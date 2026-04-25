@@ -1,17 +1,29 @@
-# Use the official Microsoft Playwright image which includes Python and browser dependencies
-FROM mcr.microsoft.com/playwright/python:v1.40.0-jammy
+# Use the required Playwright version to match the library
+FROM mcr.microsoft.com/playwright/python:v1.48.0-jammy
+
+# Environment variables for optimal performance
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 
 WORKDIR /app
 
-# Install dependencies
+# 1. Cache apt-get packages for faster builds
+RUN rm -f /etc/apt/apt.conf.d/docker-clean; \
+    echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# 2. Install Python dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
+# 3. Copy code
 COPY . .
-
-# Install playwright browsers (though the base image has them, this ensures they are ready for the python env)
-RUN python -m playwright install chromium
 
 EXPOSE 8000
 
