@@ -8,7 +8,26 @@ AI Citation Optimizer is a specialized tool designed to help websites improve th
 - **Detailed Optimization Roadmap:** A prioritized action plan generated from your domain's AI citation gaps.
 - **Automated Content Drafting:** Uses Gemini to instantly draft tailored YouTube collaboration pitches, Reddit comments, and PR emails.
 - **Actionable Fix Instructions:** Provides specific problem analysis, step-by-step fixes, and copy-paste JSON-LD schema snippets for missing pages based on URL structures.
-- **Deep Crawlability Audit:** Uses Headless Chromium (Playwright) to render JavaScript-heavy pages, calculating precise DOM depth, load times, and measuring JS-rendered text bloat to identify crawling bottlenecks.
+- **Deep Technical Audit:** Simulates an AI indexer using a Headless Chromium instance (via Playwright & CDP) to capture and analyze precise technical layers (Unused JS, Bundle Size, DOM depth, Console Errors) that AI bots struggle with.
+
+## How We Measure & Optimize for AI Crawlers
+
+Unlike traditional search engines, AI search bots (like ChatGPT-Search, Perplexity, and Gemini) have much stricter timeouts and struggle with heavy client-side rendering. To help websites win in the AI era, our solution measures performance across several strict technical layers and prescribes targeted fixes.
+
+### 1. The Measurement Layers (Playwright + CDP)
+When you audit a URL, our backend spins up a Headless Chromium browser and attaches via the Chrome DevTools Protocol (CDP) to measure exact AI-crawler blockers:
+- **JS Dependency & Bloat:** We measure the delta between raw HTML length and fully rendered text. High JS dependency means AI bots might only see a blank page.
+- **Unused JavaScript (Dead Code):** We use CDP precise coverage traces to determine what percentage of downloaded JS functions are actually executed. Dead code wastes the crawler's strict execution budget.
+- **JS Bundle Payload Size:** Tracks the exact weight of downloaded JavaScript. Heavy bundles cause AI crawlers to time out before indexing the content.
+- **Largest Contentful Paint (LCP):** Evaluates how fast the main content renders for the bot.
+- **Console Errors:** Traps live JS errors during the render phase, which often completely break an AI bot's ability to "see" the page.
+- **Structured Data (JSON-LD):** Detects if semantic markup exists to feed the LLM easily digestible context.
+
+### 2. The Improvement Layers (Actionable Fixes)
+Instead of just showing raw data, the tool turns these metrics into immediate action:
+- **Guide-First Action Plans:** We use `gemini-2.5-flash` to evaluate the metrics and output a prioritized checklist of what developers need to fix.
+- **Copy-Paste Schema Generation:** If a page is missing context, the app generates custom JSON-LD (e.g., `Product`, `FAQPage`, or `Article`) explicitly tailored to the page's URL path.
+- **Off-Page Strategy:** The dashboard identifies gaps across external channels (Reddit, YouTube) and automatically drafts outreach content to help your brand get cited externally.
 
 ## Architecture
 
