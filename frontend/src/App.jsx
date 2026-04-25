@@ -2,7 +2,6 @@ import React from 'react'
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom'
 import Dashboard from './pages/Dashboard'
 import PageDetail from './pages/PageDetail'
-import Benchmark from './pages/Benchmark'
 import { Sparkles } from 'lucide-react'
 
 const NavLink = ({ to, children }) => {
@@ -21,7 +20,7 @@ function App() {
       <div className="app-container">
         <nav>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginRight: 'auto' }}>
-            <Sparkles color="#8b5cf6" size={28} />
+            <Sparkles color="#3b82f6" size={28} />
             <h2 style={{ margin: 0, fontSize: '1.5rem' }}>Citation Optimizer</h2>
           </div>
           <NavLink to="/">Dashboard</NavLink>
@@ -30,7 +29,6 @@ function App() {
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/audit/:url" element={<PageDetail />} />
-          <Route path="/benchmark" element={<Benchmark />} />
         </Routes>
 
         <footer style={{ marginTop: '4rem', textAlign: 'center', padding: '2rem', color: 'var(--text-muted)', borderTop: '1px solid var(--border-glass)' }}>
