@@ -1,11 +1,19 @@
 # AI Citation Optimizer
 
-AI Citation Optimizer is a specialized tool designed to help websites improve their visibility in AI search engines like ChatGPT, Perplexity, and Gemini. It detects pages ignored by AI engines, analyzes crawlability issues, and provides actionable optimization steps.
+AI Citation Optimizer is a specialized tool designed to help websites improve their visibility in AI search engines like ChatGPT, Perplexity, and Gemini. It detects pages ignored by AI engines, analyzes crawlability issues, compares your brand against competitors across key channels, and provides actionable optimization steps with automated content drafting.
+
+## Key Features
+
+- **Competitor Advantage Breakdown:** Visualizes visibility gaps between your brand and top competitors across YouTube, Reddit, Editorial Lists, and Wikipedia.
+- **Detailed Optimization Roadmap:** A prioritized action plan generated from your domain's AI citation gaps.
+- **Automated Content Drafting:** Uses Gemini to instantly draft tailored YouTube collaboration pitches, Reddit comments, and PR emails.
+- **Actionable Fix Instructions:** Provides specific problem analysis, step-by-step fixes, and copy-paste JSON-LD schema snippets for missing pages based on URL structures.
+- **Deep Crawlability Audit:** Uses Headless Chromium (Playwright) to render JavaScript-heavy pages, calculating precise DOM depth, load times, and measuring JS-rendered text bloat to identify crawling bottlenecks.
 
 ## Architecture
 
 - **Backend**: FastAPI (Python 3.11+)
-- **AI Agent**: Playwright (for rendered HTML analysis) + Gemini 1.5 Flash
+- **AI Agent**: Playwright (for rendered HTML analysis) + Gemini 2.5 Flash
 - **Data Provider**: Peec AI API (for citation metrics and domain visibility)
 - **Frontend**: React + Vite (Vanilla CSS Premium Design)
 
@@ -98,14 +106,16 @@ npm run dev
 
 ## API Endpoints
 
-- `GET /api/gaps?domain=<domain>`: Returns a list of pages in the sitemap that are not currently cited by AI.
+- `GET /api/gaps?domain=<domain>`: Returns a list of non-cited pages, overall performance metrics, and competitor visibility data.
+- `GET /api/benchmark?domain=<domain>`: Provides the detailed optimization roadmap, competitor breakdown, and gap sources.
 - `POST /api/audit`: Conducts a deep crawlability and AI-readiness audit of a specific URL.
-- `GET /api/benchmark?domain=<domain>`: Provides visibility metrics and projected improvement scores.
+- `POST /api/generate-fix`: Generates an actionable fix checklist and JSON-LD schema for a missing page.
+- `POST /api/generate-content`: Drafts targeted outreach content (emails, comments, scripts) for specific optimization roadmap items.
 
 ## Example Usage
 
-1. Enter your domain (e.g., `peec.ai`) on the Dashboard.
-2. View the list of non-cited pages.
-3. Click "Run Audit" on a page to see why it's ignored.
-4. Apply the recommended fixes (e.g., reducing JS dependency, improving content clarity).
-5. Track potential growth in the Benchmark section.
+1. Enter your domain (e.g., `nothing.tech`) on the Dashboard.
+2. Review the **Growth Opportunity** and **Competitor Advantage Breakdown** to see where you stand.
+3. Check the **Optimization Roadmap** for high-priority actions and click "Draft Content" to instantly generate outreach emails or comments.
+4. Drill down into specific **Gap Sources** (YouTube, Reddit, Editorial) to identify missed citation opportunities.
+5. In the **Pages Missing** section, click "How to Fix" to get specific, step-by-step instructions and JSON-LD markup to make the page AI-ready.
