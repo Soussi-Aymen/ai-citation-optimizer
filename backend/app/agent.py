@@ -21,7 +21,7 @@ def _infer_product_name(url: str) -> str:
 
 class CrawlabilityAgent:
     def __init__(self):
-        self.model = genai.GenerativeModel('gemini-1.5-flash')
+        self.model = genai.GenerativeModel('gemini-2.5-flash')
 
     def build_fix_instructions(self, url: str) -> dict:
         """Returns structured instruction panel data — user-facing action plan, no automated fixes."""
@@ -165,12 +165,93 @@ Focus on clarity and actionability."""
                     viewport={'width': 1280, 'height': 800}
                 )
                 page = await context.new_page()
+
+                # Metric 1: Console Errors
+                console_errors = []
+                page.on("pageerror", lambda err: console_errors.append(str(err)))
+
+                # Metric 2: Total JS Payload Size
+                js_bytes = []
+                def on_response(r):
+                    try:
+                        ctype = r.headers.get("content-type", "")
+                        if "javascript" in ctype:
+                            length = r.headers.get("content-length")
+                            if length and length.isdigit():
+                                js_bytes.append(int(length))
+                    except Exception:
+                        pass
+                page.on("response", on_response)
+
+                # Metric 3: Unused JS Coverage via CDP
+                cdp = None
+                try:
+                    cdp = await context.new_cdp_session(page)
+                    await cdp.send("Profiler.enable")
+                    await cdp.send("Profiler.startPreciseCoverage", {"callCount": False, "detailed": True})
+                except Exception:
+                    cdp = None
+
                 await page.goto(url, wait_until="networkidle", timeout=40000)
                 await asyncio.sleep(1)
+
+                try:
+                    if cdp:
+                        res = await cdp.send("Profiler.takePreciseCoverage")
+                        js_coverage = res.get("result", [])
+                    else:
+                        js_coverage = []
+                except Exception:
+                    js_coverage = []
+                
+                try:
+                    total_funcs = 0
+                    used_funcs = 0
+                    for script in js_coverage:
+                        funcs = script.get("functions", [])
+                        total_funcs += len(funcs)
+                        for f in funcs:
+                            ranges = f.get("ranges", [])
+                            if ranges and ranges[0].get("count", 0) > 0:
+                                used_funcs += 1
+                                
+                    signals['unused_js_pct'] = round((1 - used_funcs / total_funcs) * 100) if total_funcs > 0 else 0
+                except Exception:
+                    signals['unused_js_pct'] = None
+
+                try:
+                    signals['console_errors'] = len(console_errors)
+                    signals['console_error_details'] = console_errors[:3]
+                except Exception:
+                    signals['console_errors'] = None
+                    signals['console_error_details'] = []
+
+                try:
+                    signals['js_payload_mb'] = round(sum(b for b in js_bytes if b) / (1024 * 1024), 2)
+                except Exception:
+                    signals['js_payload_mb'] = None
 
                 rendered_html = await page.content()
                 rendered_soup = BeautifulSoup(rendered_html, 'html.parser')
                 rendered_text = rendered_soup.get_text()
+
+                # Metric 4: Largest Contentful Paint (LCP)
+                try:
+                    lcp_ms = await page.evaluate("""
+                        () => new Promise(resolve => {
+                            let lcp = 0;
+                            new PerformanceObserver(list => {
+                                const entries = list.getEntries();
+                                if (entries.length > 0) {
+                                    lcp = entries[entries.length - 1].startTime;
+                                }
+                            }).observe({ type: 'largest-contentful-paint', buffered: true });
+                            setTimeout(() => resolve(lcp), 500);
+                        })
+                    """)
+                    signals['lcp_seconds'] = round(float(lcp_ms) / 1000, 2)
+                except Exception:
+                    signals['lcp_seconds'] = None
 
                 signals['load_time_ms'] = int((time.time() - start_time) * 1000)
                 signals['text_delta'] = len(rendered_text) - signals['raw_text_length']
@@ -202,7 +283,13 @@ Return ONLY valid JSON: {{performance_report:{{score, issues, fixes}}, sitemap_a
             result['execution_time_ms'] = int((time.time() - start_time) * 1000)
             return result
         except Exception as e:
-            return {"error": True, "logs": logs, "message": str(e)}
+            logs.append(f"Phase 3 Failed: {str(e)}")
+            return {
+                "error": True, 
+                "logs": logs, 
+                "message": str(e),
+                "signals": signals if 'signals' in locals() else {}
+            }
 
     async def audit_url(self, url: str, competitor_data: str = ""):
         return await self.fetch_and_analyze(url, competitor_data)

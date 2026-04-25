@@ -93,10 +93,17 @@ async def get_gaps(domain: str = Query(...)):
 
 @app.post("/api/generate-fix")
 async def generate_fix(request: FixRequest):
-    """Returns structured instruction panel data — not automated fix, but user action plan."""
+    """Returns structured instruction panel data and live Playwright metrics."""
     try:
         url = request.url
         fix_data = agent.build_fix_instructions(url)
+        
+        audit_result = await agent.fetch_and_analyze(url)
+        if "signals" in audit_result:
+            fix_data["metrics"] = audit_result["signals"]
+        else:
+            fix_data["metrics"] = {}
+
         return fix_data
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
