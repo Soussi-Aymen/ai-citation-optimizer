@@ -25,7 +25,6 @@ function App() {
             <h2 style={{ margin: 0, fontSize: '1.5rem' }}>Citation Optimizer</h2>
           </div>
           <NavLink to="/">Dashboard</NavLink>
-          <NavLink to="/benchmark">Benchmark</NavLink>
         </nav>
 
         <Routes>
