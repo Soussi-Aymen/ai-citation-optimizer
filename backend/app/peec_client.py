@@ -1,77 +1,92 @@
 import os
-import requests
+import httpx
+import json
+import time
+from datetime import datetime, timedelta
 from dotenv import load_dotenv
 
 load_dotenv()
 
-PEEC_API_KEY = os.getenv("PEEC_API_KEY")
-PEEC_BASE_URL = "https://api.peec.ai/customer/v1"
-
 class PeecClient:
-    def __init__(self, api_key=None):
-        self.api_key = api_key or PEEC_API_KEY
+    def __init__(self):
+        self.api_key = os.getenv("PEEC_API_KEY")
+        self.base_url = "https://api.peec.ai/customer/v1"
         self.headers = {
-            "Content-Type": "application/json",
-            "X-API-Key": self.api_key
+            "x-api-key": self.api_key,
+            "Content-Type": "application/json"
         }
+        self._cache = {}
 
-    def get_url_report(self, domain: str):
-        """
-        Fetches the URL report for a given domain to see which URLs are being cited.
-        """
-        url = f"{PEEC_BASE_URL}/reports/urls"
-        # Based on search results, we use dimensions and filters
-        payload = {
-            "dimensions": ["url", "domain", "citation_count", "visibility_score"],
-            "filters": {
-                "domain": domain
-            }
-        }
+    def _get_cache(self, key):
+        if key in self._cache:
+            data, timestamp = self._cache[key]
+            if time.time() - timestamp < 3600: # 1 hour cache
+                return data
+        return None
+
+    def _set_cache(self, key, data):
+        self._cache[key] = (data, time.time())
+
+    async def _post(self, endpoint, payload):
+        cache_key = f"{endpoint}:{json.dumps(payload, sort_keys=True)}"
+        cached = self._get_cache(cache_key)
+        if cached:
+            return cached
+
+        async with httpx.AsyncClient() as client:
+            try:
+                response = await client.post(
+                    f"{self.base_url}/{endpoint}",
+                    headers=self.headers,
+                    json=payload,
+                    timeout=30.0
+                )
+                response.raise_for_status()
+                data = response.json()
+                self._set_cache(cache_key, data)
+                return data
+            except Exception as e:
+                print(f"Peec API Error ({endpoint}): {e}")
+                return {}
+
+    async def get_domain_report(self, domain: str):
+        return await self._post("reports", {"domain": domain})
+
+    async def get_cited_urls(self, domain: str):
+        report = await self.get_domain_report(domain)
+        items = report.get('data', [])
+        if isinstance(items, dict): items = [items]
+        cited_urls = []
+        for item in items:
+            url = item.get('url') or item.get('cited_url') or item.get('source_url')
+            if url and domain in url:
+                cited_urls.append(url)
+            citations = item.get('citations', [])
+            if isinstance(citations, list):
+                for c in citations:
+                    c_url = c.get('url') or c.get('source_url')
+                    if c_url and domain in c_url:
+                        cited_urls.append(c_url)
+        return list(set(u.rstrip('/') for u in cited_urls))
+
+    async def list_brands(self, project_id: str):
+        """Lists brands associated with a project."""
+        return await self._post("brands", {"project_id": project_id})
+
+    async def get_actions(self, project_id: str, scope: str = "overview", **kwargs):
+        """Fetches AI citation actions/gaps."""
+        today = datetime.now()
+        start_date = (today - timedelta(days=30)).strftime("%Y-%m-%d")
+        end_date = today.strftime("%Y-%m-%d")
         
-        try:
-            response = requests.post(url, headers=self.headers, json=payload, timeout=15)
-            # If the API key is invalid or unauthorized, this will raise an error
-            # In a real scenario, we might want to return mocked data if it's a demo
-            response.raise_for_status()
-            return response.json()
-        except Exception as e:
-            print(f"Error calling Peec API (URL Report): {e}")
-            # Mocked data for development if API fails
-            return {
-                "data": [
-                    {"url": f"https://{domain}/page1", "citation_count": 5, "visibility_score": 80},
-                    {"url": f"https://{domain}/page2", "citation_count": 2, "visibility_score": 45}
-                ]
-            }
-
-    def get_domain_report(self, domain: str):
-        """
-        Fetches the domain-level visibility report.
-        """
-        url = f"{PEEC_BASE_URL}/reports/domains"
         payload = {
-            "dimensions": ["domain", "visibility_score", "citation_count"],
-            "filters": {
-                "domain": domain
-            }
+            "project_id": project_id,
+            "scope": scope,
+            "start_date": start_date,
+            "end_date": end_date
         }
-        
-        try:
-            response = requests.post(url, headers=self.headers, json=payload, timeout=15)
-            response.raise_for_status()
-            return response.json()
-        except Exception as e:
-            print(f"Error calling Peec API (Domain Report): {e}")
-            return {
-                "data": [
-                    {"domain": domain, "visibility_score": 60, "citation_count": 12}
-                ]
-            }
-
-    def get_cited_urls(self, domain: str):
-        """
-        Helper to get just the list of cited URLs from the report.
-        """
-        report = self.get_url_report(domain)
-        # Extract URLs from the 'data' field
-        return [item['url'] for item in report.get('data', [])]
+        for k, v in kwargs.items():
+            if v is not None:
+                payload[k] = v
+            
+        return await self._post("actions", payload)
