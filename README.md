@@ -2,6 +2,12 @@
 
 AI Citation Optimizer is a specialized tool designed to help websites improve their visibility in AI search engines like ChatGPT, Perplexity, and Gemini. It detects pages ignored by AI engines, analyzes crawlability issues, compares your brand against competitors across key channels, and provides actionable optimization steps with automated content drafting.
 
+![AI Search Dashboard](file:///c:/Users/Aymen/Desktop/ai-citation-optimizer/artifacts/screenshots/dashboard.png)
+
+![Actionable Fix Instructions](file:///c:/Users/Aymen/Desktop/ai-citation-optimizer/artifacts/screenshots/how_to_fix.png)
+
+![Growth Opportunity Analysis](file:///c:/Users/Aymen/Desktop/ai-citation-optimizer/artifacts/screenshots/growth_opportunity.png)
+
 ## Key Features
 
 - **Competitor Advantage Breakdown:** Visualizes visibility gaps between your brand and top competitors across YouTube, Reddit, Editorial Lists, and Wikipedia.
