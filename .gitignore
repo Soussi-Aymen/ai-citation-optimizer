@@ -1,0 +1,67 @@
+# =========================
+# OS
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# Python (Backend)
+# =========================
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.sqlite3
+*.db
+
+# Virtual environments
+venv/
+.env/
+.venv/
+
+# Logs
+*.log
+
+# =========================
+# FastAPI / General
+# =========================
+.env
+.env.*
+*.env
+
+# =========================
+# Playwright
+# =========================
+playwright-report/
+test-results/
+node_modules/.cache/playwright/
+
+# =========================
+# Node / Frontend
+# =========================
+node_modules/
+dist/
+build/
+.cache/
+.next/
+out/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# =========================
+# IDEs
+# =========================
+.vscode/
+.idea/
+
+# =========================
+# Misc
+# =========================
+coverage/
+*.coverage
+.cache/
+tmp/
