@@ -279,6 +279,90 @@ const Dashboard = () => {
                           {generatedFixes[url].checklist.map((item, i) => <li key={i} style={{ marginBottom: '0.25rem' }}>{item}</li>)}
                         </ol>
                         
+                        {/* New Metric Grid */}
+                        {generatedFixes[url].metrics && (
+                          <div style={{ marginBottom: '1.5rem', padding: '1rem', border: '1px solid #e2e8f0', borderRadius: '0.5rem', background: '#f8fafc' }}>
+                            <p style={{ fontWeight: 'bold', fontSize: '0.9rem', color: '#1e293b', marginBottom: '0.75rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.5rem', margin: '0 0 0.75rem 0' }}>Page Audit Result</p>
+                            
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.85rem' }}>
+                              {(() => {
+                                const m = generatedFixes[url].metrics;
+                                let redCount = 0;
+                                
+                                // JS Dependency
+                                const jsImpactText = m.js_impact === 'CRITICAL' ? '🔴 CRITICAL — heavy JS dependency' : (m.js_impact === 'MODERATE' ? '🟡 Moderate JS dependency' : '✅ Low JS dependency');
+                                if (m.js_impact === 'CRITICAL') redCount++;
+                                
+                                // Unused JS
+                                let unusedText = 'Unable to measure';
+                                let unusedIcon = '⚪';
+                                if (m.unused_js_pct !== null && m.unused_js_pct !== undefined) {
+                                  if (m.unused_js_pct > 60) { unusedIcon = '🔴'; unusedText = `${m.unused_js_pct}% unused (dead code blocking crawlers)`; redCount++; }
+                                  else if (m.unused_js_pct >= 30) { unusedIcon = '🟡'; unusedText = `${m.unused_js_pct}% unused JS is downloaded but never executed`; }
+                                  else { unusedIcon = '✅'; unusedText = `${m.unused_js_pct}% unused JS — efficient`; }
+                                }
+                                
+                                // Bundle Size
+                                let bundleText = 'Unable to measure';
+                                let bundleIcon = '⚪';
+                                if (m.js_payload_mb !== null && m.js_payload_mb !== undefined) {
+                                  if (m.js_payload_mb > 3) { bundleIcon = '🔴'; bundleText = `${m.js_payload_mb}MB — crawlers likely time out`; redCount++; }
+                                  else if (m.js_payload_mb >= 1) { bundleIcon = '🟡'; bundleText = `${m.js_payload_mb}MB — may slow AI crawler indexing`; }
+                                  else { bundleIcon = '✅'; bundleText = `${m.js_payload_mb}MB JS payload — crawler friendly`; }
+                                }
+                                
+                                // LCP
+                                let lcpText = 'Unable to measure';
+                                let lcpIcon = '⚪';
+                                if (m.lcp_seconds !== null && m.lcp_seconds !== undefined) {
+                                  if (m.lcp_seconds > 4) { lcpIcon = '🔴'; lcpText = `${m.lcp_seconds}s LCP — too slow, AI crawlers likely skip this page`; redCount++; }
+                                  else if (m.lcp_seconds >= 2.5) { lcpIcon = '🟡'; lcpText = `${m.lcp_seconds}s LCP — borderline, crawlers may deprioritise`; }
+                                  else { lcpIcon = '✅'; lcpText = `${m.lcp_seconds}s LCP — fast enough for AI crawlers`; }
+                                }
+                                
+                                // Console Errors
+                                let errText = 'Unable to measure';
+                                let errIcon = '⚪';
+                                if (m.console_errors !== null && m.console_errors !== undefined) {
+                                  if (m.console_errors >= 3) { errIcon = '🔴'; errText = `${m.console_errors} errors — page may appear broken to bots`; redCount++; }
+                                  else if (m.console_errors >= 1) { errIcon = '🟡'; errText = `${m.console_errors} JS errors may affect AI crawler rendering`; }
+                                  else { errIcon = '✅'; errText = `No JS errors detected`; }
+                                }
+                                
+                                const overallText = redCount >= 3 ? '🔴 Poor AI Crawlability' : (redCount >= 1 ? '🟡 Moderate AI Crawlability' : '✅ Good AI Crawlability');
+
+                                return (
+                                  <>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr' }}>
+                                      <span style={{ color: '#64748b' }}>JS Dependency</span>
+                                      <span>{jsImpactText}</span>
+                                    </div>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr' }}>
+                                      <span style={{ color: '#64748b' }}>Unused JavaScript</span>
+                                      <span>{unusedIcon} {unusedText}</span>
+                                    </div>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr' }}>
+                                      <span style={{ color: '#64748b' }}>JS Bundle Size</span>
+                                      <span>{bundleIcon} {bundleText}</span>
+                                    </div>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr' }}>
+                                      <span style={{ color: '#64748b' }}>Page Load (LCP)</span>
+                                      <span>{lcpIcon} {lcpText}</span>
+                                    </div>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr' }}>
+                                      <span style={{ color: '#64748b' }}>Console Errors</span>
+                                      <span>{errIcon} {errText}</span>
+                                    </div>
+                                    <div style={{ marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid #e2e8f0', fontWeight: 'bold', color: '#1e293b' }}>
+                                      Overall: {overallText}
+                                    </div>
+                                  </>
+                                )
+                              })()}
+                            </div>
+                          </div>
+                        )}
+
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
                           <p style={{ fontWeight: 'bold', fontSize: '0.9rem', color: '#1e293b', margin: 0 }}>Code Snippet ({generatedFixes[url].schema_type})</p>
                           <button 

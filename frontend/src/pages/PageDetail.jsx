@@ -17,7 +17,7 @@ const PageDetail = () => {
     "Awaiting Network Idle (JS Hydration)...",
     "Extracting DevTools Meta-Signals...",
     "Fetching Peec Competitor Intelligence...",
-    "Building Multi-Track Report with Gemini 3 Flash..."
+    "Building Multi-Track Report with Gemini 2.5 Flash..."
   ]
 
   useEffect(() => {
@@ -90,7 +90,7 @@ const PageDetail = () => {
         <button onClick={() => navigate('/')} style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 600 }}>
           <ArrowLeft size={18} /> Dashboard
         </button>
-        <span style={{ fontSize: '0.85rem', color: '#94a3b8' }}>Powered by Gemini 3 Flash</span>
+        <span style={{ fontSize: '0.85rem', color: '#94a3b8' }}>Powered by Gemini 2.5 Flash</span>
       </div>
 
       <header style={{ marginBottom: '2.5rem' }}>
@@ -104,7 +104,7 @@ const PageDetail = () => {
           <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
             <Cpu size={20} color="#64748b" /> How This Score Was Calculated
           </h3>
-          <p className="text-muted" style={{ fontSize: '0.85rem', marginBottom: '1.5rem' }}>Raw DevTools signals captured during live browser render — these are the exact inputs Gemini 3 used to generate the report below.</p>
+          <p className="text-muted" style={{ fontSize: '0.85rem', marginBottom: '1.5rem' }}>Raw DevTools signals captured during live browser render — these are the exact inputs Gemini 2.5 used to generate the report below.</p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '1rem' }}>
 
             {/* Load Time */}
@@ -148,6 +148,74 @@ const PageDetail = () => {
                     <Layers size={14} /> DOM DEPTH
                   </div>
                   <div style={{ fontSize: '1.3rem', fontWeight: 800, color }}>{d}</div>
+                  <div style={{ fontSize: '0.72rem', color, fontWeight: 600, marginTop: '0.2rem' }}>{label}</div>
+                </div>
+              )
+            })()}
+
+            {/* Unused JS */}
+            {data.signals.unused_js_pct !== undefined && (() => {
+              const u = data.signals.unused_js_pct
+              const color = u === null ? '#94a3b8' : u < 30 ? '#16a34a' : u <= 60 ? '#f59e0b' : '#ef4444'
+              const label = u === null ? 'Unknown' : u < 30 ? 'Efficient' : u <= 60 ? 'Bloated' : 'Dead Code'
+              const displayVal = u === null ? 'N/A' : `${u}%`
+              return (
+                <div style={{ padding: '1rem', borderRadius: '0.75rem', background: '#f8fafc', border: `1px solid ${color}30` }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#64748b', fontSize: '0.78rem', fontWeight: 700, marginBottom: '0.5rem' }}>
+                    <Activity size={14} /> UNUSED JS
+                  </div>
+                  <div style={{ fontSize: '1.3rem', fontWeight: 800, color }}>{displayVal}</div>
+                  <div style={{ fontSize: '0.72rem', color, fontWeight: 600, marginTop: '0.2rem' }}>{label}</div>
+                </div>
+              )
+            })()}
+
+            {/* JS Payload */}
+            {data.signals.js_payload_mb !== undefined && (() => {
+              const p = data.signals.js_payload_mb
+              const color = p === null ? '#94a3b8' : p < 1 ? '#16a34a' : p <= 3 ? '#f59e0b' : '#ef4444'
+              const label = p === null ? 'Unknown' : p < 1 ? 'Crawler Friendly' : p <= 3 ? 'Heavy' : 'Timeout Risk'
+              const displayVal = p === null ? 'N/A' : `${p}MB`
+              return (
+                <div style={{ padding: '1rem', borderRadius: '0.75rem', background: '#f8fafc', border: `1px solid ${color}30` }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#64748b', fontSize: '0.78rem', fontWeight: 700, marginBottom: '0.5rem' }}>
+                    <Globe size={14} /> JS PAYLOAD
+                  </div>
+                  <div style={{ fontSize: '1.3rem', fontWeight: 800, color }}>{displayVal}</div>
+                  <div style={{ fontSize: '0.72rem', color, fontWeight: 600, marginTop: '0.2rem' }}>{label}</div>
+                </div>
+              )
+            })()}
+
+            {/* LCP */}
+            {data.signals.lcp_seconds !== undefined && (() => {
+              const l = data.signals.lcp_seconds
+              const color = l === null ? '#94a3b8' : l < 2.5 ? '#16a34a' : l <= 4 ? '#f59e0b' : '#ef4444'
+              const label = l === null ? 'Unknown' : l < 2.5 ? 'Fast' : l <= 4 ? 'Borderline' : 'Too Slow'
+              const displayVal = l === null ? 'N/A' : `${l}s`
+              return (
+                <div style={{ padding: '1rem', borderRadius: '0.75rem', background: '#f8fafc', border: `1px solid ${color}30` }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#64748b', fontSize: '0.78rem', fontWeight: 700, marginBottom: '0.5rem' }}>
+                    <Zap size={14} /> LCP
+                  </div>
+                  <div style={{ fontSize: '1.3rem', fontWeight: 800, color }}>{displayVal}</div>
+                  <div style={{ fontSize: '0.72rem', color, fontWeight: 600, marginTop: '0.2rem' }}>{label}</div>
+                </div>
+              )
+            })()}
+
+            {/* Console Errors */}
+            {data.signals.console_errors !== undefined && (() => {
+              const e = data.signals.console_errors
+              const color = e === null ? '#94a3b8' : e === 0 ? '#16a34a' : e < 3 ? '#f59e0b' : '#ef4444'
+              const label = e === null ? 'Unknown' : e === 0 ? 'Clean' : e < 3 ? 'Warnings' : 'Broken'
+              const displayVal = e === null ? 'N/A' : e
+              return (
+                <div style={{ padding: '1rem', borderRadius: '0.75rem', background: '#f8fafc', border: `1px solid ${color}30` }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#64748b', fontSize: '0.78rem', fontWeight: 700, marginBottom: '0.5rem' }}>
+                    <ShieldAlert size={14} /> ERRORS
+                  </div>
+                  <div style={{ fontSize: '1.3rem', fontWeight: 800, color }}>{displayVal}</div>
                   <div style={{ fontSize: '0.72rem', color, fontWeight: 600, marginTop: '0.2rem' }}>{label}</div>
                 </div>
               )
