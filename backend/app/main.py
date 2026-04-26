@@ -98,7 +98,7 @@ async def generate_fix(request: FixRequest):
         url = request.url
         fix_data = agent.build_fix_instructions(url)
         
-        audit_result = await agent.fetch_and_analyze(url)
+        audit_result = await agent.fetch_and_analyze(url, skip_ai=True)
         if "signals" in audit_result:
             fix_data["metrics"] = audit_result["signals"]
         else:
@@ -131,12 +131,6 @@ async def get_benchmark(domain: str = Query(...)):
         citations = report_data.get('citation_count', 0)
         sitemap_urls = await fetch_sitemap_urls(clean_domain) or []
         total_pages = len(sitemap_urls)
-
-        target_citations = int(citations + (total_pages - citations) * 0.45) if total_pages > 0 else citations + 66
-        target_visibility = (target_citations / total_pages) * 100 if total_pages > 0 else 0
-        target_visibility = round(target_visibility, 1)
-        if target_visibility == 0:
-            target_visibility = 15.0
 
         # --- Fetch actions overview (top 5 by opportunity_score) ---
         actions_overview = await peec.get_actions(pid, scope="overview")
@@ -265,6 +259,38 @@ async def get_benchmark(domain: str = Query(...)):
                 }
             else:
                 tab_actions[tab] = {"gap_percentage": 0, "opportunity_score": 0, "items": [], "has_data": False}
+
+        # --- Smart Growth Calculation ---
+        # 1. Technical Growth (Sitemap Gaps)
+        tech_gap = max(0, total_pages - citations)
+        tech_potential = tech_gap
+        
+        # 2. Strategic Growth (Off-page channels: YouTube, Reddit, etc.)
+        strategic_potential = 0
+        total_opportunity = 0
+        for item in roadmap:
+            opp = item.get('opportunity_score', 0)
+            strategic_potential += (opp / 100) * 20 
+            total_opportunity += opp
+            
+        for tab, data in tab_actions.items():
+            if data.get('has_data'):
+                opp = data.get('opportunity_score', 0)
+                strategic_potential += (opp / 100) * 15
+                total_opportunity += opp
+
+        target_citations = int(citations + tech_potential + strategic_potential)
+        
+        # Calculate visibility boost
+        # Technical fixes contribute up to 40% visibility boost
+        tech_boost = (tech_gap / total_pages * 40) if total_pages > 0 else 15
+        
+        # Strategic fixes contribute up to 50% visibility boost
+        # 800 is an estimated max aggregate opportunity score (5 roadmap + 3 tabs)
+        strategic_boost = (total_opportunity / 800) * 50 
+        
+        target_visibility = min(98.5, visibility + tech_boost + strategic_boost)
+        target_visibility = round(target_visibility, 1)
 
         return {
             "domain": domain,

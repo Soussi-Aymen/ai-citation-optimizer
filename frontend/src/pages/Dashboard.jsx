@@ -413,7 +413,7 @@ const Dashboard = () => {
                     <div style={{ fontSize: '1.4rem', fontWeight: '800', color: '#2563eb' }}>
                       {benchmarkData.estimated.visibility_score}% <TrendingUp size={18} style={{ verticalAlign: 'middle' }} />
                     </div>
-                    <div style={{ fontSize: '0.7rem', color: '#64748b', marginTop: '0.25rem' }}>(if top 3 actions completed)</div>
+                    <div style={{ fontSize: '0.7rem', color: '#64748b', marginTop: '0.25rem' }}>(Smart projection: all technical + channel fixes)</div>
                   </div>
                   <div>
                     <span className="text-muted" style={{ fontSize: '0.75rem' }}>CURRENT CITATIONS</span>

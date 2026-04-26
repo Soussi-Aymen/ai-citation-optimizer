@@ -138,7 +138,7 @@ Focus on clarity and actionability."""
         response = await loop.run_in_executor(None, lambda: self.model.generate_content(prompt))
         return response.text.strip()
 
-    async def fetch_and_analyze(self, url: str, competitor_data: str = ""):
+    async def fetch_and_analyze(self, url: str, competitor_data: str = "", skip_ai: bool = False):
         """Deep technical audit using Playwright and Gemini."""
         logs = []
         start_time = time.time()
@@ -192,8 +192,8 @@ Focus on clarity and actionability."""
                 except Exception:
                     cdp = None
 
-                await page.goto(url, wait_until="networkidle", timeout=40000)
-                await asyncio.sleep(1)
+                await page.goto(url, wait_until="load", timeout=20000)
+                await asyncio.sleep(0.5)
 
                 try:
                     if cdp:
@@ -264,6 +264,17 @@ Focus on clarity and actionability."""
             finally:
                 if 'browser' in locals():
                     await browser.close()
+
+        if skip_ai:
+            return {
+                "performance_report": {"score": 0, "issues": [], "fixes": []},
+                "sitemap_audit": {"score": 0, "analysis": "", "improvements": []},
+                "competitive_analysis": {"competitor_edge": "", "gap_to_close": ""},
+                "ai_readiness": {"overall_score": 0, "estimated_impact": ""},
+                "logs": logs,
+                "signals": signals,
+                "execution_time_ms": int((time.time() - start_time) * 1000)
+            }
 
         logs.append("Phase 3: AI Audit Reasoning...")
         prompt = f"""Perform a triple-track AI Citation Audit for: {url}.
