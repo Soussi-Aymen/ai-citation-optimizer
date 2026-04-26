@@ -1,6 +1,6 @@
 # AI Citation Optimizer
 
-AI Citation Optimizer is a specialized tool designed to help websites improve their visibility in AI search engines like ChatGPT, Perplexity, and Gemini. It detects pages ignored by AI engines, analyzes crawlability issues, compares your brand against competitors across key channels, and provides actionable optimization steps with automated content drafting.
+AI Citation Optimizer helps early-stage brands like Nothing Phone, Attio, and BYD close the AI search visibility gap against Apple, Salesforce, and Tesla — built on top of Peec AI's MCP to turn monitoring data into automated action.
 
 ![AI Search Dashboard](artifacts/screenshots/dashboard.png)
 
@@ -21,7 +21,9 @@ AI Citation Optimizer is a specialized tool designed to help websites improve th
 Unlike traditional search engines, AI search bots (like ChatGPT-Search, Perplexity, and Gemini) have much stricter timeouts and struggle with heavy client-side rendering. To help websites win in the AI era, our solution measures performance across several strict technical layers and prescribes targeted fixes.
 
 ### 1. The Measurement Layers (Playwright + CDP)
+
 When you audit a URL, our backend spins up a Headless Chromium browser and attaches via the Chrome DevTools Protocol (CDP) to measure exact AI-crawler blockers:
+
 - **JS Dependency & Bloat:** We measure the delta between raw HTML length and fully rendered text. High JS dependency means AI bots might only see a blank page.
 - **Unused JavaScript (Dead Code):** We use CDP precise coverage traces to determine what percentage of downloaded JS functions are actually executed. Dead code wastes the crawler's strict execution budget.
 - **JS Bundle Payload Size:** Tracks the exact weight of downloaded JavaScript. Heavy bundles cause AI crawlers to time out before indexing the content.
@@ -30,7 +32,9 @@ When you audit a URL, our backend spins up a Headless Chromium browser and attac
 - **Structured Data (JSON-LD):** Detects if semantic markup exists to feed the LLM easily digestible context.
 
 ### 2. The Improvement Layers (Actionable Fixes)
+
 Instead of just showing raw data, the tool turns these metrics into immediate action:
+
 - **Guide-First Action Plans:** We use `gemini-2.5-flash` to evaluate the metrics and output a prioritized checklist of what developers need to fix.
 - **Copy-Paste Schema Generation:** If a page is missing context, the app generates custom JSON-LD (e.g., `Product`, `FAQPage`, or `Article`) explicitly tailored to the page's URL path.
 - **Off-Page Strategy:** The dashboard identifies gaps across external channels (Reddit, YouTube) and automatically drafts outreach content to help your brand get cited externally.
