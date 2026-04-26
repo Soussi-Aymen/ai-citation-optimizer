@@ -429,7 +429,7 @@ const Dashboard = () => {
                       {(() => {
                         const total = data?.total_sitemap_pages || 0;
                         const current = benchmarkData.current.citation_count || 0;
-                        const target = Math.min(total, Math.round(current + (total - current) * 0.75));
+                        const target = Math.min(total, Math.round(current + (total - current) * 0.50));
                         const pct = total > 0 ? (target / total) * 100 : 0;
                         return `${pct.toFixed(1)}%`;
                       })()} <TrendingUp size={18} style={{ verticalAlign: 'middle' }} />
@@ -446,7 +446,7 @@ const Dashboard = () => {
                       {(() => {
                         const total = data?.total_sitemap_pages || 0;
                         const current = benchmarkData.current.citation_count || 0;
-                        return Math.min(total, Math.round(current + (total - current) * 0.75));
+                        return Math.min(total, Math.round(current + (total - current) * 0.50));
                       })()} <TrendingUp size={18} style={{ verticalAlign: 'middle' }} />
                     </div>
                   </div>

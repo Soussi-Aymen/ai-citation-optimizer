@@ -144,7 +144,7 @@ npm run dev
 ## Example Usage
 
 1. Enter your domain (e.g., `nothing.tech`) on the Dashboard.
-2. Review the **Growth Opportunity** and **Competitor Advantage Breakdown** to see where you stand.
+2. Review the **Growth Opportunity** and **Competitor Advantage Breakdown** to see where you stand. (Note: Estimated progress in a realistic benchmark shows around 50% improvement for targeted businesses).
 3. Check the **Optimization Roadmap** for high-priority actions and click "Draft Content" to instantly generate outreach emails or comments.
 4. Drill down into specific **Gap Sources** (YouTube, Reddit, Editorial) to identify missed citation opportunities.
 5. In the **Pages Missing** section, click "How to Fix" to get specific, step-by-step instructions and JSON-LD markup to make the page AI-ready.
