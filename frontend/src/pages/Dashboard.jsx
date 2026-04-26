@@ -426,9 +426,15 @@ const Dashboard = () => {
                   <div>
                     <span className="text-muted" style={{ fontSize: '0.75rem', display: 'block', marginBottom: '0.25rem' }}>TARGET VISIBILITY</span>
                     <div style={{ fontSize: '1.4rem', fontWeight: '800', color: '#2563eb' }}>
-                      {benchmarkData.estimated.visibility_score}% <TrendingUp size={18} style={{ verticalAlign: 'middle' }} />
+                      {(() => {
+                        const total = data?.total_sitemap_pages || 0;
+                        const current = benchmarkData.current.citation_count || 0;
+                        const target = Math.min(total, Math.round(current + (total - current) * 0.75));
+                        const pct = total > 0 ? (target / total) * 100 : 0;
+                        return `${pct.toFixed(1)}%`;
+                      })()} <TrendingUp size={18} style={{ verticalAlign: 'middle' }} />
                     </div>
-                    <div style={{ fontSize: '0.7rem', color: '#64748b', marginTop: '0.25rem' }}>(Smart projection: all technical + channel fixes)</div>
+                    <div style={{ fontSize: '0.7rem', color: '#64748b', marginTop: '0.25rem' }}>Estimated if non-cited pages are fixed</div>
                   </div>
                   <div>
                     <span className="text-muted" style={{ fontSize: '0.75rem' }}>CURRENT CITATIONS</span>
@@ -436,7 +442,13 @@ const Dashboard = () => {
                   </div>
                   <div>
                     <span className="text-muted" style={{ fontSize: '0.75rem' }}>TARGET CITATIONS</span>
-                    <div style={{ fontSize: '1.4rem', fontWeight: '800', color: '#2563eb' }}>{benchmarkData.estimated.citation_count} <TrendingUp size={18} style={{ verticalAlign: 'middle' }} /></div>
+                    <div style={{ fontSize: '1.4rem', fontWeight: '800', color: '#2563eb' }}>
+                      {(() => {
+                        const total = data?.total_sitemap_pages || 0;
+                        const current = benchmarkData.current.citation_count || 0;
+                        return Math.min(total, Math.round(current + (total - current) * 0.75));
+                      })()} <TrendingUp size={18} style={{ verticalAlign: 'middle' }} />
+                    </div>
                   </div>
                 </div>
               </section>
