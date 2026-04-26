@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import axios from 'axios'
-import { Search, AlertCircle, TrendingUp, ArrowRight, ChevronLeft, ChevronRight, BarChart2, Zap, ListChecks, Globe, CheckCircle2, Trophy, ShieldCheck, ShieldX, Copy, Check } from 'lucide-react'
+import { Search, AlertCircle, TrendingUp, ArrowRight, ChevronLeft, ChevronRight, BarChart2, Zap, ListChecks, Globe, CheckCircle2, Trophy, ShieldCheck, ShieldX, Copy, Check, FileCode, Info } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
 const renderMarkdownLinks = (text) => {
@@ -412,6 +412,48 @@ const Dashboard = () => {
               </div>
             )}
           </section>
+
+          {/* Sitemap Technical Health */}
+          {data?.sitemap_metrics && (
+            <div className="animate-fade-in" style={{ marginBottom: '2rem' }}>
+              <section className="glass-card" style={{ background: '#f8fafc', border: '1px solid #e2e8f0' }}>
+                <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem', textTransform: 'uppercase', fontSize: '0.9rem', letterSpacing: '0.05em', color: '#475569' }}>
+                  <FileCode size={18} /> Sitemap Technical Check
+                </h3>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem' }}>
+                  <div style={{ padding: '1rem', borderRadius: '0.5rem', background: data.sitemap_metrics.has_lastmod ? '#f0fdf4' : '#fff7ed', border: `1px solid ${data.sitemap_metrics.has_lastmod ? '#dcfce7' : '#ffedd5'}` }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '0.5rem' }}>
+                      <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600 }}>FRESHNESS (LASTMOD)</span>
+                      {!data.sitemap_metrics.has_lastmod && <AlertCircle size={14} color="#ea580c" />}
+                    </div>
+                    <div style={{ fontSize: '1.2rem', fontWeight: 800, color: data.sitemap_metrics.has_lastmod ? '#16a34a' : '#ea580c' }}>
+                      {data.sitemap_metrics.lastmod_count} / {data.sitemap_metrics.total_count} Pages
+                    </div>
+                    <p style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.5rem', lineHeight: '1.4' }}>
+                      {data.sitemap_metrics.has_lastmod 
+                        ? "Great: XML lastmod tags are present. These help AI engines prioritize crawling your freshest content." 
+                        : "Common Pitfall: Missing <lastmod> tags. Without these, AI crawlers may not know when your content was last updated and might skip indexing new changes."}
+                    </p>
+                  </div>
+
+                  <div style={{ padding: '1rem', borderRadius: '0.5rem', background: (data.orphans?.length || 0) === 0 ? '#f0fdf4' : '#fef2f2', border: `1px solid ${(data.orphans?.length || 0) === 0 ? '#dcfce7' : '#fee2e2'}` }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '0.5rem' }}>
+                      <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600 }}>COMPLETENESS (ORPHANS)</span>
+                      {(data.orphans?.length || 0) > 0 && <AlertCircle size={14} color="#ef4444" />}
+                    </div>
+                    <div style={{ fontSize: '1.2rem', fontWeight: 800, color: (data.orphans?.length || 0) === 0 ? '#16a34a' : '#ef4444' }}>
+                      {data.orphans?.length || 0} Pages Missing
+                    </div>
+                    <p style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.5rem', lineHeight: '1.4' }}>
+                      {(data.orphans?.length || 0) === 0 
+                        ? "Clean: All pages currently cited by AI are listed in your sitemap." 
+                        : `Critical Issue: AI is citing ${data.orphans?.length} pages that are NOT in your sitemap. This means your sitemap is incomplete and missing key traffic-driving URLs.`}
+                    </p>
+                  </div>
+                </div>
+              </section>
+            </div>
+          )}
 
           {/* Competitor Advantage Breakdown */}
           {benchmarkData && benchmarkData.channel_gaps && (

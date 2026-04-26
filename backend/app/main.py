@@ -47,9 +47,12 @@ async def get_gaps(domain: str = Query(...)):
         clean_domain = domain.replace("https://", "").replace("http://", "").replace("www.", "").split('/')[0]
         pid = get_project_id(clean_domain)
 
-        sitemap_urls = await fetch_sitemap_urls(clean_domain) or []
+        sitemap_res = await fetch_sitemap_urls(clean_domain)
+        sitemap_urls = sitemap_res.get("urls", [])
+        sitemap_metrics = sitemap_res.get("metrics", {})
+        
         cited_urls = await peec.get_cited_urls(clean_domain)
-        gaps = get_ai_citation_gaps(sitemap_urls, cited_urls)
+        gaps, orphans = get_ai_citation_gaps(sitemap_urls, cited_urls)
 
         total = len(sitemap_urls)
         cited = len(cited_urls)
@@ -84,9 +87,13 @@ async def get_gaps(domain: str = Query(...)):
             "citation_coverage_pct": round(citation_rate * 100, 1),
             "performance_score": perf_score,
             "gaps": gaps[:20],
+            "orphans": orphans[:10],
+            "sitemap_metrics": sitemap_metrics,
             "brands": brands,
             "competitors": competitors
         }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
