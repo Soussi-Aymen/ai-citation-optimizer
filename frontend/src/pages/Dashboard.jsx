@@ -373,6 +373,21 @@ const Dashboard = () => {
                               {copiedFix[url] ? 'Copied!' : 'Copy'}
                             </button>
                         </div>
+                        
+                        <div style={{ marginBottom: '1rem', fontSize: '0.75rem', color: '#64748b', lineHeight: '1.4' }}>
+                          <div style={{ marginBottom: '0.5rem' }}>
+                            ℹ️ <strong>Why this matters:</strong> AI engines like ChatGPT and Perplexity cannot guess 
+                            what your page is about from JavaScript-rendered content alone. This 
+                            script tells them directly — what the page is, what brand it belongs 
+                            to, and what it contains — in a format they can always read.
+                          </div>
+                          <div>
+                            <strong>Where to add it:</strong> Paste this inside the &lt;head&gt; tag of this specific 
+                            page in your website's source code. Ask your developer to add it if 
+                            you don't have direct access. Once added, AI crawlers will pick it up 
+                            within 2–7 days.
+                          </div>
+                        </div>
                         <pre style={{ background: '#1e293b', color: '#f8fafc', padding: '1rem', borderRadius: '0.5rem', overflowX: 'auto', fontSize: '0.8rem', margin: 0 }}>
                           <code>{generatedFixes[url].json_ld}</code>
                         </pre>
