@@ -10,11 +10,11 @@ AI Citation Optimizer helps early-stage brands like Nothing Phone, Attio, and BY
 
 ## Key Features
 
-- **Competitor Advantage Breakdown:** Visualizes visibility gaps between your brand and top competitors across YouTube, Reddit, Editorial Lists, and Wikipedia.
-- **Detailed Optimization Roadmap:** A prioritized action plan generated from your domain's AI citation gaps.
-- **Automated Content Drafting:** Uses Gemini to instantly draft tailored YouTube collaboration pitches, Reddit comments, and PR emails.
-- **Actionable Fix Instructions:** Provides specific problem analysis, step-by-step fixes, and copy-paste JSON-LD schema snippets for missing pages based on URL structures.
-- **Deep Technical Audit:** Simulates an AI indexer using a Headless Chromium instance (via Playwright & CDP) to capture and analyze precise technical layers (Unused JS, Bundle Size, DOM depth, Console Errors) that AI bots struggle with.
+- **Deep Technical AI Audit:** Simulates an AI indexer using a Headless Chromium instance (via Playwright & CDP) to capture and analyze precise technical layers—like Unused JS, JS-to-Text ratio, and DOM depth—that specifically cause AI search bots to fail or time out.
+- **Automated Sitemap-to-Citation Mapping:** Instantly identifies the "Discovery Gap" by cross-referencing your sitemap against real-time AI citations, revealing exactly which high-value pages are being ignored by LLM crawlers.
+- **Actionable AI-Readiness Fixes:** Provides step-by-step technical instructions and generated copy-paste JSON-LD schema snippets to force AI discovery and ensure your content is structured for LLM ingestion.
+- **Instant Outreach Content Drafting:** Uses Gemini to draft tailored collaboration pitches, Reddit comments, and PR emails for specific gaps identified in your optimization roadmap.
+- **Dynamic Growth Projection:** Uses a realistic 50% recovery model to project visibility and citation growth based on technical gap closure and off-page strategic actions.
 
 ## How We Measure & Optimize for AI Crawlers
 
@@ -35,13 +35,15 @@ When you audit a URL, our backend spins up a Headless Chromium browser and attac
 
 Instead of just showing raw data, the tool turns these metrics into immediate action:
 
-- **Guide-First Action Plans:** We use `gemini-2.5-flash` to evaluate the metrics and output a prioritized checklist of what developers need to fix.
+- **LangChain-Powered Reasoning:** The backend agent uses **LangChain** to orchestrate reasoning chains, ensuring that audit instructions are coherent, structured, and context-aware.
+- **Framework-Agnostic Guidance:** Every technical flag (Yellow/Red) triggers a "Guidance to solve the issue" button. This provides a detailed, 4-step implementation plan that works regardless of whether you use React, Next.js, Vue, or a traditional CMS.
 - **Copy-Paste Schema Generation:** If a page is missing context, the app generates custom JSON-LD (e.g., `Product`, `FAQPage`, or `Article`) explicitly tailored to the page's URL path.
 - **Off-Page Strategy:** The dashboard identifies gaps across external channels (Reddit, YouTube) and automatically drafts outreach content to help your brand get cited externally.
 
 ## Architecture
 
 - **Backend**: FastAPI (Python 3.11+)
+- **AI Orchestration**: LangChain (for structured chains and prompt templates)
 - **AI Agent**: Playwright (for rendered HTML analysis) + Gemini 2.5 Flash
 - **Data Provider**: Peec AI API (for citation metrics and domain visibility)
 - **Frontend**: React + Vite (Vanilla CSS Premium Design)
@@ -147,4 +149,4 @@ npm run dev
 2. Review the **Growth Opportunity** and **Competitor Advantage Breakdown** to see where you stand. (Note: Estimated progress in a realistic benchmark shows around 50% improvement for targeted businesses).
 3. Check the **Optimization Roadmap** for high-priority actions and click "Draft Content" to instantly generate outreach emails or comments.
 4. Drill down into specific **Gap Sources** (YouTube, Reddit, Editorial) to identify missed citation opportunities.
-5. In the **Pages Missing** section, click "How to Fix" to get specific, step-by-step instructions and JSON-LD markup to make the page AI-ready.
+5. In the **Pages Missing** section, click "How to Fix" to get specific, step-by-step instructions. In the **Technical Audit Report**, use the "Guidance to solve the issue" buttons for framework-agnostic implementation plans to make the page AI-ready.
