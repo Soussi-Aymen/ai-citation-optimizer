@@ -15,11 +15,13 @@ async def test_audit_metrics():
     print("Testing CrawlabilityAgent Performance Metrics on react.dev...")
     agent = CrawlabilityAgent()
     
-    # Mock the Gemini call to return a stubbed JSON response
-    original_generate = agent.model.generate_content
-    agent.model.generate_content = lambda prompt: type('obj', (object,), {
-        'text': '{"performance_report":{"score":0,"issues":[],"fixes":[]},"sitemap_audit":{"score":0,"analysis":"","improvements":[]},"competitive_analysis":{"competitor_edge":"","gap_to_close":""},"ai_readiness":{"overall_score":0,"estimated_impact":""}}'
-    })()
+    # Mock the LangChain ainvoke call to return a stubbed JSON response
+    async def mock_ainvoke(*args, **kwargs):
+        return type('obj', (object,), {
+            'content': '{"performance_report":{"score":0,"issues":[],"fixes":[]},"sitemap_audit":{"score":0,"analysis":"","improvements":[]},"competitive_analysis":{"competitor_edge":"","gap_to_close":""},"ai_readiness":{"overall_score":0,"estimated_impact":""}}'
+        })()
+    
+    agent.model.ainvoke = mock_ainvoke
 
     try:
         res = await agent.fetch_and_analyze("https://react.dev")
@@ -36,9 +38,9 @@ async def test_audit_metrics():
         assert signals.get('unused_js_pct') is not None, "Unused JS was not measured"
         print("\n✅ Test Passed")
         
-    finally:
-        # Restore the original method
-        agent.model.generate_content = original_generate
+    except Exception as e:
+        print(f"❌ Test Failed: {str(e)}")
+        raise e
 
 if __name__ == "__main__":
     asyncio.run(test_audit_metrics())

@@ -1,9 +1,9 @@
 fastapi
 uvicorn
 playwright==1.48.0
-requests
-google-generativeai
 beautifulsoup4
 lxml
 python-dotenv
 httpx
+langchain
+langchain-google-genai
