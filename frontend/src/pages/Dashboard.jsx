@@ -32,6 +32,11 @@ const Dashboard = () => {
   const [generatingContent, setGeneratingContent] = useState({})
   const [copiedContent, setCopiedContent] = useState({})
   const [activeTab, setActiveTab] = useState('YouTube')
+  const [expandedGuidance, setExpandedGuidance] = useState({})
+
+  const toggleGuidance = (id) => {
+    setExpandedGuidance(prev => ({ ...prev, [id]: !prev[id] }))
+  }
   
   const itemsPerPage = 5
   
@@ -333,25 +338,54 @@ const Dashboard = () => {
 
                                 return (
                                   <>
-                                    <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr' }}>
-                                      <span style={{ color: '#64748b' }}>JS Dependency</span>
-                                      <span>{jsImpactText}</span>
-                                    </div>
-                                    <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr' }}>
-                                      <span style={{ color: '#64748b' }}>Unused JavaScript</span>
-                                      <span>{unusedIcon} {unusedText}</span>
-                                    </div>
-                                    <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr' }}>
-                                      <span style={{ color: '#64748b' }}>JS Bundle Size</span>
-                                      <span>{bundleIcon} {bundleText}</span>
-                                    </div>
-                                    <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr' }}>
-                                      <span style={{ color: '#64748b' }}>Page Load (LCP)</span>
-                                      <span>{lcpIcon} {lcpText}</span>
-                                    </div>
-                                    <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr' }}>
-                                      <span style={{ color: '#64748b' }}>Console Errors</span>
-                                      <span>{errIcon} {errText}</span>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                      {[
+                                        { id: 'js_hydration', label: 'JS Dependency', text: jsImpactText, score: m.js_impact === 'CRITICAL' ? 'Bad' : (m.js_impact === 'MODERATE' ? 'Medium' : 'Good') },
+                                        { id: 'unused_js', label: 'Unused JavaScript', text: `${unusedIcon} ${unusedText}`, score: (m.unused_js_pct > 60) ? 'Bad' : (m.unused_js_pct >= 30 ? 'Medium' : 'Good') },
+                                        { id: 'js_payload', label: 'JS Bundle Size', text: `${bundleIcon} ${bundleText}`, score: (m.js_payload_mb > 3) ? 'Bad' : (m.js_payload_mb >= 1 ? 'Medium' : 'Good') },
+                                        { id: 'lcp', label: 'Page Load (LCP)', text: `${lcpIcon} ${lcpText}`, score: (m.lcp_seconds > 4) ? 'Bad' : (m.lcp_seconds >= 2.5 ? 'Medium' : 'Good') },
+                                        { id: 'console_errors', label: 'Console Errors', text: `${errIcon} ${errText}`, score: (m.console_errors >= 3) ? 'Bad' : (m.console_errors >= 1 ? 'Medium' : 'Good') }
+                                      ].map((row) => {
+                                        const guidanceItem = generatedFixes[url].guidance?.find(g => g.id === row.id);
+                                        const expKey = `${url}_${row.id}`;
+                                        return (
+                                          <div key={row.id}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                              <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr', flex: 1 }}>
+                                                <span style={{ color: '#64748b' }}>{row.label}</span>
+                                                <span style={{ fontWeight: row.score !== 'Good' ? 600 : 400 }}>{row.text}</span>
+                                              </div>
+                                              {guidanceItem && (
+                                                <button 
+                                                  onClick={() => toggleGuidance(expKey)}
+                                                  style={{ 
+                                                    fontSize: '0.7rem', 
+                                                    padding: '0.2rem 0.5rem', 
+                                                    background: row.score === 'Bad' ? '#ef4444' : '#f59e0b',
+                                                    color: 'white',
+                                                    border: 'none',
+                                                    borderRadius: '4px',
+                                                    cursor: 'pointer',
+                                                    fontWeight: 700
+                                                  }}
+                                                >
+                                                  {expandedGuidance[expKey] ? 'Close' : 'How to fix'}
+                                                </button>
+                                              )}
+                                            </div>
+                                            {expandedGuidance[expKey] && guidanceItem && (
+                                              <div className="animate-fade-in" style={{ marginTop: '0.75rem', padding: '0.75rem', background: '#fff', border: '1px solid #fde68a', borderRadius: '0.5rem' }}>
+                                                <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#92400e', marginBottom: '0.5rem' }}>STEPS TO FIX:</div>
+                                                <ul style={{ margin: 0, paddingLeft: '1rem', color: '#78350f', fontSize: '0.8rem' }}>
+                                                  {guidanceItem.steps.map((step, si) => (
+                                                    <li key={si} style={{ marginBottom: '0.25rem' }}>{step}</li>
+                                                  ))}
+                                                </ul>
+                                              </div>
+                                            )}
+                                          </div>
+                                        );
+                                      })}
                                     </div>
                                     <div style={{ marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid #e2e8f0', fontWeight: 'bold', color: '#1e293b' }}>
                                       Overall: {overallText}

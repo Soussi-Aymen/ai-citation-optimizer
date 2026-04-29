@@ -108,8 +108,10 @@ async def generate_fix(request: FixRequest):
         audit_result = await agent.fetch_and_analyze(url, skip_ai=True)
         if "signals" in audit_result:
             fix_data["metrics"] = audit_result["signals"]
+            fix_data["guidance"] = audit_result.get("guidance", [])
         else:
             fix_data["metrics"] = {}
+            fix_data["guidance"] = []
 
         return fix_data
     except Exception as e:

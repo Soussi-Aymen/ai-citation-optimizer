@@ -11,6 +11,11 @@ const PageDetail = () => {
   const [data, setData] = useState(null)
   const [error, setError] = useState('')
   const [currentStep, setCurrentStep] = useState(0)
+  const [expandedGuidance, setExpandedGuidance] = useState({})
+  
+  const toggleGuidance = (id) => {
+    setExpandedGuidance(prev => ({ ...prev, [id]: !prev[id] }))
+  }
   
   const simulationSteps = [
     "Spinning up Chromium Cluster...",
@@ -248,6 +253,61 @@ const PageDetail = () => {
                 <div style={{ fontSize: '0.72rem', color: '#94a3b8', marginTop: '0.2rem' }}>chars (pre-JS)</div>
               </div>
             )}
+          </div>
+        </section>
+      )}
+
+      {/* 0.1 Technical Optimization Guidance — Only shows Medium/Bad scores */}
+      {data.guidance && data.guidance.length > 0 && (
+        <section className="glass-card" style={{ marginBottom: '2rem', background: '#fffbeb', border: '1px solid #fde68a' }}>
+          <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#92400e', marginBottom: '1.5rem' }}>
+            <Activity size={20} color="#92400e" /> Recommended Chromium Optimizations
+          </h3>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem' }}>
+            {data.guidance.map((item, i) => (
+              <div key={i} style={{ padding: '1rem', background: '#ffffff80', borderRadius: '0.75rem', borderLeft: `5px solid ${item.score === 'Bad' ? '#ef4444' : '#f59e0b'}` }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.4rem' }}>
+                      <span style={{ fontSize: '0.7rem', fontWeight: 800, color: '#92400e', letterSpacing: '0.05em' }}>{item.metric.toUpperCase()}</span>
+                      <span style={{ fontSize: '0.65rem', padding: '0.2rem 0.5rem', borderRadius: '1rem', background: item.score === 'Bad' ? '#fee2e2' : '#fef3c7', color: item.score === 'Bad' ? '#ef4444' : '#b45309', fontWeight: 800 }}>{item.score.toUpperCase()}</span>
+                    </div>
+                    <div style={{ fontSize: '0.95rem', fontWeight: 600, color: '#78350f' }}>{item.advice}</div>
+                  </div>
+                  <button 
+                    onClick={() => toggleGuidance(item.id)}
+                    className="btn-fix"
+                    style={{ 
+                      fontSize: '0.75rem', 
+                      padding: '0.4rem 0.8rem', 
+                      background: item.score === 'Bad' ? '#ef4444' : '#f59e0b',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '0.5rem',
+                      cursor: 'pointer',
+                      fontWeight: 700,
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                      transition: 'transform 0.2s'
+                    }}
+                  >
+                    {expandedGuidance[item.id] ? 'Close' : 'Guidance to solve the issue'}
+                  </button>
+                </div>
+                
+                {expandedGuidance[item.id] && (
+                  <div className="animate-fade-in" style={{ marginTop: '1.25rem', padding: '1rem', background: 'white', borderRadius: '0.5rem', border: '1px solid #fde68a' }}>
+                    <h4 style={{ fontSize: '0.8rem', color: '#92400e', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      <Target size={14} /> IMPLEMENTATION STEPS
+                    </h4>
+                    <ul style={{ margin: 0, paddingLeft: '1.2rem', color: '#78350f' }}>
+                      {item.steps.map((step, si) => (
+                        <li key={si} style={{ fontSize: '0.88rem', marginBottom: '0.5rem', lineHeight: '1.4' }}>{step}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         </section>
       )}
