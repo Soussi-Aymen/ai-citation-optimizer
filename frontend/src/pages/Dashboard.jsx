@@ -269,7 +269,7 @@ const Dashboard = () => {
                         onClick={() => handleGenerateFix(url)}
                         disabled={generatingFix[url]}
                       >
-                        {generatingFix[url] ? 'Generating...' : 'How to Fix →'}
+                        {generatingFix[url] ? 'Analyzing...' : 'How to fix'}
                       </button>
                     </div>
                     
@@ -369,7 +369,7 @@ const Dashboard = () => {
                                                     fontWeight: 700
                                                   }}
                                                 >
-                                                  {expandedGuidance[expKey] ? 'Close' : 'How to fix'}
+                                                  {expandedGuidance[expKey] ? 'Close' : 'Guidance to solve'}
                                                 </button>
                                               )}
                                             </div>
