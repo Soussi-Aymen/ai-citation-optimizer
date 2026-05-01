@@ -18,7 +18,7 @@ AI Citation Optimizer helps early-stage brands like Nothing Phone, Attio, and BY
 
 ## How We Measure & Optimize for AI Crawlers
 
-Unlike traditional search engines, AI search bots (like ChatGPT-Search, Perplexity, and Gemini) have much stricter timeouts and struggle with heavy client-side rendering. To help websites win in the AI era, our solution measures performance across several strict technical layers and prescribes targeted fixes.
+Unlike traditional search engines, AI search bots (like ChatGPT-Search, Perplexity, and Gemini) have much stricter timeouts and struggle with heavy client-side rendering. Our tool identifies these blockers through a **Technical Health Matrix** and prescribes targeted fixes.
 
 ### 1. The Measurement Layers (Playwright + CDP)
 
@@ -35,10 +35,9 @@ When you audit a URL, our backend spins up a Headless Chromium browser and attac
 
 Instead of just showing raw data, the tool turns these metrics into immediate action:
 
-- **LangChain-Powered Reasoning:** The backend agent uses **LangChain** to orchestrate reasoning chains, ensuring that audit instructions are coherent, structured, and context-aware.
-- **Framework-Agnostic Guidance:** Every technical flag (Yellow/Red) triggers a "Guidance to solve the issue" button. This provides a detailed, 4-step implementation plan that works regardless of whether you use React, Next.js, Vue, or a traditional CMS.
-- **Copy-Paste Schema Generation:** If a page is missing context, the app generates custom JSON-LD (e.g., `Product`, `FAQPage`, or `Article`) explicitly tailored to the page's URL path.
-- **Off-Page Strategy:** The dashboard identifies gaps across external channels (Reddit, YouTube) and automatically drafts outreach content to help your brand get cited externally.
+- **Unified Action Plan:** Every audit generates a single, comprehensive "General Chromium Optimization Tips" section. This provides a framework-agnostic implementation plan to solve all flagged technical issues (JS bloat, LCP, console errors) in one centralized view.
+- **Deep Technical Health Matrix:** Replaces generic scores with a detailed list of bot-centric metrics, including JS Hydration impact, Unused JS coverage, and LCP, with explicit 🔴/🟡/✅ status indicators.
+- **Copy-Paste Schema Generation:** Automatically generates custom JSON-LD (e.g., `Product`, `Organization`) tailored to the specific URL path to accelerate AI entity recognition.
 
 ## Architecture
 
@@ -46,7 +45,9 @@ Instead of just showing raw data, the tool turns these metrics into immediate ac
 - **AI Orchestration**: LangChain (for structured chains and prompt templates)
 - **AI Agent**: Playwright (for rendered HTML analysis) + Gemini 2.5 Flash
 - **Data Provider**: Peec AI API (for citation metrics and domain visibility)
-- **Frontend**: React + Vite (Vanilla CSS Premium Design)
+- **Frontend**: React + Vite (Tailwind CSS Premium Design)
+- **Code Quality**: Integrated Linters for both Backend and Frontend
+- **Progress Tracking**: Dynamic visibility progress visualization at the top of the dashboard
 
 ## Setup Instructions
 
