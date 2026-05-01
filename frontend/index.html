@@ -2,9 +2,58 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>frontend</title>
+    <title>AI Citation Optimizer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              brand: {
+                primary: '#3b82f6',
+                secondary: '#6366f1',
+                danger: '#ef4444',
+                success: '#22c55e',
+                warning: '#eab308',
+              }
+            },
+            animation: {
+              'fade-in': 'fadeIn 0.4s ease-out forwards',
+            },
+            keyframes: {
+              fadeIn: {
+                '0%': { opacity: '0', transform: 'translateY(5px)' },
+                '100%': { opacity: '1', transform: 'translateY(0)' },
+              }
+            }
+          }
+        }
+      }
+    </script>
+    <style type="text/tailwindcss">
+      @layer base {
+        body {
+          @apply bg-slate-50 text-slate-900 antialiased;
+          font-family: "Inter", sans-serif;
+        }
+      }
+      @layer components {
+        .glass-card {
+          @apply rounded-xl border border-slate-200 bg-white p-6 shadow-sm transition-all duration-300 hover:border-blue-500 hover:shadow-md;
+        }
+        .btn-primary {
+          @apply inline-flex cursor-pointer items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 font-semibold text-white transition-all hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50;
+        }
+        .btn-secondary {
+          @apply inline-flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-slate-100 px-5 py-2.5 font-semibold text-slate-600 transition-all hover:bg-slate-200;
+        }
+        .stat-box {
+          @apply border-l-4 border-blue-500;
+        }
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
