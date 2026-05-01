@@ -1,19 +1,51 @@
 import React, { useState, useEffect } from 'react'
 import axios from 'axios'
-import { Search, AlertCircle, TrendingUp, ArrowRight, ChevronLeft, ChevronRight, BarChart2, Zap, ListChecks, Globe, CheckCircle2, Trophy, ShieldCheck, ShieldX, Copy, Check, FileCode, Info } from 'lucide-react'
+import {
+  Search,
+  AlertCircle,
+  TrendingUp,
+  ArrowRight,
+  ChevronLeft,
+  ChevronRight,
+  BarChart2,
+  Zap,
+  ListChecks,
+  Globe,
+  CheckCircle2,
+  Trophy,
+  Copy,
+  Check,
+  FileCode,
+  Cpu,
+  ExternalLink,
+  Mail,
+  MessageSquare,
+  PlayCircle,
+  FileText,
+} from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
 const renderMarkdownLinks = (text) => {
-  if (!text) return null;
-  const parts = text.split(/(\[[^\]]+\]\([^)]+\))/g);
+  if (!text) return null
+  const parts = text.split(/(\[[^\]]+\]\([^)]+\))/g)
   return parts.map((part, i) => {
-    const match = part.match(/\[([^\]]+)\]\(([^)]+)\)/);
+    const match = part.match(/\[([^\]]+)\]\(([^)]+)\)/)
     if (match) {
-      return <a key={i} href={match[2]} target="_blank" rel="noreferrer" style={{color: '#3b82f6', textDecoration: 'underline'}}>{match[1]}</a>;
+      return (
+        <a
+          key={i}
+          href={match[2]}
+          target="_blank"
+          rel="noreferrer"
+          className="text-blue-600 underline hover:text-blue-800"
+        >
+          {match[1]}
+        </a>
+      )
     }
-    return <span key={i}>{part}</span>;
-  });
-};
+    return <span key={i}>{part}</span>
+  })
+}
 
 const Dashboard = () => {
   const [domain, setDomain] = useState('')
@@ -22,24 +54,24 @@ const Dashboard = () => {
   const [error, setError] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const [benchmarkData, setBenchmarkData] = useState(null)
-  
-  // New States
+
   const [generatedFixes, setGeneratedFixes] = useState({})
   const [generatingFix, setGeneratingFix] = useState({})
-  const [copiedFix, setCopiedFix] = useState({})
-  
+  const [expandedFix, setExpandedFix] = useState({})
+  const [expandedGuidance, setExpandedGuidance] = useState({})
+
+  const toggleGuidance = (url, metricId) => {
+    const key = `${url}-${metricId}`
+    setExpandedGuidance((prev) => ({ ...prev, [key]: !prev[key] }))
+  }
+
   const [generatedContent, setGeneratedContent] = useState({})
   const [generatingContent, setGeneratingContent] = useState({})
   const [copiedContent, setCopiedContent] = useState({})
+  const [copiedFix, setCopiedFix] = useState({})
   const [activeTab, setActiveTab] = useState('YouTube')
-  const [expandedGuidance, setExpandedGuidance] = useState({})
 
-  const toggleGuidance = (id) => {
-    setExpandedGuidance(prev => ({ ...prev, [id]: !prev[id] }))
-  }
-  
   const itemsPerPage = 5
-  
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -52,7 +84,7 @@ const Dashboard = () => {
   const fetchGaps = async (e) => {
     if (e) e.preventDefault()
     if (!domain) return
-    
+
     setLoading(true)
     setError('')
     setData(null)
@@ -62,7 +94,7 @@ const Dashboard = () => {
       setData(response.data)
       localStorage.setItem('last_analyzed_domain', domain)
       setCurrentPage(1)
-      
+
       const benchResponse = await axios.get(`http://localhost:8000/api/benchmark?domain=${domain}`)
       setBenchmarkData(benchResponse.data)
     } catch (err) {
@@ -73,38 +105,49 @@ const Dashboard = () => {
     }
   }
 
-  const handleGenerateFix = async (url) => {
-    setGeneratingFix(prev => ({...prev, [url]: true}))
+  const handleHowToFix = async (url) => {
+    if (generatedFixes[url]) {
+      setGeneratedFixes((prev) => {
+        const next = { ...prev }
+        delete next[url]
+        return next
+      })
+      return
+    }
+    setGeneratingFix((prev) => ({ ...prev, [url]: true }))
     try {
       const res = await axios.post('http://localhost:8000/api/generate-fix', { url })
-      setGeneratedFixes(prev => ({...prev, [url]: res.data}))
-    } catch(err) {
+      setGeneratedFixes((prev) => ({ ...prev, [url]: res.data }))
+    } catch (err) {
       console.error(err)
     } finally {
-      setGeneratingFix(prev => ({...prev, [url]: false}))
+      setGeneratingFix((prev) => ({ ...prev, [url]: false }))
     }
   }
 
   const copyToClipboard = (text, key, type = 'fix') => {
     navigator.clipboard.writeText(text)
     if (type === 'fix') {
-      setCopiedFix(prev => ({...prev, [key]: true}))
-      setTimeout(() => setCopiedFix(prev => ({...prev, [key]: false})), 2000)
+      setCopiedFix((prev) => ({ ...prev, [key]: true }))
+      setTimeout(() => setCopiedFix((prev) => ({ ...prev, [key]: false })), 2000)
     } else {
-      setCopiedContent(prev => ({...prev, [key]: true}))
-      setTimeout(() => setCopiedContent(prev => ({...prev, [key]: false})), 2000)
+      setCopiedContent((prev) => ({ ...prev, [key]: true }))
+      setTimeout(() => setCopiedContent((prev) => ({ ...prev, [key]: false })), 2000)
     }
   }
 
   const handleGenerateContent = async (actionType, actionText, key) => {
-    setGeneratingContent(prev => ({...prev, [key]: true}))
+    setGeneratingContent((prev) => ({ ...prev, [key]: true }))
     try {
-      const res = await axios.post('http://localhost:8000/api/generate-content', { action_type: actionType, action_text: actionText })
-      setGeneratedContent(prev => ({...prev, [key]: res.data.content}))
-    } catch(e) {
+      const res = await axios.post('http://localhost:8000/api/generate-content', {
+        action_type: actionType,
+        action_text: actionText,
+      })
+      setGeneratedContent((prev) => ({ ...prev, [key]: res.data.content }))
+    } catch (e) {
       console.error(e)
     } finally {
-      setGeneratingContent(prev => ({...prev, [key]: false}))
+      setGeneratingContent((prev) => ({ ...prev, [key]: false }))
     }
   }
 
@@ -115,540 +158,625 @@ const Dashboard = () => {
 
   return (
     <div className="animate-fade-in">
-      <header style={{ marginBottom: '2.5rem' }}>
-        <h1>AI Search Dashboard</h1>
-        <p className="text-muted">Analyze your website's visibility and detect citation gaps in AI models.</p>
+      <header className="mb-10">
+        <h1 className="mb-2 text-4xl font-extrabold tracking-tight text-slate-900">
+          AI Search Dashboard
+        </h1>
+        <p className="text-lg text-slate-500">
+          Analyze your website's visibility and detect citation gaps in AI models.
+        </p>
       </header>
 
-      <section className="glass-card" style={{ marginBottom: '2rem' }}>
-        <form onSubmit={fetchGaps} style={{ display: 'flex', gap: '1rem' }}>
-          <div style={{ flex: 1, position: 'relative' }}>
-            <Search style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} size={18} />
-            <input 
-              type="text" 
-              placeholder="Enter your domain (e.g. peec.ai)" 
+      <section className="glass-card mb-8">
+        <form onSubmit={fetchGaps} className="flex gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute top-1/2 left-4 -translate-y-1/2 text-slate-400" size={20} />
+            <input
+              type="text"
+              placeholder="Enter your domain (e.g. nothing.tech)"
               value={domain}
               onChange={(e) => setDomain(e.target.value)}
-              style={{ paddingLeft: '2.5rem', width: '100%', height: '48px', borderRadius: '0.5rem', border: '1px solid var(--border-subtle)', background: '#fff' }}
+              className="h-12 w-full rounded-lg border border-slate-200 bg-white pr-4 pl-12 transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
               required
             />
           </div>
-          <button type="submit" className="btn-primary" disabled={loading} style={{ height: '48px' }}>
+          <button type="submit" className="btn-primary h-12" disabled={loading}>
             {loading ? 'Analyzing...' : 'Run Analysis'}
           </button>
         </form>
-        {error && <p style={{ color: '#ef4444', marginTop: '1rem', fontSize: '0.9rem' }}>{error}</p>}
+        {error && <p className="mt-4 text-sm font-medium text-red-500">{error}</p>}
       </section>
 
       {data && (
         <>
-          <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
-            <div className="glass-card stat-box" style={{ borderColor: '#3b82f6', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#64748b', fontSize: '0.9rem', fontWeight: 600 }}>
+          <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+            <div className="glass-card stat-box border-blue-500 p-4">
+              <div className="mb-1 flex items-center gap-2 text-sm font-semibold text-slate-500">
                 <Globe size={16} /> Sitemap Pages
               </div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#1e293b' }}>{data.total_sitemap_pages}</div>
+              <div className="text-2xl font-bold text-slate-900">{data.total_sitemap_pages}</div>
             </div>
 
-            <div className="glass-card stat-box" style={{ borderColor: '#22c55e', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#16a34a', fontSize: '0.9rem', fontWeight: 600 }}>
+            <div className="glass-card stat-box border-emerald-500 p-4">
+              <div className="mb-1 flex items-center gap-2 text-sm font-semibold text-emerald-600">
                 <CheckCircle2 size={16} /> Cited by AI
               </div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#16a34a' }}>{data.total_cited_pages}</div>
+              <div className="text-2xl font-bold text-emerald-600">{data.total_cited_pages}</div>
             </div>
 
-            <div className="glass-card stat-box" style={{ borderColor: '#ef4444', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#ef4444', fontSize: '0.9rem', fontWeight: 600 }}>
+            <div className="glass-card stat-box border-red-500 p-4">
+              <div className="mb-1 flex items-center gap-2 text-sm font-semibold text-red-500">
                 <AlertCircle size={16} /> Citation Gaps
               </div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#ef4444' }}>
+              <div className="text-2xl font-bold text-red-500">
                 {(data.total_sitemap_pages || 0) - (data.total_cited_pages || 0)}
               </div>
             </div>
 
-            <div className="glass-card stat-box" style={{ borderColor: '#eab308', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#ca8a04', fontSize: '0.9rem', fontWeight: 600 }}>
-                <Zap size={16} fill="#eab308" /> Perf. Ranking
+            <div className="glass-card stat-box border-amber-500 p-4">
+              <div className="mb-1 flex items-center gap-2 text-sm font-semibold text-amber-600">
+                <Zap size={16} className="fill-amber-500" /> Perf. Ranking
               </div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#ca8a04' }}>{data.performance_score}/100</div>
-              <div style={{ fontSize: '0.72rem', color: '#94a3b8' }}>Based on citation coverage</div>
+              <div className="text-2xl font-bold text-amber-600">{data.performance_score}/100</div>
+              <div className="text-[10px] text-slate-400">Based on citation coverage</div>
             </div>
 
-            {data.citation_coverage_pct !== undefined && (
-              <div className="glass-card stat-box" style={{ borderColor: '#a855f7', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#9333ea', fontSize: '0.9rem', fontWeight: 600 }}>
-                  <BarChart2 size={16} /> AI Coverage
-                </div>
-                <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#9333ea' }}>{data.citation_coverage_pct}%</div>
-                <div style={{ fontSize: '0.72rem', color: '#94a3b8' }}>of sitemap cited by AI</div>
+            <div className="glass-card stat-box border-purple-500 p-4">
+              <div className="mb-1 flex items-center gap-2 text-sm font-semibold text-purple-600">
+                <BarChart2 size={16} /> AI Coverage
               </div>
-            )}
+              <div className="text-2xl font-bold text-purple-600">
+                {data.citation_coverage_pct}%
+              </div>
+              <div className="text-[10px] text-slate-400">of sitemap cited by AI</div>
+            </div>
           </div>
 
           {benchmarkData && (
-            <div className="animate-fade-in" style={{ marginBottom: '2rem' }}>
-              <section className="glass-card" style={{ border: '1px solid #e2e8f0' }}>
-                <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <ListChecks size={20} color="#3b82f6" /> Your Action Plan to Beat Competitors in AI Search
-                </h3>
-                <div style={{ marginTop: '1.5rem' }}>
-                  {benchmarkData.roadmap.map((item, index) => {
-                    const badgeColor = item.priority === 'HIGH' ? '#ef4444' : item.priority === 'MEDIUM' ? '#eab308' : '#cbd5e1';
-                    return (
-                    <div key={index} style={{ marginBottom: '1.5rem', padding: '1.5rem', background: '#f8fafc', borderRadius: '0.5rem', border: '1px solid #e2e8f0' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
-                        <span style={{ fontSize: '0.85rem', fontWeight: 700 }}>{item.priority_emoji} {item.priority} PRIORITY</span>
-                        <span style={{ color: '#64748b', margin: '0 0.5rem' }}>|</span>
-                        <span style={{ fontSize: '1rem', fontWeight: 600, color: '#1e293b' }}>{item.title}</span>
-                      </div>
-                      
-                      <div style={{ fontSize: '0.95rem', color: '#334155', marginBottom: '1rem' }}>
-                        {item.gap_percentage}% of {item.channel.toLowerCase()} results cite competitors but NOT {benchmarkData.own_brand_name}.
-                      </div>
-                      
-                      <div style={{ fontWeight: 600, fontSize: '0.9rem', marginBottom: '0.5rem' }}>What to do:</div>
-                      <ul style={{ paddingLeft: '1.5rem', fontSize: '0.9rem', color: '#334155', marginBottom: '1.5rem' }}>
-                        {item.actions.map((act, i) => (
-                           <li key={i} style={{ marginBottom: '0.25rem' }}>{renderMarkdownLinks(act.text)}</li>
-                        ))}
-                      </ul>
-                      
-                      <div style={{ display: 'flex', gap: '1rem' }}>
-                        {item.actions.map((act, i) => (
-                          <div key={`act_${i}`}>
-                            <button 
-                              className="btn-primary" 
-                              style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem', background: '#fff', color: '#3b82f6', border: '1px solid #3b82f6' }}
-                              onClick={() => handleGenerateContent(item.type, act.text, `roadmap_${index}_${i}`)}
-                              disabled={generatingContent[`roadmap_${index}_${i}`]}
-                            >
-                              {generatingContent[`roadmap_${index}_${i}`] ? 'Generating...' : `Draft Content ${i+1} →`}
-                            </button>
-                            {generatedContent[`roadmap_${index}_${i}`] && (
-                              <div style={{ marginTop: '1rem', padding: '1rem', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '0.5rem', width: '100%', maxWidth: '600px' }}>
-                                <p style={{ whiteSpace: 'pre-wrap', fontSize: '0.85rem', marginBottom: '0.75rem', color: '#334155' }}>
-                                  {generatedContent[`roadmap_${index}_${i}`]}
-                                </p>
-                                <button 
-                                  onClick={() => copyToClipboard(generatedContent[`roadmap_${index}_${i}`], `roadmap_${index}_${i}`, 'content')}
-                                  style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.8rem', color: '#64748b', background: 'none', border: 'none', cursor: 'pointer' }}
-                                >
-                                  {copiedContent[`roadmap_${index}_${i}`] ? <Check size={14} color="#10b981" /> : <Copy size={14} />} 
-                                  {copiedContent[`roadmap_${index}_${i}`] ? 'Copied!' : 'Copy'}
-                                </button>
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
+            <div className="mb-8 space-y-6">
+              <section className="rounded-xl border border-blue-100 bg-blue-50 p-6 shadow-sm">
+                <h3 className="mb-6 text-xl font-bold text-slate-900">Growth Opportunity</h3>
+                <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
+                  <div>
+                    <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">
+                      CURRENT VISIBILITY
+                    </span>
+                    <div className="text-2xl font-black text-slate-900">
+                      {benchmarkData.current.visibility_score}%
                     </div>
-                  )})}
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-bold tracking-wider text-blue-400 uppercase">
+                      TARGET VISIBILITY
+                    </span>
+                    <div className="flex items-center gap-2 text-2xl font-black text-blue-600">
+                      {benchmarkData.estimated.visibility_score}% <TrendingUp size={20} />
+                    </div>
+                    <p className="mt-1 text-[10px] text-slate-500">if top 3 actions completed</p>
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">
+                      CURRENT CITATIONS
+                    </span>
+                    <div className="text-2xl font-black text-slate-900">
+                      {benchmarkData.current.citation_count}
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-bold tracking-wider text-blue-400 uppercase">
+                      TARGET CITATIONS
+                    </span>
+                    <div className="flex items-center gap-2 text-2xl font-black text-blue-600">
+                      {benchmarkData.estimated.citation_count} <TrendingUp size={20} />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-8 border-t border-blue-100 pt-8">
+                  <h4 className="mb-6 text-[10px] font-bold tracking-[0.2em] text-blue-500 uppercase">
+                    WHERE COMPETITORS HAVE THE ADVANTAGE OVER YOU (last 30 days)
+                  </h4>
+                  <div className="space-y-4">
+                    {benchmarkData.channel_gaps.map((cg, i) => (
+                      <div
+                        key={i}
+                        className="flex flex-col gap-4 border-b border-blue-100 pb-4 last:border-0 lg:flex-row lg:items-center lg:justify-between lg:pb-0"
+                      >
+                        <div className="w-32 font-bold text-slate-700">{cg.channel}</div>
+                        <div className="flex flex-1 flex-wrap items-center gap-6">
+                          {cg.competitors.map((comp, idx) => (
+                            <div key={idx} className="flex items-center gap-2">
+                              <span className="text-sm font-medium text-slate-500">
+                                {comp.name}
+                              </span>
+                              <div className="flex items-center gap-1 font-mono text-xs">
+                                <span className="text-slate-300">████████</span>
+                                <span className="font-bold text-slate-700">{comp.visibility}%</span>
+                              </div>
+                            </div>
+                          ))}
+                          <div className="flex items-center gap-2 rounded-lg bg-orange-50 px-3 py-1 ring-1 ring-orange-200">
+                            <span className="text-sm font-bold text-orange-600">{cg.own.name}</span>
+                            <div className="flex items-center gap-1 font-mono text-xs">
+                              <span className="text-orange-200">░░</span>
+                              <span className="font-black text-orange-600">
+                                {cg.own.visibility}%
+                              </span>
+                            </div>
+                            <span className="text-[10px] font-bold text-orange-400">
+                              ← You are here
+                            </span>
+                          </div>
+                        </div>
+                        <div
+                          className={`text-right text-[10px] font-black tracking-widest ${
+                            cg.gap_label === 'CRITICAL'
+                              ? 'text-red-600'
+                              : cg.gap_label === 'HIGH'
+                                ? 'text-orange-600'
+                                : 'text-amber-600'
+                          }`}
+                        >
+                          Gap: {cg.gap_label}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </section>
             </div>
           )}
 
-          <section className="glass-card" style={{ marginBottom: '2rem' }}>
-            <h3>Your Pages Missing from AI Answers</h3>
-            <p className="text-muted" style={{ marginBottom: '1.5rem' }}>These pages exist on your sitemap but AI engines like ChatGPT and Perplexity are not citing them. Click 'How to Fix' on any page for a specific action plan.</p>
-            
-            <div style={{ border: '1px solid var(--border-subtle)', borderRadius: '0.5rem', overflow: 'hidden' }}>
+          {benchmarkData && (
+            <section className="mb-8 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+              <div className="border-b border-slate-200 bg-slate-50 px-6 py-4">
+                <h3 className="flex items-center gap-2 text-lg font-bold text-slate-900">
+                  <ListChecks className="text-blue-500" size={24} />
+                  Your Action Plan to Beat Competitors in AI Search
+                </h3>
+              </div>
+              <div className="divide-y divide-slate-100 p-6">
+                {benchmarkData.roadmap.map((item, index) => (
+                  <div key={index} className="py-6 first:pt-0 last:pb-0">
+                    <div className="mb-4 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <span
+                          className={`rounded-full px-3 py-1 text-[10px] font-black tracking-wider uppercase ${
+                            item.priority === 'HIGH'
+                              ? 'bg-red-100 text-red-600'
+                              : item.priority === 'MEDIUM'
+                                ? 'bg-amber-100 text-amber-600'
+                                : 'bg-slate-100 text-slate-500'
+                          }`}
+                        >
+                          {item.priority_emoji} {item.priority} PRIORITY
+                        </span>
+                        <h4 className="text-lg font-bold text-slate-800">{item.title}</h4>
+                      </div>
+                      <div className="text-sm font-bold text-slate-400">
+                        Gap: {item.gap_percentage}%
+                      </div>
+                    </div>
+
+                    <p className="mb-6 text-slate-600">
+                      <strong>{item.gap_percentage}%</strong> of {item.channel.toLowerCase()}{' '}
+                      results cite competitors but NOT {benchmarkData.own_brand_name}.
+                    </p>
+
+                    <div className="mb-6 rounded-lg bg-slate-50 p-4 ring-1 ring-slate-100">
+                      <h5 className="mb-3 text-xs font-bold tracking-widest text-slate-400 uppercase">
+                        What to do:
+                      </h5>
+                      <ul className="space-y-3">
+                        {item.actions.map((act, i) => (
+                          <li
+                            key={i}
+                            className="flex items-start gap-3 text-sm leading-relaxed text-slate-700"
+                          >
+                            <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-blue-500" />
+                            <div className="flex-1">
+                              {renderMarkdownLinks(act.text)}
+                              {act.url && (
+                                <a
+                                  href={act.url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="ml-2 inline-flex items-center gap-1 text-blue-500 hover:underline"
+                                >
+                                  [link] <ExternalLink size={12} />
+                                </a>
+                              )}
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    <div className="flex flex-wrap gap-3">
+                      {item.actions.map((act, i) => {
+                        const contentKey = `roadmap_${index}_${i}`
+                        const isYouTube = item.channel.toLowerCase().includes('youtube')
+                        const isReddit = item.channel.toLowerCase().includes('reddit')
+
+                        return (
+                          <div key={contentKey} className="w-full sm:w-auto">
+                            <button
+                              onClick={() => handleGenerateContent(item.type, act.text, contentKey)}
+                              disabled={generatingContent[contentKey]}
+                              className="btn-secondary w-full justify-center py-2 text-xs"
+                            >
+                              {generatingContent[contentKey] ? (
+                                'Generating...'
+                              ) : (
+                                <>
+                                  {isYouTube ? (
+                                    <PlayCircle size={14} />
+                                  ) : isReddit ? (
+                                    <MessageSquare size={14} />
+                                  ) : (
+                                    <FileText size={14} />
+                                  )}
+                                  Draft{' '}
+                                  {isYouTube ? 'Video Script' : isReddit ? 'Reddit Post' : 'Pitch'}{' '}
+                                  {i + 1} →
+                                </>
+                              )}
+                            </button>
+                            {generatedContent[contentKey] && (
+                              <div className="mt-4 rounded-lg border border-blue-100 bg-blue-50/50 p-4">
+                                <div className="mb-3 flex items-center justify-between">
+                                  <span className="text-[10px] font-bold tracking-widest text-blue-500 uppercase">
+                                    GEMINI DRAFT
+                                  </span>
+                                  <button
+                                    onClick={() =>
+                                      copyToClipboard(
+                                        generatedContent[contentKey],
+                                        contentKey,
+                                        'content',
+                                      )
+                                    }
+                                    className="flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:text-blue-800"
+                                  >
+                                    {copiedContent[contentKey] ? (
+                                      <Check size={14} />
+                                    ) : (
+                                      <Copy size={14} />
+                                    )}
+                                    {copiedContent[contentKey] ? 'Copied!' : 'Copy Draft'}
+                                  </button>
+                                </div>
+                                <div className="text-sm leading-relaxed whitespace-pre-wrap text-slate-700">
+                                  {generatedContent[contentKey]}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          <section className="glass-card mb-8">
+            <h3 className="mb-2 text-xl font-bold text-slate-900">
+              Your Pages Missing from AI Answers
+            </h3>
+            <p className="mb-6 text-sm text-slate-500">
+              These pages exist on your sitemap but AI engines like ChatGPT and Perplexity are not
+              citing them. Click 'How to Fix' on any page for a specific action plan.
+            </p>
+
+            <div className="overflow-hidden rounded-xl border border-slate-200">
               {currentItems.length > 0 ? (
                 currentItems.map((url, index) => (
-                  <div key={index} style={{ borderBottom: index === currentItems.length - 1 ? 'none' : '1px solid var(--border-subtle)', background: index % 2 === 0 ? '#fff' : '#f8fafc' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', minWidth: 0 }}>
-                        <AlertCircle size={18} color="#ef4444" style={{ flexShrink: 0 }} />
-                        <span style={{ fontSize: '0.9rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: '#334155' }}>
-                          {url}
-                        </span>
+                  <div
+                    key={index}
+                    className={`border-b border-slate-100 last:border-0 ${
+                      index % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between p-4">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <AlertCircle className="flex-shrink-0 text-red-500" size={18} />
+                        <span className="truncate font-mono text-sm text-slate-600">{url}</span>
                       </div>
-                      <button 
-                        className="btn-primary" 
-                        style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem', flexShrink: 0 }}
-                        onClick={() => handleGenerateFix(url)}
+                      <button
+                        onClick={() => handleHowToFix(url)}
                         disabled={generatingFix[url]}
+                        className={`ml-4 flex-shrink-0 rounded-lg px-4 py-2 text-xs font-bold transition-all ${
+                          generatedFixes[url]
+                            ? 'bg-slate-100 text-slate-600'
+                            : 'bg-blue-600 text-white hover:bg-blue-700'
+                        }`}
                       >
-                        {generatingFix[url] ? 'Analyzing...' : 'How to fix'}
+                        {generatingFix[url]
+                          ? 'Analyzing...'
+                          : generatedFixes[url]
+                            ? 'Close Plan'
+                            : 'How to Fix →'}
                       </button>
                     </div>
-                    
-                    {/* Expandable Fix Panel */}
-                    {generatedFixes[url] && (
-                      <div style={{ padding: '1.5rem', background: '#fff', borderTop: '1px solid var(--border-subtle)', borderLeft: '4px solid #3b82f6' }}>
-                        <p style={{ fontWeight: 'bold', fontSize: '0.9rem', marginBottom: '0.5rem', color: '#1e293b' }}>The Problem</p>
-                        <p style={{ fontSize: '0.85rem', color: '#475569', marginBottom: '1.5rem' }}>{generatedFixes[url].problem}</p>
-                        
-                        <p style={{ fontWeight: 'bold', fontSize: '0.9rem', marginBottom: '0.5rem', color: '#1e293b' }}>What you need to do</p>
-                        <ol style={{ fontSize: '0.85rem', color: '#475569', marginBottom: '1.5rem', paddingLeft: '1.5rem' }}>
-                          {generatedFixes[url].checklist.map((item, i) => <li key={i} style={{ marginBottom: '0.25rem' }}>{item}</li>)}
-                        </ol>
-                        
-                        {/* New Metric Grid */}
-                        {generatedFixes[url].metrics && (
-                          <div style={{ marginBottom: '1.5rem', padding: '1rem', border: '1px solid #e2e8f0', borderRadius: '0.5rem', background: '#f8fafc' }}>
-                            <p style={{ fontWeight: 'bold', fontSize: '0.9rem', color: '#1e293b', marginBottom: '0.75rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.5rem', margin: '0 0 0.75rem 0' }}>Page Audit Result</p>
-                            
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.85rem' }}>
-                              {(() => {
-                                const m = generatedFixes[url].metrics;
-                                let redCount = 0;
-                                
-                                // JS Dependency
-                                const jsImpactText = m.js_impact === 'CRITICAL' ? '🔴 CRITICAL — heavy JS dependency' : (m.js_impact === 'MODERATE' ? '🟡 Moderate JS dependency' : '✅ Low JS dependency');
-                                if (m.js_impact === 'CRITICAL') redCount++;
-                                
-                                // Unused JS
-                                let unusedText = 'Unable to measure';
-                                let unusedIcon = '⚪';
-                                if (m.unused_js_pct !== null && m.unused_js_pct !== undefined) {
-                                  if (m.unused_js_pct > 60) { unusedIcon = '🔴'; unusedText = `${m.unused_js_pct}% unused (dead code blocking crawlers)`; redCount++; }
-                                  else if (m.unused_js_pct >= 30) { unusedIcon = '🟡'; unusedText = `${m.unused_js_pct}% unused JS is downloaded but never executed`; }
-                                  else { unusedIcon = '✅'; unusedText = `${m.unused_js_pct}% unused JS — efficient`; }
-                                }
-                                
-                                // Bundle Size
-                                let bundleText = 'Unable to measure';
-                                let bundleIcon = '⚪';
-                                if (m.js_payload_mb !== null && m.js_payload_mb !== undefined) {
-                                  if (m.js_payload_mb > 3) { bundleIcon = '🔴'; bundleText = `${m.js_payload_mb}MB — crawlers likely time out`; redCount++; }
-                                  else if (m.js_payload_mb >= 1) { bundleIcon = '🟡'; bundleText = `${m.js_payload_mb}MB — may slow AI crawler indexing`; }
-                                  else { bundleIcon = '✅'; bundleText = `${m.js_payload_mb}MB JS payload — crawler friendly`; }
-                                }
-                                
-                                // LCP
-                                let lcpText = 'Unable to measure';
-                                let lcpIcon = '⚪';
-                                if (m.lcp_seconds !== null && m.lcp_seconds !== undefined) {
-                                  if (m.lcp_seconds > 4) { lcpIcon = '🔴'; lcpText = `${m.lcp_seconds}s LCP — too slow, AI crawlers likely skip this page`; redCount++; }
-                                  else if (m.lcp_seconds >= 2.5) { lcpIcon = '🟡'; lcpText = `${m.lcp_seconds}s LCP — borderline, crawlers may deprioritise`; }
-                                  else { lcpIcon = '✅'; lcpText = `${m.lcp_seconds}s LCP — fast enough for AI crawlers`; }
-                                }
-                                
-                                // Console Errors
-                                let errText = 'Unable to measure';
-                                let errIcon = '⚪';
-                                if (m.console_errors !== null && m.console_errors !== undefined) {
-                                  if (m.console_errors >= 3) { errIcon = '🔴'; errText = `${m.console_errors} errors — page may appear broken to bots`; redCount++; }
-                                  else if (m.console_errors >= 1) { errIcon = '🟡'; errText = `${m.console_errors} JS errors may affect AI crawler rendering`; }
-                                  else { errIcon = '✅'; errText = `No JS errors detected`; }
-                                }
-                                
-                                const overallText = redCount >= 3 ? '🔴 Poor AI Crawlability' : (redCount >= 1 ? '🟡 Moderate AI Crawlability' : '✅ Good AI Crawlability');
 
-                                return (
-                                  <>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                                      {[
-                                        { id: 'js_hydration', label: 'JS Dependency', text: jsImpactText, score: m.js_impact === 'CRITICAL' ? 'Bad' : (m.js_impact === 'MODERATE' ? 'Medium' : 'Good') },
-                                        { id: 'unused_js', label: 'Unused JavaScript', text: `${unusedIcon} ${unusedText}`, score: (m.unused_js_pct > 60) ? 'Bad' : (m.unused_js_pct >= 30 ? 'Medium' : 'Good') },
-                                        { id: 'js_payload', label: 'JS Bundle Size', text: `${bundleIcon} ${bundleText}`, score: (m.js_payload_mb > 3) ? 'Bad' : (m.js_payload_mb >= 1 ? 'Medium' : 'Good') },
-                                        { id: 'lcp', label: 'Page Load (LCP)', text: `${lcpIcon} ${lcpText}`, score: (m.lcp_seconds > 4) ? 'Bad' : (m.lcp_seconds >= 2.5 ? 'Medium' : 'Good') },
-                                        { id: 'console_errors', label: 'Console Errors', text: `${errIcon} ${errText}`, score: (m.console_errors >= 3) ? 'Bad' : (m.console_errors >= 1 ? 'Medium' : 'Good') }
-                                      ].map((row) => {
-                                        const guidanceItem = generatedFixes[url].guidance?.find(g => g.id === row.id);
-                                        const expKey = `${url}_${row.id}`;
-                                        return (
-                                          <div key={row.id}>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                              <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr', flex: 1 }}>
-                                                <span style={{ color: '#64748b' }}>{row.label}</span>
-                                                <span style={{ fontWeight: row.score !== 'Good' ? 600 : 400 }}>{row.text}</span>
-                                              </div>
-                                              {guidanceItem && (
-                                                <button 
-                                                  onClick={() => toggleGuidance(expKey)}
-                                                  style={{ 
-                                                    fontSize: '0.7rem', 
-                                                    padding: '0.2rem 0.5rem', 
-                                                    background: row.score === 'Bad' ? '#ef4444' : '#f59e0b',
-                                                    color: 'white',
-                                                    border: 'none',
-                                                    borderRadius: '4px',
-                                                    cursor: 'pointer',
-                                                    fontWeight: 700
-                                                  }}
-                                                >
-                                                  {expandedGuidance[expKey] ? 'Close' : 'Guidance to solve'}
-                                                </button>
-                                              )}
-                                            </div>
-                                            {expandedGuidance[expKey] && guidanceItem && (
-                                              <div className="animate-fade-in" style={{ marginTop: '0.75rem', padding: '0.75rem', background: '#fff', border: '1px solid #fde68a', borderRadius: '0.5rem' }}>
-                                                <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#92400e', marginBottom: '0.5rem' }}>STEPS TO FIX:</div>
-                                                <ul style={{ margin: 0, paddingLeft: '1rem', color: '#78350f', fontSize: '0.8rem' }}>
-                                                  {guidanceItem.steps.map((step, si) => (
-                                                    <li key={si} style={{ marginBottom: '0.25rem' }}>{step}</li>
-                                                  ))}
-                                                </ul>
-                                              </div>
-                                            )}
-                                          </div>
-                                        );
-                                      })}
+                    {generatedFixes[url] && (
+                      <div className="animate-fade-in border-t border-slate-100 bg-blue-50/30 p-6">
+                        <div className="mx-auto max-w-4xl space-y-8">
+                          {generatedFixes[url]?.metrics && (
+                            <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+                              <h4 className="mb-6 flex items-center gap-2 text-sm font-bold text-slate-800">
+                                <Cpu size={16} className="text-blue-500" />
+                                Page Audit Result
+                              </h4>
+                              <div className="space-y-4">
+                                {[
+                                  { id: 'js_hydration', label: 'JS Dependency', value: generatedFixes[url].metrics?.js_impact === 'CRITICAL' ? '🔴 CRITICAL — heavy JS dependency' : (generatedFixes[url].metrics?.js_impact === 'MODERATE' ? '🟡 Moderate JS dependency' : '✅ Low JS dependency'), color: generatedFixes[url].metrics?.js_impact === 'CRITICAL' ? 'text-red-600' : (generatedFixes[url].metrics?.js_impact === 'MODERATE' ? 'text-amber-600' : 'text-emerald-600'), score: generatedFixes[url].metrics?.js_impact === 'LOW' ? 'Good' : (generatedFixes[url].metrics?.js_impact === 'MODERATE' ? 'Medium' : 'Bad') },
+                                  { id: 'unused_js', label: 'Unused JavaScript', value: (generatedFixes[url].metrics?.unused_js_pct ?? 0) > 60 ? `🔴 ${generatedFixes[url].metrics.unused_js_pct}% unused (dead code blocking crawlers)` : ((generatedFixes[url].metrics?.unused_js_pct ?? 0) >= 30 ? `🟡 ${generatedFixes[url].metrics.unused_js_pct}% unused JS is downloaded but never executed` : `✅ ${generatedFixes[url].metrics?.unused_js_pct ?? 0}% unused — highly efficient`), color: (generatedFixes[url].metrics?.unused_js_pct ?? 0) > 60 ? 'text-red-600' : ((generatedFixes[url].metrics?.unused_js_pct ?? 0) >= 30 ? 'text-amber-600' : 'text-emerald-600'), score: (generatedFixes[url].metrics?.unused_js_pct ?? 0) > 60 ? 'Bad' : ((generatedFixes[url].metrics?.unused_js_pct ?? 0) >= 30 ? 'Medium' : 'Good') },
+                                  { id: 'js_payload', label: 'JS Bundle Size', value: (generatedFixes[url].metrics?.js_payload_mb ?? 0) > 3 ? `🔴 ${generatedFixes[url].metrics.js_payload_mb}MB — timeout risk for bots` : ((generatedFixes[url].metrics?.js_payload_mb ?? 0) >= 1 ? `🟡 ${generatedFixes[url].metrics.js_payload_mb}MB — may slow AI crawler indexing` : `✅ ${generatedFixes[url].metrics?.js_payload_mb ?? 0}MB JS payload — crawler friendly`), color: (generatedFixes[url].metrics?.js_payload_mb ?? 0) > 3 ? 'text-red-600' : ((generatedFixes[url].metrics?.js_payload_mb ?? 0) >= 1 ? 'text-amber-600' : 'text-emerald-600'), score: (generatedFixes[url].metrics?.js_payload_mb ?? 0) > 3 ? 'Bad' : ((generatedFixes[url].metrics?.js_payload_mb ?? 0) >= 1 ? 'Medium' : 'Good') },
+                                  { id: 'lcp', label: 'Page Load (LCP)', value: (generatedFixes[url].metrics?.lcp_seconds ?? 0) > 4 ? `🔴 ${generatedFixes[url].metrics.lcp_seconds}s LCP — too slow for bot timeouts` : ((generatedFixes[url].metrics?.lcp_seconds ?? 0) >= 2.5 ? `🟡 ${generatedFixes[url].metrics.lcp_seconds}s LCP — borderline for AI crawlers` : `✅ ${generatedFixes[url].metrics?.lcp_seconds ?? 0}s LCP — fast enough for AI crawlers`), color: (generatedFixes[url].metrics?.lcp_seconds ?? 0) > 4 ? 'text-red-600' : ((generatedFixes[url].metrics?.lcp_seconds ?? 0) >= 2.5 ? 'text-amber-600' : 'text-emerald-600'), score: (generatedFixes[url].metrics?.lcp_seconds ?? 0) > 4 ? 'Bad' : ((generatedFixes[url].metrics?.lcp_seconds ?? 0) >= 2.5 ? 'Medium' : 'Good') },
+                                  { id: 'console_errors', label: 'Console Errors', value: (generatedFixes[url].metrics?.console_errors ?? 0) >= 3 ? `🔴 ${generatedFixes[url].metrics.console_errors} errors — page may appear broken to bots` : ((generatedFixes[url].metrics?.console_errors ?? 0) >= 1 ? `🟡 ${generatedFixes[url].metrics.console_errors} errors — check for failed API calls` : `✅ No JS errors detected`), color: (generatedFixes[url].metrics?.console_errors ?? 0) >= 3 ? 'text-red-600' : ((generatedFixes[url].metrics?.console_errors ?? 0) >= 1 ? 'text-amber-600' : 'text-emerald-600'), score: (generatedFixes[url].metrics?.console_errors ?? 0) >= 3 ? 'Bad' : ((generatedFixes[url].metrics?.console_errors ?? 0) >= 1 ? 'Medium' : 'Good') },
+                                ].map((row) => (
+                                  <div key={row.id} className="border-b border-slate-50 pb-3 last:border-0 last:pb-0">
+                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                                      <div className="flex flex-col sm:flex-row sm:items-center">
+                                        <div className="w-full text-xs font-semibold text-slate-400 sm:w-48">{row.label}</div>
+                                        <div className={`text-sm font-bold ${row.color}`}>{row.value}</div>
+                                      </div>
+                                      {row.score !== 'Good' && (
+                                        <button
+                                          onClick={() => toggleGuidance(url, row.id)}
+                                          className={`mt-2 flex items-center gap-1.5 rounded-lg px-3 py-1 text-[10px] font-black uppercase tracking-tight transition-all hover:scale-105 sm:mt-0 ${
+                                            row.score === 'Bad' ? 'bg-red-50 text-red-600' : 'bg-amber-50 text-amber-600'
+                                          }`}
+                                        >
+                                          {expandedGuidance[`${url}-${row.id}`] ? 'Hide Guidance' : 'Guidance →'}
+                                        </button>
+                                      )}
                                     </div>
-                                    <div style={{ marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid #e2e8f0', fontWeight: 'bold', color: '#1e293b' }}>
-                                      Overall: {overallText}
-                                    </div>
-                                  </>
-                                )
-                              })()}
+                                    {expandedGuidance[`${url}-${row.id}`] && (
+                                      <div className={`mt-3 animate-fade-in rounded-lg p-4 ring-1 ${
+                                        row.score === 'Bad' ? 'bg-red-50/50 ring-red-100' : 'bg-amber-50/50 ring-amber-100'
+                                      }`}>
+                                        <ul className="space-y-2">
+                                          {generatedFixes[url].guidance.find(g => g.id === row.id)?.steps?.map((step, si) => (
+                                            <li key={si} className="flex items-start gap-2 text-xs text-slate-700">
+                                              <span className={`mt-1 h-1 w-1 flex-shrink-0 rounded-full ${
+                                                row.score === 'Bad' ? 'bg-red-400' : 'bg-amber-400'
+                                              }`} />
+                                              {step}
+                                            </li>
+                                          ))}
+                                        </ul>
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
+                                <div className="mt-6 border-t border-slate-100 pt-6">
+                                  <div className="flex items-center gap-2 font-bold text-slate-900">
+                                    Overall: {
+                                      (() => {
+                                        const m = generatedFixes[url]?.metrics;
+                                        if (!m) return <span className="text-slate-400">Analysis Pending</span>;
+                                        const isBad = m.js_impact === 'CRITICAL' || (m.unused_js_pct ?? 0) > 60 || (m.js_payload_mb ?? 0) > 3 || (m.lcp_seconds ?? 0) > 4 || (m.console_errors ?? 0) >= 3;
+                                        const isMed = m.js_impact === 'MODERATE' || (m.unused_js_pct ?? 0) >= 30 || (m.js_payload_mb ?? 0) >= 1 || (m.lcp_seconds ?? 0) >= 2.5 || (m.console_errors ?? 0) >= 1;
+                                        if (isBad) return <><span className="text-red-600">🔴 Poor AI Crawlability</span></>;
+                                        if (isMed) return <><span className="text-amber-600">🟡 Moderate AI Crawlability</span></>;
+                                        return <><span className="text-emerald-600">✅ Good AI Crawlability</span></>;
+                                      })()
+                                    }
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+                            <h4 className="mb-4 flex items-center gap-2 text-sm font-bold text-slate-800">
+                              <AlertCircle size={16} className="text-blue-500" />
+                              The Problem
+                            </h4>
+                            <p className="text-sm leading-relaxed text-slate-600">
+                              {generatedFixes[url].problem}
+                            </p>
+                          </div>
+
+                          <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+                            <h4 className="mb-4 flex items-center gap-2 text-sm font-bold text-slate-800">
+                              <CheckCircle2 size={16} className="text-blue-500" />
+                              What YOU need to do
+                            </h4>
+                            <ul className="space-y-3">
+                              {generatedFixes[url]?.checklist?.map((item, i) => (
+                                <li
+                                  key={i}
+                                  className="flex items-start gap-3 text-sm text-slate-600"
+                                >
+                                  <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 text-[10px] font-black text-blue-600">
+                                    {i + 1}
+                                  </span>
+                                  {item}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+
+                          <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+                            <div className="mb-4 flex items-center justify-between">
+                              <h4 className="flex items-center gap-2 text-sm font-bold text-slate-800">
+                                <FileCode size={16} className="text-blue-500" />
+                                JSON-LD Schema Template
+                              </h4>
+                              <button
+                                onClick={() =>
+                                  copyToClipboard(generatedFixes[url].json_ld, url, 'fix')
+                                }
+                                className="flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:text-blue-800"
+                              >
+                                {copiedFix[url] ? <Check size={14} /> : <Copy size={14} />}
+                                {copiedFix[url] ? 'Copied!' : 'Copy Code'}
+                              </button>
+                            </div>
+                            <div className="relative">
+                              <pre className="max-h-80 overflow-auto rounded-lg bg-slate-900 p-4 font-mono text-[10px] leading-relaxed text-slate-300">
+                                <code>{generatedFixes[url]?.json_ld ?? '// No schema generated'}</code>
+                              </pre>
+                            </div>
+                            <p className="mt-4 text-[10px] italic text-slate-400">
+                              Paste this into your website's &lt;head&gt; tag. Brand is set to
+                              'Nothing' based on your profile.
+                            </p>
+                            <div className="mt-6 border-t border-slate-100 pt-6">
+                              <button
+                                onClick={() => navigate(`/audit/${encodeURIComponent(url)}`)}
+                                className="flex w-full items-center justify-center gap-2 rounded-lg border border-slate-200 py-2.5 text-xs font-bold text-slate-600 transition-all hover:bg-slate-50"
+                              >
+                                View Deep Technical Audit Report <ArrowRight size={14} />
+                              </button>
                             </div>
                           </div>
-                        )}
-
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                          <p style={{ fontWeight: 'bold', fontSize: '0.9rem', color: '#1e293b', margin: 0 }}>Code Snippet ({generatedFixes[url].schema_type})</p>
-                          <button 
-                              onClick={() => copyToClipboard(generatedFixes[url].json_ld, url, 'fix')}
-                              style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.8rem', color: '#3b82f6', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}
-                            >
-                              {copiedFix[url] ? <Check size={14} color="#10b981" /> : <Copy size={14} />} 
-                              {copiedFix[url] ? 'Copied!' : 'Copy'}
-                            </button>
                         </div>
-                        
-                        <div style={{ marginBottom: '1rem', fontSize: '0.75rem', color: '#64748b', lineHeight: '1.4' }}>
-                          <div style={{ marginBottom: '0.5rem' }}>
-                            ℹ️ <strong>Why this matters:</strong> AI engines like ChatGPT and Perplexity cannot guess 
-                            what your page is about from JavaScript-rendered content alone. This 
-                            script tells them directly — what the page is, what brand it belongs 
-                            to, and what it contains — in a format they can always read.
-                          </div>
-                          <div>
-                            <strong>Where to add it:</strong> Paste this inside the &lt;head&gt; tag of this specific 
-                            page in your website's source code. Ask your developer to add it if 
-                            you don't have direct access. Once added, AI crawlers will pick it up 
-                            within 2–7 days.
-                          </div>
-                        </div>
-                        <pre style={{ background: '#1e293b', color: '#f8fafc', padding: '1rem', borderRadius: '0.5rem', overflowX: 'auto', fontSize: '0.8rem', margin: 0 }}>
-                          <code>{generatedFixes[url].json_ld}</code>
-                        </pre>
                       </div>
                     )}
                   </div>
                 ))
               ) : (
-                <div style={{ padding: '2rem', textAlign: 'center' }}>No gaps found!</div>
+                <div className="py-12 text-center text-slate-400">
+                  No missing pages found. Your sitemap is fully cited!
+                </div>
               )}
             </div>
 
             {totalPages > 1 && (
-              <div className="pagination">
-                <button className="page-btn" onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>
-                  <ChevronLeft size={16} />
+              <div className="mt-6 flex items-center justify-center gap-4">
+                <button
+                  className="rounded-lg border border-slate-200 p-2 text-slate-500 transition-all hover:bg-slate-100 disabled:opacity-30"
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                >
+                  <ChevronLeft size={20} />
                 </button>
-                <span className="text-muted" style={{ fontSize: '0.85rem' }}>Page {currentPage} of {totalPages}</span>
-                <button className="page-btn" onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>
-                  <ChevronRight size={16} />
+                <span className="text-sm font-medium text-slate-600">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <button
+                  className="rounded-lg border border-slate-200 p-2 text-slate-500 transition-all hover:bg-slate-100 disabled:opacity-30"
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                >
+                  <ChevronRight size={20} />
                 </button>
               </div>
             )}
           </section>
 
-          {/* Sitemap Technical Health */}
-          {data?.sitemap_metrics && (
-            <div className="animate-fade-in" style={{ marginBottom: '2rem' }}>
-              <section className="glass-card" style={{ background: '#f8fafc', border: '1px solid #e2e8f0' }}>
-                <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem', textTransform: 'uppercase', fontSize: '0.9rem', letterSpacing: '0.05em', color: '#475569' }}>
-                  <FileCode size={18} /> Sitemap Technical Check
-                </h3>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem' }}>
-                  <div style={{ padding: '1rem', borderRadius: '0.5rem', background: data.sitemap_metrics.has_lastmod ? '#f0fdf4' : '#fff7ed', border: `1px solid ${data.sitemap_metrics.has_lastmod ? '#dcfce7' : '#ffedd5'}` }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '0.5rem' }}>
-                      <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600 }}>FRESHNESS (LASTMOD)</span>
-                      {!data.sitemap_metrics.has_lastmod && <AlertCircle size={14} color="#ea580c" />}
-                    </div>
-                    <div style={{ fontSize: '1.2rem', fontWeight: 800, color: data.sitemap_metrics.has_lastmod ? '#16a34a' : '#ea580c' }}>
-                      {data.sitemap_metrics.lastmod_count} / {data.sitemap_metrics.total_count} Pages
-                    </div>
-                    <p style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.5rem', lineHeight: '1.4' }}>
-                      {data.sitemap_metrics.has_lastmod 
-                        ? "Great: XML lastmod tags are present. These help AI engines prioritize crawling your freshest content." 
-                        : "Common Pitfall: Missing <lastmod> tags. Without these, AI crawlers may not know when your content was last updated and might skip indexing new changes."}
-                    </p>
-                  </div>
-
-                  <div style={{ padding: '1rem', borderRadius: '0.5rem', background: (data.orphans?.length || 0) === 0 ? '#f0fdf4' : '#fef2f2', border: `1px solid ${(data.orphans?.length || 0) === 0 ? '#dcfce7' : '#fee2e2'}` }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '0.5rem' }}>
-                      <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600 }}>COMPLETENESS (ORPHANS)</span>
-                      {(data.orphans?.length || 0) > 0 && <AlertCircle size={14} color="#ef4444" />}
-                    </div>
-                    <div style={{ fontSize: '1.2rem', fontWeight: 800, color: (data.orphans?.length || 0) === 0 ? '#16a34a' : '#ef4444' }}>
-                      {data.orphans?.length || 0} Pages Missing
-                    </div>
-                    <p style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.5rem', lineHeight: '1.4' }}>
-                      {(data.orphans?.length || 0) === 0 
-                        ? "Clean: All pages currently cited by AI are listed in your sitemap." 
-                        : `Critical Issue: AI is citing ${data.orphans?.length} pages that are NOT in your sitemap. This means your sitemap is incomplete and missing key traffic-driving URLs.`}
-                    </p>
-                  </div>
-                </div>
-              </section>
-            </div>
-          )}
-
-          {/* Competitor Advantage Breakdown */}
-          {benchmarkData && benchmarkData.channel_gaps && (
-            <div className="animate-fade-in" style={{ marginBottom: '2rem' }}>
-              <section className="glass-card" style={{ border: '1px solid #3b82f6', background: '#eff6ff', marginBottom: '1rem' }}>
-                <h3 style={{ marginBottom: '1.5rem' }}>Growth Opportunity</h3>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1.5rem' }}>
-                  <div>
-                    <span className="text-muted" style={{ fontSize: '0.75rem' }}>CURRENT VISIBILITY</span>
-                    <div style={{ fontSize: '1.4rem', fontWeight: '800' }}>{benchmarkData.current.visibility_score}%</div>
-                  </div>
-                  <div>
-                    <span className="text-muted" style={{ fontSize: '0.75rem', display: 'block', marginBottom: '0.25rem' }}>TARGET VISIBILITY</span>
-                    <div style={{ fontSize: '1.4rem', fontWeight: '800', color: '#2563eb' }}>
-                      {(() => {
-                        const total = data?.total_sitemap_pages || 0;
-                        const current = benchmarkData.current.citation_count || 0;
-                        const target = Math.min(total, Math.round(current + (total - current) * 0.50));
-                        const pct = total > 0 ? (target / total) * 100 : 0;
-                        return `${pct.toFixed(1)}%`;
-                      })()} <TrendingUp size={18} style={{ verticalAlign: 'middle' }} />
-                    </div>
-                    <div style={{ fontSize: '0.7rem', color: '#64748b', marginTop: '0.25rem' }}>Estimated if non-cited pages are fixed</div>
-                  </div>
-                  <div>
-                    <span className="text-muted" style={{ fontSize: '0.75rem' }}>CURRENT CITATIONS</span>
-                    <div style={{ fontSize: '1.4rem', fontWeight: '800' }}>{benchmarkData.current.citation_count}</div>
-                  </div>
-                  <div>
-                    <span className="text-muted" style={{ fontSize: '0.75rem' }}>TARGET CITATIONS</span>
-                    <div style={{ fontSize: '1.4rem', fontWeight: '800', color: '#2563eb' }}>
-                      {(() => {
-                        const total = data?.total_sitemap_pages || 0;
-                        const current = benchmarkData.current.citation_count || 0;
-                        return Math.min(total, Math.round(current + (total - current) * 0.50));
-                      })()} <TrendingUp size={18} style={{ verticalAlign: 'middle' }} />
-                    </div>
-                  </div>
-                </div>
-              </section>
-
-              <section className="glass-card" style={{ marginBottom: '2rem' }}>
-                <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem', textTransform: 'uppercase', fontSize: '0.9rem', letterSpacing: '0.05em' }}>
-                  Where Competitors Have The Advantage Over You (last 30 days)
-                </h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                  {benchmarkData.channel_gaps.map((cg, i) => (
-                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                      <div style={{ width: '120px', fontSize: '0.9rem', fontWeight: 600, color: '#334155' }}>
-                        {cg.channel}
-                      </div>
-                      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                        {cg.competitors.map((comp, idx) => (
-                          <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <div style={{ width: '80px', fontSize: '0.8rem', color: '#64748b' }}>{comp.name}</div>
-                            <div style={{ flex: 1, background: '#e2e8f0', height: '16px', borderRadius: '2px', overflow: 'hidden' }}>
-                               <div style={{ width: `${Math.max(2, comp.visibility)}%`, background: '#94a3b8', height: '100%' }}></div>
-                            </div>
-                            <div style={{ width: '40px', fontSize: '0.8rem', fontWeight: 600, color: '#64748b', textAlign: 'right' }}>
-                              {comp.visibility}%
-                            </div>
-                          </div>
-                        ))}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <div style={{ width: '80px', fontSize: '0.8rem', color: '#ef4444', fontWeight: 700 }}>{cg.own.name}</div>
-                          <div style={{ flex: 1, background: '#fecaca', height: '16px', borderRadius: '2px', overflow: 'hidden' }}>
-                             <div style={{ width: `${Math.max(2, cg.own.visibility)}%`, background: '#ef4444', height: '100%' }}></div>
-                          </div>
-                          <div style={{ width: '140px', fontSize: '0.8rem', fontWeight: 700, color: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.5rem' }}>
-                            {cg.own.visibility}% <span style={{ fontSize: '0.7rem', background: '#fef2f2', padding: '0.1rem 0.3rem', borderRadius: '4px', color: '#ef4444' }}>← You are here</span>
-                          </div>
-                        </div>
-                      </div>
-                      <div style={{ width: '100px', fontSize: '0.8rem', fontWeight: 700, textAlign: 'right', color: cg.gap_label === 'CRITICAL' ? '#b91c1c' : cg.gap_label === 'HIGH' ? '#ea580c' : '#ca8a04' }}>
-                        Gap: {cg.gap_label}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </section>
-            </div>
-          )}
-
-          {/* Gap Sources Tab Panel */}
+          {/* Fix 4: Gap Sources (Data Fetch Fix and Empty State Message) */}
           {benchmarkData && benchmarkData.tab_actions && (
-            <section className="glass-card" style={{ marginBottom: '2rem' }}>
-              <h3 style={{ marginBottom: '1.5rem' }}>Gap Sources</h3>
-              <div style={{ display: 'flex', borderBottom: '1px solid #e2e8f0', marginBottom: '1.5rem' }}>
-                {['YouTube', 'Reddit', 'Editorial'].map(tab => (
-                  <button 
+            <section className="glass-card">
+              <h3 className="mb-6 text-xl font-bold text-slate-900">Gap Sources</h3>
+              <div className="mb-8 flex gap-2 border-b border-slate-200">
+                {['YouTube', 'Reddit', 'Editorial'].map((tab) => (
+                  <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
-                    style={{
-                      padding: '0.75rem 1.5rem',
-                      background: 'none',
-                      border: 'none',
-                      borderBottom: activeTab === tab ? '2px solid #3b82f6' : '2px solid transparent',
-                      color: activeTab === tab ? '#3b82f6' : '#64748b',
-                      fontWeight: activeTab === tab ? 600 : 400,
-                      cursor: 'pointer'
-                    }}
+                    className={`relative px-6 py-3 text-sm font-bold transition-all ${
+                      activeTab === tab ? 'text-blue-600' : 'text-slate-500 hover:text-slate-800'
+                    }`}
                   >
                     {tab}
+                    {activeTab === tab && (
+                      <div className="absolute bottom-0 left-0 h-0.5 w-full bg-blue-600" />
+                    )}
                   </button>
                 ))}
               </div>
-              
+
               <div>
-                {benchmarkData.tab_actions[activeTab] && benchmarkData.tab_actions[activeTab].has_data ? (
-                  <div style={{ marginBottom: '1.5rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
-                      <span style={{ 
-                        padding: '0.2rem 0.6rem', 
-                        borderRadius: '1rem', 
-                        fontSize: '0.75rem', 
-                        fontWeight: 700, 
-                        background: benchmarkData.tab_actions[activeTab].opportunity_score > 70 ? '#fecaca' : benchmarkData.tab_actions[activeTab].opportunity_score > 40 ? '#fed7aa' : '#dbeafe',
-                        color: benchmarkData.tab_actions[activeTab].opportunity_score > 70 ? '#b91c1c' : benchmarkData.tab_actions[activeTab].opportunity_score > 40 ? '#9a3412' : '#1e40af'
-                      }}>
-                        {benchmarkData.tab_actions[activeTab].opportunity_score > 70 ? 'High' : benchmarkData.tab_actions[activeTab].opportunity_score > 40 ? 'Medium' : 'Low'} Opportunity
+                {benchmarkData.tab_actions[activeTab] &&
+                benchmarkData.tab_actions[activeTab].has_data ? (
+                  <div className="space-y-6">
+                    <div className="flex items-center gap-3">
+                      <span
+                        className={`rounded-full px-3 py-1 text-[10px] font-black tracking-widest uppercase ${
+                          benchmarkData.tab_actions[activeTab].opportunity_score > 70
+                            ? 'bg-red-100 text-red-600'
+                            : benchmarkData.tab_actions[activeTab].opportunity_score > 40
+                              ? 'bg-orange-100 text-orange-600'
+                              : 'bg-blue-100 text-blue-600'
+                        }`}
+                      >
+                        {benchmarkData.tab_actions[activeTab].opportunity_score > 70
+                          ? 'High'
+                          : benchmarkData.tab_actions[activeTab].opportunity_score > 40
+                            ? 'Medium'
+                            : 'Low'}{' '}
+                        Opportunity
                       </span>
-                      <span style={{ color: '#64748b', fontSize: '0.9rem' }}>— {benchmarkData.tab_actions[activeTab].gap_percentage}% of {activeTab.toLowerCase()} cite competitors, not your brand</span>
+                      <span className="text-sm font-medium text-slate-400">
+                        — {benchmarkData.tab_actions[activeTab].gap_percentage}% of{' '}
+                        {activeTab.toLowerCase()} cite competitors, not your brand
+                      </span>
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+
+                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                       {benchmarkData.tab_actions[activeTab].items.map((gapItem, idx) => (
-                        <div key={idx} style={{ padding: '1rem', background: '#f8fafc', borderRadius: '0.5rem', borderLeft: '3px solid #cbd5e1' }}>
-                           <div style={{ fontSize: '0.9rem', marginBottom: '0.75rem', color: '#1e293b', fontWeight: 500 }}>
-                             {renderMarkdownLinks(gapItem.text)}
-                           </div>
-                           <button 
-                             className="btn-primary" 
-                             style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}
-                             onClick={() => handleGenerateContent(activeTab, gapItem.text, gapItem.id)}
-                             disabled={generatingContent[gapItem.id]}
-                           >
-                             {generatingContent[gapItem.id] ? 'Generating...' : 'Generate Content →'}
-                           </button>
-                           
-                           {generatedContent[gapItem.id] && (
-                             <div style={{ marginTop: '1rem', padding: '1rem', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '0.5rem' }}>
-                               <p style={{ whiteSpace: 'pre-wrap', fontSize: '0.85rem', marginBottom: '0.75rem', color: '#334155' }}>
-                                 {generatedContent[gapItem.id]}
-                               </p>
-                               <button 
-                                 onClick={() => copyToClipboard(generatedContent[gapItem.id], gapItem.id, 'content')}
-                                 style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.8rem', color: '#64748b', background: 'none', border: 'none', cursor: 'pointer' }}
-                               >
-                                 {copiedContent[gapItem.id] ? <Check size={14} color="#10b981" /> : <Copy size={14} />} 
-                                 {copiedContent[gapItem.id] ? 'Copied!' : 'Copy'}
-                               </button>
-                             </div>
-                           )}
+                        <div
+                          key={idx}
+                          className="flex flex-col justify-between rounded-xl border border-slate-100 bg-slate-50/50 p-5 ring-1 ring-slate-100"
+                        >
+                          <div className="mb-4 text-sm leading-relaxed text-slate-700">
+                            {renderMarkdownLinks(gapItem.text)}
+                          </div>
+                          <button
+                            onClick={() =>
+                              handleGenerateContent(activeTab, gapItem.text, gapItem.id)
+                            }
+                            disabled={generatingContent[gapItem.id]}
+                            className="btn-primary w-full justify-center py-2 text-xs"
+                          >
+                            {generatingContent[gapItem.id] ? 'Generating...' : 'Generate Content →'}
+                          </button>
+
+                          {generatedContent[gapItem.id] && (
+                            <div className="mt-4 rounded-lg bg-white p-4 shadow-sm ring-1 ring-slate-200">
+                              <p className="mb-3 text-xs leading-relaxed whitespace-pre-wrap text-slate-600">
+                                {generatedContent[gapItem.id]}
+                              </p>
+                              <button
+                                onClick={() =>
+                                  copyToClipboard(
+                                    generatedContent[gapItem.id],
+                                    gapItem.id,
+                                    'content',
+                                  )
+                                }
+                                className="flex items-center gap-1 text-[10px] font-bold text-blue-600"
+                              >
+                                {copiedContent[gapItem.id] ? (
+                                  <Check size={12} />
+                                ) : (
+                                  <Copy size={12} />
+                                )}
+                                {copiedContent[gapItem.id] ? 'Copied!' : 'Copy'}
+                              </button>
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
                   </div>
-                ) : <p className="text-muted" style={{ padding: '2rem', textAlign: 'center' }}>Not enough data yet — Peec needs 3–5 more days of prompt tracking to surface gaps here.</p>}
+                ) : (
+                  <div className="flex h-40 items-center justify-center text-center">
+                    <p className="max-w-md text-sm font-medium text-slate-400">
+                      Not enough data yet — Peec needs 3–5 more days of prompt tracking to surface
+                      gaps here.
+                    </p>
+                  </div>
+                )}
               </div>
             </section>
           )}
-
         </>
       )}
     </div>

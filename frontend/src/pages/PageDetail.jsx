@@ -1,7 +1,23 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import axios from 'axios'
-import { ArrowLeft, Zap, ShieldAlert, CheckCircle2, Cpu, Activity, Clock, Globe, FileJson, Target, BarChart2, Code2, Layers, CheckSquare, XSquare } from 'lucide-react'
+import {
+  ArrowLeft,
+  Zap,
+  ShieldAlert,
+  CheckCircle2,
+  Cpu,
+  Activity,
+  Clock,
+  Globe,
+  FileJson,
+  Target,
+  BarChart2,
+  Code2,
+  Layers,
+  CheckSquare,
+  XSquare,
+} from 'lucide-react'
 
 const PageDetail = () => {
   const { url } = useParams()
@@ -12,17 +28,17 @@ const PageDetail = () => {
   const [error, setError] = useState('')
   const [currentStep, setCurrentStep] = useState(0)
   const [expandedGuidance, setExpandedGuidance] = useState({})
-  
+
   const toggleGuidance = (id) => {
-    setExpandedGuidance(prev => ({ ...prev, [id]: !prev[id] }))
+    setExpandedGuidance((prev) => ({ ...prev, [id]: !prev[id] }))
   }
-  
+
   const simulationSteps = [
-    "Spinning up Chromium Cluster...",
-    "Awaiting Network Idle (JS Hydration)...",
-    "Extracting DevTools Meta-Signals...",
-    "Fetching Peec Competitor Intelligence...",
-    "Building Multi-Track Report with Gemini 2.5 Flash..."
+    'Spinning up Chromium Cluster...',
+    'Awaiting Network Idle (JS Hydration)...',
+    'Extracting DevTools Meta-Signals...',
+    'Fetching Peec Competitor Intelligence...',
+    'Building Multi-Track Report with Gemini...',
   ]
 
   useEffect(() => {
@@ -35,25 +51,31 @@ const PageDetail = () => {
     }
 
     let stepInterval = setInterval(() => {
-      setCurrentStep(prev => (prev < simulationSteps.length - 1 ? prev + 1 : prev))
+      setCurrentStep((prev) => (prev < simulationSteps.length - 1 ? prev + 1 : prev))
     }, 3000)
 
     const runAudit = async () => {
       try {
-        const response = await axios.post('http://localhost:8000/api/audit', { url: decodedUrl }, {
-          timeout: 120000 // 2 minute timeout for deep audits
-        })
-        
+        const response = await axios.post(
+          'http://localhost:8000/api/audit',
+          { url: decodedUrl },
+          {
+            timeout: 120000,
+          },
+        )
+
         if (response.data.analysis.error) {
-           setData(response.data.analysis) // Set data even on error to show logs
-           setError("Audit Engine Error: " + (response.data.analysis.message || "Unknown Error"))
+          setData(response.data.analysis)
+          setError('Audit Engine Error: ' + (response.data.analysis.message || 'Unknown Error'))
         } else {
           setData(response.data.analysis)
           localStorage.setItem(cacheKey, JSON.stringify(response.data.analysis))
         }
       } catch (err) {
         console.error(err)
-        setError('Connection Timeout: The audit is taking longer than 2 minutes or the backend is unresponsive.')
+        setError(
+          'Connection Timeout: The audit is taking longer than 2 minutes or the backend is unresponsive.',
+        )
       } finally {
         setLoading(false)
         clearInterval(stepInterval)
@@ -63,245 +85,195 @@ const PageDetail = () => {
     return () => clearInterval(stepInterval)
   }, [decodedUrl])
 
-  if (loading) return (
-    <div style={{ textAlign: 'center', padding: '10rem 2rem' }}>
-      <div className="animate-spin" style={{ margin: '0 auto', width: '48px', height: '48px', border: '3px solid #3b82f6', borderTopColor: 'transparent', borderRadius: '50%' }}></div>
-      <h2 style={{ marginTop: '2rem', color: '#1e293b' }}>{simulationSteps[currentStep]}</h2>
-      <p className="text-muted">Performing deep technical crawlability audit...</p>
-    </div>
-  )
-
-  if (error) return (
-    <div className="glass-card" style={{ textAlign: 'center', padding: '3rem' }}>
-      <ShieldAlert size={48} color="#ef4444" style={{ margin: '0 auto' }} />
-      <h2 style={{ marginTop: '1.5rem' }}>Audit Engine Error</h2>
-      <p className="text-muted" style={{ maxWidth: '600px', margin: '0.5rem auto 2rem' }}>{error}</p>
-      
-      {/* Show logs even on error for debugging */}
-      <div className="log-window" style={{ textAlign: 'left', marginBottom: '2rem', maxHeight: '200px', overflowY: 'auto' }}>
-        <div style={{ color: '#ef4444', marginBottom: '0.5rem', fontWeight: 700 }}>FAILURE_TRACE:</div>
-        {data?.logs?.map((log, i) => (
-          <div key={i} style={{ fontSize: '0.75rem', marginBottom: '2px' }}><span style={{ color: '#475569' }}>&gt;</span> {log}</div>
-        ))}
+  if (loading)
+    return (
+      <div className="flex flex-col items-center justify-center py-32 text-center">
+        <div className="mb-8 h-12 w-12 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
+        <h2 className="mb-2 text-2xl font-bold text-slate-900">{simulationSteps[currentStep]}</h2>
+        <p className="text-slate-500">Performing deep technical crawlability audit...</p>
       </div>
+    )
 
-      <button className="btn-primary" onClick={() => navigate('/')}>Back to Dashboard</button>
-    </div>
-  )
+  if (error)
+    return (
+      <div className="glass-card flex flex-col items-center py-16 text-center">
+        <ShieldAlert size={64} className="mb-6 text-red-500" />
+        <h2 className="mb-2 text-2xl font-bold text-slate-900">Audit Engine Error</h2>
+        <p className="mx-auto mb-8 max-w-lg text-slate-500">{error}</p>
+
+        {data?.logs && (
+          <div className="mb-8 w-full max-w-2xl rounded-lg bg-slate-900 p-6 text-left">
+            <div className="mb-4 font-mono text-xs font-bold text-red-400">FAILURE_TRACE:</div>
+            <div className="max-h-48 space-y-1 overflow-auto font-mono text-[10px] text-slate-400">
+              {data.logs.map((log, i) => (
+                <div key={i}>
+                  <span className="mr-2 text-slate-600">&gt;</span>
+                  {log}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <button className="btn-primary" onClick={() => navigate('/')}>
+          Back to Dashboard
+        </button>
+      </div>
+    )
 
   return (
     <div className="animate-fade-in">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-        <button onClick={() => navigate('/')} style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 600 }}>
+      <div className="mb-8 flex items-center justify-between">
+        <button
+          onClick={() => navigate('/')}
+          className="flex items-center gap-2 font-bold text-slate-500 transition-colors hover:text-slate-900"
+        >
           <ArrowLeft size={18} /> Dashboard
         </button>
-        <span style={{ fontSize: '0.85rem', color: '#94a3b8' }}>Powered by Gemini 2.5 Flash</span>
+        <span className="text-xs font-medium text-slate-400">Powered by Gemini & Peec AI</span>
       </div>
 
-      <header style={{ marginBottom: '2.5rem' }}>
-        <h1>Technical Audit Report</h1>
-        <p className="text-muted" style={{ wordBreak: 'break-all' }}>{decodedUrl}</p>
+      <header className="mb-10">
+        <h1 className="mb-2 text-3xl font-extrabold tracking-tight text-slate-900">
+          Technical Audit Report
+        </h1>
+        <p className="font-mono text-sm break-all text-slate-500">{decodedUrl}</p>
       </header>
 
-      {/* 0. Raw DevTools Signals — The Foundation of this Report */}
       {data.signals && (
-        <section className="glass-card" style={{ marginBottom: '2rem', border: '1px solid #e2e8f0' }}>
-          <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-            <Cpu size={20} color="#64748b" /> How This Score Was Calculated
-          </h3>
-          <p className="text-muted" style={{ fontSize: '0.85rem', marginBottom: '1.5rem' }}>Raw DevTools signals captured during live browser render — these are the exact inputs Gemini 2.5 used to generate the report below.</p>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '1rem' }}>
+        <section className="glass-card mb-8">
+          <div className="mb-6 flex items-center gap-2">
+            <Cpu size={20} className="text-slate-400" />
+            <div>
+              <h3 className="text-lg font-bold text-slate-900">Technical Meta-Signals</h3>
+              <p className="text-xs text-slate-500">
+                Live browser render metrics captured during audit
+              </p>
+            </div>
+          </div>
 
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {/* Load Time */}
-            {data.signals.load_time_ms !== undefined && (() => {
-              const ms = data.signals.load_time_ms
-              const color = ms < 2000 ? '#16a34a' : ms < 4000 ? '#f59e0b' : '#ef4444'
-              const label = ms < 2000 ? 'Fast' : ms < 4000 ? 'Moderate' : 'Slow'
-              return (
-                <div style={{ padding: '1rem', borderRadius: '0.75rem', background: '#f8fafc', border: `1px solid ${color}30` }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#64748b', fontSize: '0.78rem', fontWeight: 700, marginBottom: '0.5rem' }}>
-                    <Clock size={14} /> LOAD TIME
-                  </div>
-                  <div style={{ fontSize: '1.3rem', fontWeight: 800, color }}>{ms}ms</div>
-                  <div style={{ fontSize: '0.72rem', color, fontWeight: 600, marginTop: '0.2rem' }}>{label}</div>
-                </div>
-              )
-            })()}
+            <div className="rounded-xl border border-slate-100 bg-slate-50 p-4 ring-1 ring-slate-100">
+              <div className="mb-2 flex items-center gap-2 text-[10px] font-bold tracking-widest text-slate-400 uppercase">
+                <Clock size={12} /> Load Time
+              </div>
+              <div
+                className={`text-2xl font-black ${
+                  data.signals.load_time_ms < 2000
+                    ? 'text-emerald-600'
+                    : data.signals.load_time_ms < 4000
+                      ? 'text-amber-600'
+                      : 'text-red-600'
+                }`}
+              >
+                {data.signals.load_time_ms}ms
+              </div>
+            </div>
 
-            {/* JS Hydration Impact */}
-            {data.signals.js_impact && (() => {
-              const color = data.signals.js_impact === 'LOW' ? '#16a34a' : data.signals.js_impact === 'MODERATE' ? '#f59e0b' : '#ef4444'
-              return (
-                <div style={{ padding: '1rem', borderRadius: '0.75rem', background: '#f8fafc', border: `1px solid ${color}30` }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#64748b', fontSize: '0.78rem', fontWeight: 700, marginBottom: '0.5rem' }}>
-                    <Code2 size={14} /> JS HYDRATION
-                  </div>
-                  <div style={{ fontSize: '1.1rem', fontWeight: 800, color }}>{data.signals.js_impact}</div>
-                  <div style={{ fontSize: '0.72rem', color: '#94a3b8', marginTop: '0.2rem' }}>Δ {data.signals.text_delta ?? '—'} chars</div>
-                </div>
-              )
-            })()}
+            {/* JS Impact */}
+            <div className="rounded-xl border border-slate-100 bg-slate-50 p-4 ring-1 ring-slate-100">
+              <div className="mb-2 flex items-center gap-2 text-[10px] font-bold tracking-widest text-slate-400 uppercase">
+                <Code2 size={12} /> JS Hydration
+              </div>
+              <div
+                className={`text-2xl font-black ${
+                  data.signals.js_impact === 'CRITICAL' ? 'text-red-600' : 'text-amber-600'
+                }`}
+              >
+                {data.signals.js_impact}
+              </div>
+            </div>
 
             {/* DOM Depth */}
-            {data.signals.dom_depth !== undefined && (() => {
-              const d = data.signals.dom_depth
-              const color = d < 12 ? '#16a34a' : d < 20 ? '#f59e0b' : '#ef4444'
-              const label = d < 12 ? 'Shallow (Good)' : d < 20 ? 'Moderate' : 'Deep (Bad)'
-              return (
-                <div style={{ padding: '1rem', borderRadius: '0.75rem', background: '#f8fafc', border: `1px solid ${color}30` }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#64748b', fontSize: '0.78rem', fontWeight: 700, marginBottom: '0.5rem' }}>
-                    <Layers size={14} /> DOM DEPTH
-                  </div>
-                  <div style={{ fontSize: '1.3rem', fontWeight: 800, color }}>{d}</div>
-                  <div style={{ fontSize: '0.72rem', color, fontWeight: 600, marginTop: '0.2rem' }}>{label}</div>
-                </div>
-              )
-            })()}
-
-            {/* Unused JS */}
-            {data.signals.unused_js_pct !== undefined && (() => {
-              const u = data.signals.unused_js_pct
-              const color = u === null ? '#94a3b8' : u < 30 ? '#16a34a' : u <= 60 ? '#f59e0b' : '#ef4444'
-              const label = u === null ? 'Unknown' : u < 30 ? 'Efficient' : u <= 60 ? 'Bloated' : 'Dead Code'
-              const displayVal = u === null ? 'N/A' : `${u}%`
-              return (
-                <div style={{ padding: '1rem', borderRadius: '0.75rem', background: '#f8fafc', border: `1px solid ${color}30` }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#64748b', fontSize: '0.78rem', fontWeight: 700, marginBottom: '0.5rem' }}>
-                    <Activity size={14} /> UNUSED JS
-                  </div>
-                  <div style={{ fontSize: '1.3rem', fontWeight: 800, color }}>{displayVal}</div>
-                  <div style={{ fontSize: '0.72rem', color, fontWeight: 600, marginTop: '0.2rem' }}>{label}</div>
-                </div>
-              )
-            })()}
-
-            {/* JS Payload */}
-            {data.signals.js_payload_mb !== undefined && (() => {
-              const p = data.signals.js_payload_mb
-              const color = p === null ? '#94a3b8' : p < 1 ? '#16a34a' : p <= 3 ? '#f59e0b' : '#ef4444'
-              const label = p === null ? 'Unknown' : p < 1 ? 'Crawler Friendly' : p <= 3 ? 'Heavy' : 'Timeout Risk'
-              const displayVal = p === null ? 'N/A' : `${p}MB`
-              return (
-                <div style={{ padding: '1rem', borderRadius: '0.75rem', background: '#f8fafc', border: `1px solid ${color}30` }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#64748b', fontSize: '0.78rem', fontWeight: 700, marginBottom: '0.5rem' }}>
-                    <Globe size={14} /> JS PAYLOAD
-                  </div>
-                  <div style={{ fontSize: '1.3rem', fontWeight: 800, color }}>{displayVal}</div>
-                  <div style={{ fontSize: '0.72rem', color, fontWeight: 600, marginTop: '0.2rem' }}>{label}</div>
-                </div>
-              )
-            })()}
-
-            {/* LCP */}
-            {data.signals.lcp_seconds !== undefined && (() => {
-              const l = data.signals.lcp_seconds
-              const color = l === null ? '#94a3b8' : l < 2.5 ? '#16a34a' : l <= 4 ? '#f59e0b' : '#ef4444'
-              const label = l === null ? 'Unknown' : l < 2.5 ? 'Fast' : l <= 4 ? 'Borderline' : 'Too Slow'
-              const displayVal = l === null ? 'N/A' : `${l}s`
-              return (
-                <div style={{ padding: '1rem', borderRadius: '0.75rem', background: '#f8fafc', border: `1px solid ${color}30` }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#64748b', fontSize: '0.78rem', fontWeight: 700, marginBottom: '0.5rem' }}>
-                    <Zap size={14} /> LCP
-                  </div>
-                  <div style={{ fontSize: '1.3rem', fontWeight: 800, color }}>{displayVal}</div>
-                  <div style={{ fontSize: '0.72rem', color, fontWeight: 600, marginTop: '0.2rem' }}>{label}</div>
-                </div>
-              )
-            })()}
-
-            {/* Console Errors */}
-            {data.signals.console_errors !== undefined && (() => {
-              const e = data.signals.console_errors
-              const color = e === null ? '#94a3b8' : e === 0 ? '#16a34a' : e < 3 ? '#f59e0b' : '#ef4444'
-              const label = e === null ? 'Unknown' : e === 0 ? 'Clean' : e < 3 ? 'Warnings' : 'Broken'
-              const displayVal = e === null ? 'N/A' : e
-              return (
-                <div style={{ padding: '1rem', borderRadius: '0.75rem', background: '#f8fafc', border: `1px solid ${color}30` }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#64748b', fontSize: '0.78rem', fontWeight: 700, marginBottom: '0.5rem' }}>
-                    <ShieldAlert size={14} /> ERRORS
-                  </div>
-                  <div style={{ fontSize: '1.3rem', fontWeight: 800, color }}>{displayVal}</div>
-                  <div style={{ fontSize: '0.72rem', color, fontWeight: 600, marginTop: '0.2rem' }}>{label}</div>
-                </div>
-              )
-            })()}
-
-            {/* JSON-LD / Structured Data */}
-            {data.signals.has_json_ld !== undefined && (
-              <div style={{ padding: '1rem', borderRadius: '0.75rem', background: '#f8fafc', border: `1px solid ${data.signals.has_json_ld ? '#16a34a30' : '#ef444430'}` }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#64748b', fontSize: '0.78rem', fontWeight: 700, marginBottom: '0.5rem' }}>
-                  <FileJson size={14} /> STRUCTURED DATA
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  {data.signals.has_json_ld
-                    ? <><CheckSquare size={20} color="#16a34a" /><span style={{ fontWeight: 800, color: '#16a34a' }}>JSON-LD Found</span></>
-                    : <><XSquare size={20} color="#ef4444" /><span style={{ fontWeight: 800, color: '#ef4444' }}>Missing</span></>}
-                </div>
-                <div style={{ fontSize: '0.72rem', color: '#94a3b8', marginTop: '0.4rem' }}>
-                  {data.signals.has_json_ld ? 'AI crawlers can parse semantic context' : 'Add Schema.org JSON-LD markup'}
-                </div>
+            <div className="rounded-xl border border-slate-100 bg-slate-50 p-4 ring-1 ring-slate-100">
+              <div className="mb-2 flex items-center gap-2 text-[10px] font-bold tracking-widest text-slate-400 uppercase">
+                <Layers size={12} /> DOM Depth
               </div>
-            )}
+              <div className="text-2xl font-black text-slate-900">{data.signals.dom_depth}</div>
+            </div>
 
-            {/* Raw Content Volume */}
-            {data.signals.raw_text_length !== undefined && (
-              <div style={{ padding: '1rem', borderRadius: '0.75rem', background: '#f8fafc', border: '1px solid #e2e8f0' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#64748b', fontSize: '0.78rem', fontWeight: 700, marginBottom: '0.5rem' }}>
-                  <BarChart2 size={14} /> RAW CONTENT
-                </div>
-                <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#1e293b' }}>{data.signals.raw_text_length.toLocaleString()}</div>
-                <div style={{ fontSize: '0.72rem', color: '#94a3b8', marginTop: '0.2rem' }}>chars (pre-JS)</div>
+            {/* Structured Data */}
+            <div className="rounded-xl border border-slate-100 bg-slate-50 p-4 ring-1 ring-slate-100">
+              <div className="mb-2 flex items-center gap-2 text-[10px] font-bold tracking-widest text-slate-400 uppercase">
+                <FileJson size={12} /> JSON-LD
               </div>
-            )}
+              <div className="flex items-center gap-2">
+                {data.signals.has_json_ld ? (
+                  <>
+                    <CheckSquare size={20} className="text-emerald-500" />
+                    <span className="text-lg font-black text-emerald-600">Present</span>
+                  </>
+                ) : (
+                  <>
+                    <XSquare size={20} className="text-red-500" />
+                    <span className="text-lg font-black text-red-600">Missing</span>
+                  </>
+                )}
+              </div>
+            </div>
           </div>
         </section>
       )}
 
-      {/* 0.1 Technical Optimization Guidance — Only shows Medium/Bad scores */}
+      {/* Technical Optimization Guidance — Only shows Medium/Bad scores */}
       {data.guidance && data.guidance.length > 0 && (
-        <section className="glass-card" style={{ marginBottom: '2rem', background: '#fffbeb', border: '1px solid #fde68a' }}>
-          <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#92400e', marginBottom: '1.5rem' }}>
-            <Activity size={20} color="#92400e" /> Recommended Chromium Optimizations
+        <section className="glass-card mb-8 border-amber-200 bg-amber-50/50">
+          <h3 className="mb-6 flex items-center gap-2 text-lg font-bold text-amber-900">
+            <Activity size={20} className="text-amber-600" /> Recommended Performance Optimizations
           </h3>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem' }}>
+          <div className="grid grid-cols-1 gap-4">
             {data.guidance.map((item, i) => (
-              <div key={i} style={{ padding: '1rem', background: '#ffffff80', borderRadius: '0.75rem', borderLeft: `5px solid ${item.score === 'Bad' ? '#ef4444' : '#f59e0b'}` }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.4rem' }}>
-                      <span style={{ fontSize: '0.7rem', fontWeight: 800, color: '#92400e', letterSpacing: '0.05em' }}>{item.metric.toUpperCase()}</span>
-                      <span style={{ fontSize: '0.65rem', padding: '0.2rem 0.5rem', borderRadius: '1rem', background: item.score === 'Bad' ? '#fee2e2' : '#fef3c7', color: item.score === 'Bad' ? '#ef4444' : '#b45309', fontWeight: 800 }}>{item.score.toUpperCase()}</span>
+              <div
+                key={i}
+                className={`rounded-xl border-l-4 bg-white/80 p-5 shadow-sm ${
+                  item.score === 'Bad' ? 'border-red-500' : 'border-amber-500'
+                }`}
+              >
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div className="flex-1">
+                    <div className="mb-2 flex items-center gap-3">
+                      <span className="text-[10px] font-black uppercase tracking-widest text-amber-800">
+                        {item.metric.toUpperCase()}
+                      </span>
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-[10px] font-black uppercase ${
+                          item.score === 'Bad'
+                            ? 'bg-red-100 text-red-600'
+                            : 'bg-amber-100 text-amber-600'
+                        }`}
+                      >
+                        {item.score}
+                      </span>
                     </div>
-                    <div style={{ fontSize: '0.95rem', fontWeight: 600, color: '#78350f' }}>{item.advice}</div>
+                    <div className="text-sm font-bold text-amber-900">{item.advice}</div>
                   </div>
-                  <button 
+                  <button
                     onClick={() => toggleGuidance(item.id)}
-                    className="btn-fix"
-                    style={{ 
-                      fontSize: '0.75rem', 
-                      padding: '0.4rem 0.8rem', 
-                      background: item.score === 'Bad' ? '#ef4444' : '#f59e0b',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '0.5rem',
-                      cursor: 'pointer',
-                      fontWeight: 700,
-                      boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                      transition: 'transform 0.2s'
-                    }}
+                    className={`rounded-lg px-4 py-2 text-xs font-bold text-white transition-all hover:scale-105 ${
+                      item.score === 'Bad' ? 'bg-red-600' : 'bg-amber-600'
+                    }`}
                   >
-                    {expandedGuidance[item.id] ? 'Close' : 'Guidance to solve the issue'}
+                    {expandedGuidance[item.id] ? 'Close Guidance' : 'View Fix Steps'}
                   </button>
                 </div>
-                
+
                 {expandedGuidance[item.id] && (
-                  <div className="animate-fade-in" style={{ marginTop: '1.25rem', padding: '1rem', background: 'white', borderRadius: '0.5rem', border: '1px solid #fde68a' }}>
-                    <h4 style={{ fontSize: '0.8rem', color: '#92400e', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                      <Target size={14} /> IMPLEMENTATION STEPS
+                  <div className="mt-6 animate-fade-in rounded-lg border border-amber-100 bg-white p-5 shadow-inner">
+                    <h4 className="mb-4 flex items-center gap-2 text-xs font-black uppercase tracking-widest text-amber-800">
+                      <Target size={14} className="text-amber-600" /> Framework-Agnostic Implementation
                     </h4>
-                    <ul style={{ margin: 0, paddingLeft: '1.2rem', color: '#78350f' }}>
+                    <ul className="space-y-3">
                       {item.steps.map((step, si) => (
-                        <li key={si} style={{ fontSize: '0.88rem', marginBottom: '0.5rem', lineHeight: '1.4' }}>{step}</li>
+                        <li
+                          key={si}
+                          className="flex items-start gap-3 text-sm leading-relaxed text-amber-900/80"
+                        >
+                          <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-amber-100 text-[10px] font-black text-amber-700">
+                            {si + 1}
+                          </span>
+                          {step}
+                        </li>
                       ))}
                     </ul>
                   </div>
@@ -312,102 +284,146 @@ const PageDetail = () => {
         </section>
       )}
 
-      {/* 1. Performance Report Section */}
-      <section className="glass-card" style={{ marginBottom: '2rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-          <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Zap size={20} color="#eab308" /> 1. Performance Optimization Report
-          </h3>
-          <div style={{ padding: '0.5rem 1rem', background: '#fefce8', color: '#854d0e', borderRadius: '2rem', fontWeight: 700, fontSize: '0.9rem' }}>
-            Score: {data.performance_report.score}/100
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+        {/* Performance Report */}
+        <section className="glass-card">
+          <div className="mb-6 flex items-center justify-between">
+            <h3 className="flex items-center gap-2 text-lg font-bold text-slate-900">
+              <Zap size={20} className="text-amber-500" /> Performance Audit
+            </h3>
+            <span className="rounded-full bg-amber-50 px-3 py-1 text-sm font-bold text-amber-600">
+              Score: {data.performance_report.score}/100
+            </span>
           </div>
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
-          <div>
-            <h4 style={{ fontSize: '0.85rem', color: '#ef4444', marginBottom: '1rem' }}>SPEED BLOCKERS</h4>
-            <ul style={{ listStyle: 'none' }}>
-              {data.performance_report.issues.map((issue, i) => (
-                <li key={i} style={{ marginBottom: '0.5rem', fontSize: '0.9rem', color: '#475569' }}>• {issue}</li>
-              ))}
-            </ul>
-          </div>
-          <div>
-            <h4 style={{ fontSize: '0.85rem', color: '#22c55e', marginBottom: '1rem' }}>TECHNICAL FIXES</h4>
-            <ul style={{ listStyle: 'none' }}>
-              {data.performance_report.fixes.map((fix, i) => (
-                <li key={i} style={{ marginBottom: '0.5rem', fontSize: '0.9rem', color: '#475569' }}>→ {fix}</li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      </section>
 
-      {/* 2. Sitemap Audit Section */}
-      <section className="glass-card" style={{ marginBottom: '2rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-          <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <FileJson size={20} color="#3b82f6" /> 2. Sitemap & Structure Analysis
-          </h3>
-          <div style={{ padding: '0.5rem 1rem', background: '#eff6ff', color: '#1e40af', borderRadius: '2rem', fontWeight: 700, fontSize: '0.9rem' }}>
-             Health: {data.sitemap_audit.score}%
-          </div>
-        </div>
-        <p style={{ fontSize: '0.95rem', color: '#475569', marginBottom: '1.5rem', background: '#f8fafc', padding: '1rem', borderRadius: '0.5rem', borderLeft: '4px solid #3b82f6' }}>
-          {data.sitemap_audit.analysis}
-        </p>
-        <h4 style={{ fontSize: '0.85rem', color: '#3b82f6', marginBottom: '1rem' }}>RECOMMENDED IMPROVEMENTS</h4>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem' }}>
-          {data.sitemap_audit.improvements.map((imp, i) => (
-            <div key={i} style={{ padding: '0.75rem', border: '1px solid #e2e8f0', borderRadius: '0.5rem', fontSize: '0.85rem' }}>
-              {imp}
+          <div className="space-y-6">
+            <div>
+              <h4 className="mb-3 text-xs font-bold tracking-widest text-red-500 uppercase">
+                Critical Issues
+              </h4>
+              <ul className="space-y-2">
+                {data.performance_report?.issues?.map((issue, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm text-slate-600">
+                    <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-red-400" />
+                    {issue}
+                  </li>
+                ))}
+              </ul>
             </div>
-          ))}
-        </div>
-      </section>
 
-      {/* 3. Competitive Analysis Section */}
-      <section className="glass-card" style={{ marginBottom: '2rem', background: '#faf5ff', borderColor: '#d8b4fe' }}>
-        <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#7e22ce', marginBottom: '1.5rem' }}>
-          <Target size={20} color="#7e22ce" /> 3. Competitive Citation Edge
+            <div>
+              <h4 className="mb-3 text-xs font-bold tracking-widest text-emerald-500 uppercase">
+                Recommended Fixes
+              </h4>
+              <ul className="space-y-2">
+                {data.performance_report?.fixes?.map((fix, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm text-slate-600">
+                    <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-emerald-400" />
+                    {fix}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        {/* Sitemap Audit */}
+        <section className="glass-card">
+          <div className="mb-6 flex items-center justify-between">
+            <h3 className="flex items-center gap-2 text-lg font-bold text-slate-900">
+              <Globe size={20} className="text-blue-500" /> Content & Sitemap
+            </h3>
+            <span className="rounded-full bg-blue-50 px-3 py-1 text-sm font-bold text-blue-600">
+              Health: {data.sitemap_audit.score}%
+            </span>
+          </div>
+
+          <div className="mb-6 rounded-lg bg-slate-50 p-4 text-sm leading-relaxed text-slate-600">
+            {data.sitemap_audit.analysis}
+          </div>
+
+          <h4 className="mb-3 text-xs font-bold tracking-widest text-blue-500 uppercase">
+            Roadmap for Visibility
+          </h4>
+          <div className="grid grid-cols-1 gap-2">
+            {data.sitemap_audit?.improvements?.map((imp, i) => (
+              <div
+                key={i}
+                className="rounded-lg border border-slate-100 bg-white p-3 text-sm text-slate-700 shadow-sm"
+              >
+                {imp}
+              </div>
+            ))}
+          </div>
+        </section>
+      </div>
+
+      {/* Competitive Edge */}
+      <section className="glass-card mt-8 border-indigo-100 bg-indigo-50/30">
+        <h3 className="mb-6 flex items-center gap-2 text-lg font-bold text-slate-900">
+          <Target size={20} className="text-indigo-500" /> Competitive Landscape
         </h3>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
           <div>
-            <h4 style={{ fontSize: '0.8rem', color: '#7e22ce', marginBottom: '0.75rem' }}>WHAT COMPETITORS DO BETTER</h4>
-            <p style={{ fontSize: '0.9rem', color: '#581c87' }}>{data.competitive_analysis.competitor_edge}</p>
+            <h4 className="mb-2 text-xs font-bold tracking-widest text-indigo-500 uppercase">
+              Competitor Advantages
+            </h4>
+            <p className="text-sm leading-relaxed text-slate-600">
+              {data.competitive_analysis.competitor_edge}
+            </p>
           </div>
           <div>
-            <h4 style={{ fontSize: '0.8rem', color: '#7e22ce', marginBottom: '0.75rem' }}>KEY GAP TO CLOSE</h4>
-            <div style={{ padding: '1rem', background: '#ffffff', borderRadius: '0.5rem', border: '1px solid #d8b4fe', fontWeight: 600, color: '#7e22ce' }}>
+            <h4 className="mb-2 text-xs font-bold tracking-widest text-indigo-500 uppercase">
+              Strategic Gap to Close
+            </h4>
+            <div className="rounded-xl border border-indigo-200 bg-white p-5 text-lg font-bold text-indigo-600 shadow-sm">
               {data.competitive_analysis.gap_to_close}
             </div>
           </div>
         </div>
       </section>
 
-      {/* Overall Stat Summary */}
-      <section style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1.5rem', marginTop: '2rem' }}>
-        <div className="glass-card" style={{ textAlign: 'center' }}>
-          <span className="text-muted" style={{ fontSize: '0.7rem', fontWeight: 800 }}>AI READINESS SCORE</span>
-          <div style={{ fontSize: '2rem', fontWeight: 800, color: '#1e293b' }}>{data.ai_readiness.overall_score}%</div>
+      {/* Final Verdict */}
+      <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div className="glass-card flex flex-col items-center justify-center py-8 text-center">
+          <span className="mb-1 text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase">
+            AI READINESS
+          </span>
+          <div className="text-4xl font-black text-slate-900">
+            {data.ai_readiness.overall_score}%
+          </div>
         </div>
-        <div className="glass-card" style={{ textAlign: 'center', background: '#f0fdf4', borderColor: '#bbf7d0' }}>
-          <span className="text-muted" style={{ fontSize: '0.7rem', fontWeight: 800 }}>ESTIMATED IMPACT</span>
-          <div style={{ fontSize: '2rem', fontWeight: 800, color: '#16a34a' }}>{data.ai_readiness.estimated_impact}</div>
+        <div className="glass-card flex flex-col items-center justify-center border-emerald-100 bg-emerald-50 py-8 text-center">
+          <span className="mb-1 text-[10px] font-bold tracking-[0.2em] text-emerald-500 uppercase">
+            ESTIMATED IMPACT
+          </span>
+          <div className="text-4xl font-black text-emerald-600">
+            {data.ai_readiness.estimated_impact}
+          </div>
         </div>
-        <div className="glass-card" style={{ textAlign: 'center' }}>
-          <span className="text-muted" style={{ fontSize: '0.7rem', fontWeight: 800 }}>AUDIT TIME</span>
-          <div style={{ fontSize: '2rem', fontWeight: 800, color: '#3b82f6' }}>{data.execution_time_ms}ms</div>
+        <div className="glass-card flex flex-col items-center justify-center py-8 text-center">
+          <span className="mb-1 text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase">
+            AUDIT SPEED
+          </span>
+          <div className="text-4xl font-black text-blue-500">{data.execution_time_ms}ms</div>
         </div>
-      </section>
+      </div>
 
-      {/* Execution Trace */}
-      <section style={{ marginTop: '2rem' }}>
-        <div className="log-window" style={{ maxHeight: '120px', overflowY: 'auto' }}>
-          {data.logs && data.logs.map((log, i) => (
-            <div key={i} style={{ marginBottom: '2px' }}><span style={{ color: '#475569' }}>&gt;</span> {log}</div>
-          ))}
+      {/* Audit Logs */}
+      <div className="mt-8">
+        <h3 className="mb-4 text-xs font-bold tracking-widest text-slate-400 uppercase">
+          Execution Trace
+        </h3>
+        <div className="max-h-32 overflow-auto rounded-lg bg-slate-900 p-4 font-mono text-[10px] text-slate-500">
+          {data.logs &&
+            data.logs.map((log, i) => (
+              <div key={i}>
+                <span className="mr-2 text-slate-700">&gt;</span>
+                {log}
+              </div>
+            ))}
         </div>
-      </section>
+      </div>
     </div>
   )
 }
