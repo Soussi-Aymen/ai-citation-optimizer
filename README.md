@@ -12,7 +12,7 @@ AI Citation Optimizer helps early-stage brands like Nothing Phone, Attio, and BY
 
 - **Deep Technical AI Audit:** Simulates an AI indexer using a Headless Chromium instance (via Playwright & CDP) to capture and analyze precise technical layers—like Unused JS, JS-to-Text ratio, and DOM depth—that specifically cause AI search bots to fail or time out.
 - **Automated Sitemap-to-Citation Mapping:** Instantly identifies the "Discovery Gap" by cross-referencing your sitemap against real-time AI citations, revealing exactly which high-value pages are being ignored by LLM crawlers.
-- **Actionable AI-Readiness Fixes:** Provides step-by-step technical instructions and generated copy-paste JSON-LD schema snippets to force AI discovery and ensure your content is structured for LLM ingestion.
+- **Actionable AI-Readiness Fixes:** Provides step-by-step technical instructions, generated copy-paste JSON-LD schema snippets, and **llms.txt templates** for the analyzed site to improve AI discovery and LLM ingestion.
 - **Instant Outreach Content Drafting:** Uses Gemini to draft tailored collaboration pitches, Reddit comments, and PR emails for specific gaps identified in your optimization roadmap.
 - **Dynamic Growth Projection:** Uses a realistic 50% recovery model to project visibility and citation growth based on technical gap closure and off-page strategic actions.
 
@@ -30,14 +30,16 @@ When you audit a URL, our backend spins up a Headless Chromium browser and attac
 - **Largest Contentful Paint (LCP):** Evaluates how fast the main content renders for the bot.
 - **Console Errors:** Traps live JS errors during the render phase, which often completely break an AI bot's ability to "see" the page.
 - **Structured Data (JSON-LD):** Detects if semantic markup exists to feed the LLM easily digestible context.
+- **LLM Discovery File (llms.txt):** Probes the analyzed domain for `/llms.txt` in parallel with the browser audit and checks whether the page is listed in the site's curated AI index ([llmstxt.org](https://llmstxt.org/) spec).
 
 ### 2. The Improvement Layers (Actionable Fixes)
 
 Instead of just showing raw data, the tool turns these metrics into immediate action:
 
 - **Unified Action Plan:** Every audit generates a single, comprehensive "General Chromium Optimization Tips" section. This provides a framework-agnostic implementation plan to solve all flagged technical issues (JS bloat, LCP, console errors) in one centralized view.
-- **Deep Technical Health Matrix:** Replaces generic scores with a detailed list of bot-centric metrics, including JS Hydration impact, Unused JS coverage, and LCP, with explicit 🔴/🟡/✅ status indicators.
+- **Deep Technical Health Matrix:** Replaces generic scores with a detailed list of bot-centric metrics, including JS Hydration impact, Unused JS coverage, LCP, and **llms.txt status**, with explicit 🔴/🟡/✅ status indicators.
 - **Copy-Paste Schema Generation:** Automatically generates custom JSON-LD (e.g., `Product`, `Organization`) tailored to the specific URL path to accelerate AI entity recognition.
+- **llms.txt Template Generation:** When the analyzed site lacks `/llms.txt` or does not list the page, generates a ready-to-deploy markdown file for `https://your-domain/llms.txt`.
 
 ## Architecture
 
@@ -141,7 +143,7 @@ npm run dev
 - `GET /api/gaps?domain=<domain>`: Returns a list of non-cited pages, overall performance metrics, and competitor visibility data.
 - `GET /api/benchmark?domain=<domain>`: Provides the detailed optimization roadmap, competitor breakdown, and gap sources.
 - `POST /api/audit`: Conducts a deep crawlability and AI-readiness audit of a specific URL.
-- `POST /api/generate-fix`: Generates an actionable fix checklist and JSON-LD schema for a missing page.
+- `POST /api/generate-fix`: Generates an actionable fix checklist, JSON-LD schema, live Playwright metrics, and an **llms.txt template** for the analyzed site.
 - `POST /api/generate-content`: Drafts targeted outreach content (emails, comments, scripts) for specific optimization roadmap items.
 
 ## Example Usage
@@ -150,4 +152,13 @@ npm run dev
 2. Review the **Growth Opportunity** and **Competitor Advantage Breakdown** to see where you stand. (Note: Estimated progress in a realistic benchmark shows around 50% improvement for targeted businesses).
 3. Check the **Optimization Roadmap** for high-priority actions and click "Draft Content" to instantly generate outreach emails or comments.
 4. Drill down into specific **Gap Sources** (YouTube, Reddit, Editorial) to identify missed citation opportunities.
-5. In the **Pages Missing** section, click "How to Fix" to get specific, step-by-step instructions. In the **Technical Audit Report**, use the "Guidance to solve the issue" buttons for framework-agnostic implementation plans to make the page AI-ready.
+5. In the **Pages Missing** section, click "How to Fix" to get step-by-step instructions, live JS performance metrics, and an **llms.txt template** to publish on the analyzed domain. Use the expandable guidance buttons for framework-agnostic fixes. Open **View Deep Technical Audit Report** for the full signal breakdown.
+
+## Developer Docs
+
+Compact reference docs for contributors and AI coding agents (start with `docs/AGENT_CONTEXT.md`):
+
+- [`docs/AGENT_CONTEXT.md`](docs/AGENT_CONTEXT.md) — file map and key symbols (token-optimized)
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — system design and data flows
+- [`docs/JS_CITATION_AUDIT.md`](docs/JS_CITATION_AUDIT.md) — Playwright JS metrics and thresholds
+- [`docs/LLMS_TXT_INTEGRATION.md`](docs/LLMS_TXT_INTEGRATION.md) — llms.txt probe, guidance, and UI
