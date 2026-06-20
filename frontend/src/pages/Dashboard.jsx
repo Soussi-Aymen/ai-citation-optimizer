@@ -511,13 +511,22 @@ const Dashboard = () => {
                                 Page Audit Result
                               </h4>
                               <div className="space-y-4">
-                                {[
-                                  { id: 'js_hydration', label: 'JS Dependency', value: generatedFixes[url].metrics?.js_impact === 'CRITICAL' ? '🔴 CRITICAL — heavy JS dependency' : (generatedFixes[url].metrics?.js_impact === 'MODERATE' ? '🟡 Moderate JS dependency' : '✅ Low JS dependency'), color: generatedFixes[url].metrics?.js_impact === 'CRITICAL' ? 'text-red-600' : (generatedFixes[url].metrics?.js_impact === 'MODERATE' ? 'text-amber-600' : 'text-emerald-600'), score: generatedFixes[url].metrics?.js_impact === 'LOW' ? 'Good' : (generatedFixes[url].metrics?.js_impact === 'MODERATE' ? 'Medium' : 'Bad') },
-                                  { id: 'unused_js', label: 'Unused JavaScript', value: (generatedFixes[url].metrics?.unused_js_pct ?? 0) > 60 ? `🔴 ${generatedFixes[url].metrics.unused_js_pct}% unused (dead code blocking crawlers)` : ((generatedFixes[url].metrics?.unused_js_pct ?? 0) >= 30 ? `🟡 ${generatedFixes[url].metrics.unused_js_pct}% unused JS is downloaded but never executed` : `✅ ${generatedFixes[url].metrics?.unused_js_pct ?? 0}% unused — highly efficient`), color: (generatedFixes[url].metrics?.unused_js_pct ?? 0) > 60 ? 'text-red-600' : ((generatedFixes[url].metrics?.unused_js_pct ?? 0) >= 30 ? 'text-amber-600' : 'text-emerald-600'), score: (generatedFixes[url].metrics?.unused_js_pct ?? 0) > 60 ? 'Bad' : ((generatedFixes[url].metrics?.unused_js_pct ?? 0) >= 30 ? 'Medium' : 'Good') },
-                                  { id: 'js_payload', label: 'JS Bundle Size', value: (generatedFixes[url].metrics?.js_payload_mb ?? 0) > 3 ? `🔴 ${generatedFixes[url].metrics.js_payload_mb}MB — timeout risk for bots` : ((generatedFixes[url].metrics?.js_payload_mb ?? 0) >= 1 ? `🟡 ${generatedFixes[url].metrics.js_payload_mb}MB — may slow AI crawler indexing` : `✅ ${generatedFixes[url].metrics?.js_payload_mb ?? 0}MB JS payload — crawler friendly`), color: (generatedFixes[url].metrics?.js_payload_mb ?? 0) > 3 ? 'text-red-600' : ((generatedFixes[url].metrics?.js_payload_mb ?? 0) >= 1 ? 'text-amber-600' : 'text-emerald-600'), score: (generatedFixes[url].metrics?.js_payload_mb ?? 0) > 3 ? 'Bad' : ((generatedFixes[url].metrics?.js_payload_mb ?? 0) >= 1 ? 'Medium' : 'Good') },
-                                  { id: 'lcp', label: 'Page Load (LCP)', value: (generatedFixes[url].metrics?.lcp_seconds ?? 0) > 4 ? `🔴 ${generatedFixes[url].metrics.lcp_seconds}s LCP — too slow for bot timeouts` : ((generatedFixes[url].metrics?.lcp_seconds ?? 0) >= 2.5 ? `🟡 ${generatedFixes[url].metrics.lcp_seconds}s LCP — borderline for AI crawlers` : `✅ ${generatedFixes[url].metrics?.lcp_seconds ?? 0}s LCP — fast enough for AI crawlers`), color: (generatedFixes[url].metrics?.lcp_seconds ?? 0) > 4 ? 'text-red-600' : ((generatedFixes[url].metrics?.lcp_seconds ?? 0) >= 2.5 ? 'text-amber-600' : 'text-emerald-600'), score: (generatedFixes[url].metrics?.lcp_seconds ?? 0) > 4 ? 'Bad' : ((generatedFixes[url].metrics?.lcp_seconds ?? 0) >= 2.5 ? 'Medium' : 'Good') },
-                                  { id: 'console_errors', label: 'Console Errors', value: (generatedFixes[url].metrics?.console_errors ?? 0) >= 3 ? `🔴 ${generatedFixes[url].metrics.console_errors} errors — page may appear broken to bots` : ((generatedFixes[url].metrics?.console_errors ?? 0) >= 1 ? `🟡 ${generatedFixes[url].metrics.console_errors} errors — check for failed API calls` : `✅ No JS errors detected`), color: (generatedFixes[url].metrics?.console_errors ?? 0) >= 3 ? 'text-red-600' : ((generatedFixes[url].metrics?.console_errors ?? 0) >= 1 ? 'text-amber-600' : 'text-emerald-600'), score: (generatedFixes[url].metrics?.console_errors ?? 0) >= 3 ? 'Bad' : ((generatedFixes[url].metrics?.console_errors ?? 0) >= 1 ? 'Medium' : 'Good') },
-                                ].map((row) => (
+                                {(() => {
+                                  const m = generatedFixes[url]?.metrics ?? {}
+                                  const llmsRow = !m.has_llms_txt
+                                    ? { id: 'llms_txt', label: 'LLM Discovery File', value: '🔴 No /llms.txt on domain — bots lack a curated index', color: 'text-red-600', score: 'Bad' }
+                                    : !m.llms_txt_lists_page
+                                      ? { id: 'llms_txt', label: 'LLM Discovery File', value: '🟡 /llms.txt exists but does not list this page', color: 'text-amber-600', score: m.llms_txt_valid ? 'Medium' : 'Bad' }
+                                      : { id: 'llms_txt', label: 'LLM Discovery File', value: '✅ Page listed in /llms.txt', color: 'text-emerald-600', score: 'Good' }
+                                  return [
+                                  { id: 'js_hydration', label: 'JS Dependency', value: m.js_impact === 'CRITICAL' ? '🔴 CRITICAL — heavy JS dependency' : (m.js_impact === 'MODERATE' ? '🟡 Moderate JS dependency' : '✅ Low JS dependency'), color: m.js_impact === 'CRITICAL' ? 'text-red-600' : (m.js_impact === 'MODERATE' ? 'text-amber-600' : 'text-emerald-600'), score: m.js_impact === 'LOW' ? 'Good' : (m.js_impact === 'MODERATE' ? 'Medium' : 'Bad') },
+                                  { id: 'unused_js', label: 'Unused JavaScript', value: (m.unused_js_pct ?? 0) > 60 ? `🔴 ${m.unused_js_pct}% unused (dead code blocking crawlers)` : ((m.unused_js_pct ?? 0) >= 30 ? `🟡 ${m.unused_js_pct}% unused JS is downloaded but never executed` : `✅ ${m.unused_js_pct ?? 0}% unused — highly efficient`), color: (m.unused_js_pct ?? 0) > 60 ? 'text-red-600' : ((m.unused_js_pct ?? 0) >= 30 ? 'text-amber-600' : 'text-emerald-600'), score: (m.unused_js_pct ?? 0) > 60 ? 'Bad' : ((m.unused_js_pct ?? 0) >= 30 ? 'Medium' : 'Good') },
+                                  { id: 'js_payload', label: 'JS Bundle Size', value: (m.js_payload_mb ?? 0) > 3 ? `🔴 ${m.js_payload_mb}MB — timeout risk for bots` : ((m.js_payload_mb ?? 0) >= 1 ? `🟡 ${m.js_payload_mb}MB — may slow AI crawler indexing` : `✅ ${m.js_payload_mb ?? 0}MB JS payload — crawler friendly`), color: (m.js_payload_mb ?? 0) > 3 ? 'text-red-600' : ((m.js_payload_mb ?? 0) >= 1 ? 'text-amber-600' : 'text-emerald-600'), score: (m.js_payload_mb ?? 0) > 3 ? 'Bad' : ((m.js_payload_mb ?? 0) >= 1 ? 'Medium' : 'Good') },
+                                  { id: 'lcp', label: 'Page Load (LCP)', value: (m.lcp_seconds ?? 0) > 4 ? `🔴 ${m.lcp_seconds}s LCP — too slow for bot timeouts` : ((m.lcp_seconds ?? 0) >= 2.5 ? `🟡 ${m.lcp_seconds}s LCP — borderline for AI crawlers` : `✅ ${m.lcp_seconds ?? 0}s LCP — fast enough for AI crawlers`), color: (m.lcp_seconds ?? 0) > 4 ? 'text-red-600' : ((m.lcp_seconds ?? 0) >= 2.5 ? 'text-amber-600' : 'text-emerald-600'), score: (m.lcp_seconds ?? 0) > 4 ? 'Bad' : ((m.lcp_seconds ?? 0) >= 2.5 ? 'Medium' : 'Good') },
+                                  { id: 'console_errors', label: 'Console Errors', value: (m.console_errors ?? 0) >= 3 ? `🔴 ${m.console_errors} errors — page may appear broken to bots` : ((m.console_errors ?? 0) >= 1 ? `🟡 ${m.console_errors} errors — check for failed API calls` : '✅ No JS errors detected'), color: (m.console_errors ?? 0) >= 3 ? 'text-red-600' : ((m.console_errors ?? 0) >= 1 ? 'text-amber-600' : 'text-emerald-600'), score: (m.console_errors ?? 0) >= 3 ? 'Bad' : ((m.console_errors ?? 0) >= 1 ? 'Medium' : 'Good') },
+                                  llmsRow,
+                                ]
+                                })().map((row) => (
                                   <div key={row.id} className="border-b border-slate-50 pb-3 last:border-0 last:pb-0">
                                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
                                       <div className="flex flex-col sm:flex-row sm:items-center">
@@ -559,8 +568,8 @@ const Dashboard = () => {
                                       (() => {
                                         const m = generatedFixes[url]?.metrics;
                                         if (!m) return <span className="text-slate-400">Analysis Pending</span>;
-                                        const isBad = m.js_impact === 'CRITICAL' || (m.unused_js_pct ?? 0) > 60 || (m.js_payload_mb ?? 0) > 3 || (m.lcp_seconds ?? 0) > 4 || (m.console_errors ?? 0) >= 3;
-                                        const isMed = m.js_impact === 'MODERATE' || (m.unused_js_pct ?? 0) >= 30 || (m.js_payload_mb ?? 0) >= 1 || (m.lcp_seconds ?? 0) >= 2.5 || (m.console_errors ?? 0) >= 1;
+                                        const isBad = m.js_impact === 'CRITICAL' || (m.unused_js_pct ?? 0) > 60 || (m.js_payload_mb ?? 0) > 3 || (m.lcp_seconds ?? 0) > 4 || (m.console_errors ?? 0) >= 3 || !m.has_llms_txt;
+                                        const isMed = m.js_impact === 'MODERATE' || (m.unused_js_pct ?? 0) >= 30 || (m.js_payload_mb ?? 0) >= 1 || (m.lcp_seconds ?? 0) >= 2.5 || (m.console_errors ?? 0) >= 1 || (m.has_llms_txt && !m.llms_txt_lists_page);
                                         if (isBad) return <><span className="text-red-600">🔴 Poor AI Crawlability</span></>;
                                         if (isMed) return <><span className="text-amber-600">🟡 Moderate AI Crawlability</span></>;
                                         return <><span className="text-emerald-600">✅ Good AI Crawlability</span></>;
@@ -600,6 +609,36 @@ const Dashboard = () => {
                                 </li>
                               ))}
                             </ul>
+                          </div>
+
+                          <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+                            <div className="mb-4 flex items-center justify-between">
+                              <h4 className="flex items-center gap-2 text-sm font-bold text-slate-800">
+                                <Globe size={16} className="text-blue-500" />
+                                llms.txt Template (for analyzed site)
+                              </h4>
+                              <button
+                                onClick={() =>
+                                  copyToClipboard(
+                                    generatedFixes[url].llms_txt_template,
+                                    `${url}-llms`,
+                                    'fix',
+                                  )
+                                }
+                                className="flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:text-blue-800"
+                              >
+                                {copiedFix[`${url}-llms`] ? <Check size={14} /> : <Copy size={14} />}
+                                {copiedFix[`${url}-llms`] ? 'Copied!' : 'Copy File'}
+                              </button>
+                            </div>
+                            <div className="relative">
+                              <pre className="max-h-64 overflow-auto rounded-lg bg-slate-900 p-4 font-mono text-[10px] leading-relaxed text-slate-300">
+                                <code>{generatedFixes[url]?.llms_txt_template ?? '# No template generated'}</code>
+                              </pre>
+                            </div>
+                            <p className="mt-4 text-[10px] italic text-slate-400">
+                              Deploy at https://your-domain/llms.txt on the site you are analyzing — not this tool.
+                            </p>
                           </div>
 
                           <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">

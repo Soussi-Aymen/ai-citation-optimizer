@@ -212,6 +212,31 @@ const PageDetail = () => {
                 )}
               </div>
             </div>
+
+            {/* LLM Discovery File */}
+            <div className="rounded-xl border border-slate-100 bg-slate-50 p-4 ring-1 ring-slate-100">
+              <div className="mb-2 flex items-center gap-2 text-[10px] font-bold tracking-widest text-slate-400 uppercase">
+                <Globe size={12} /> llms.txt
+              </div>
+              <div className="flex items-center gap-2">
+                {!data.signals.has_llms_txt ? (
+                  <>
+                    <XSquare size={20} className="text-red-500" />
+                    <span className="text-lg font-black text-red-600">Missing</span>
+                  </>
+                ) : data.signals.llms_txt_lists_page ? (
+                  <>
+                    <CheckSquare size={20} className="text-emerald-500" />
+                    <span className="text-lg font-black text-emerald-600">Listed</span>
+                  </>
+                ) : (
+                  <>
+                    <XSquare size={20} className="text-amber-500" />
+                    <span className="text-lg font-black text-amber-600">Not Listed</span>
+                  </>
+                )}
+              </div>
+            </div>
           </div>
         </section>
       )}
