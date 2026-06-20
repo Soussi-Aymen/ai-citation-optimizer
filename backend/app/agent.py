@@ -10,6 +10,8 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
 from playwright.async_api import async_playwright
 
+from .llms_txt_analyzer import build_llms_txt_template, extract_domain, probe_llms_txt
+
 load_dotenv()
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
@@ -30,9 +32,15 @@ class CrawlabilityAgent:
         """Returns structured instruction panel data — user-facing action plan, no automated fixes."""
         product_name = _infer_product_name(url)
 
+        llms_checklist = (
+            "Publish `/llms.txt` at your domain root and include this page "
+            "(copy the llms.txt template below)"
+        )
+
         if "/products/" in url:
             problem = "This product page is likely rendered in JavaScript. AI crawlers cannot read JS-rendered content — they only see an empty shell."
             checklist = [
+                llms_checklist,
                 "Add JSON-LD structured data to this page's <head> (copy the template below)",
                 "Ensure the product name and description appear in plain HTML <h1> and <p> tags, not rendered by JavaScript",
                 f"Add a one-paragraph plain-text description of '{product_name}' that includes: what it is, who it's for, and how it differs from competitors like Apple and Samsung",
@@ -59,6 +67,7 @@ class CrawlabilityAgent:
         elif "/pages/" in url:
             problem = "This page lacks structured entity information that AI engines use to understand your brand and surface it in responses."
             checklist = [
+                llms_checklist,
                 "Add JSON-LD Organization schema to this page's <head> (copy the template below)",
                 "Verify all key brand information (founding year, products, mission) is written in plain HTML — not loaded via JS",
                 "Structure the page with proper heading hierarchy: one <h1> with the brand name, <h2> for each major section",
@@ -82,6 +91,7 @@ class CrawlabilityAgent:
         elif "/collections/" in url:
             problem = "Collection pages typically have thin content with no clear topic — AI engines skip them because there's nothing substantive to cite."
             checklist = [
+                llms_checklist,
                 "Add a 200–300 word plain-text introductory paragraph above the product grid explaining what this collection is and who it's for",
                 "Add JSON-LD CollectionPage schema to this page's <head> (copy the template below)",
                 "Link each product in this collection to its own product page with descriptive anchor text (not just 'View' or 'Shop Now')",
@@ -102,6 +112,7 @@ class CrawlabilityAgent:
         else:
             problem = "This page has no structured data and may not have enough plain-text content for AI engines to index and cite it."
             checklist = [
+                llms_checklist,
                 "Add JSON-LD WebPage schema to this page's <head> (copy the template below)",
                 "Ensure all key content is in plain HTML — not loaded via JavaScript frameworks",
                 "Add at least one paragraph of descriptive text that clearly explains what this page is about",
@@ -125,6 +136,7 @@ class CrawlabilityAgent:
             "checklist": checklist,
             "schema_type": schema_type,
             "json_ld": f'<script type="application/ld+json">\n{json.dumps(json_ld, indent=2)}\n</script>',
+            "llms_txt_template": build_llms_txt_template(url),
         }
 
     def _generate_guidance(self, signals: dict) -> list:
@@ -245,6 +257,39 @@ class CrawlabilityAgent:
                 }
             )
 
+        # LLM Discovery File (llms.txt on analyzed domain)
+        if not signals.get("has_llms_txt"):
+            guidance.append(
+                {
+                    "id": "llms_txt",
+                    "metric": "LLM Discovery File",
+                    "score": "Bad",
+                    "advice": f"No /llms.txt found on {signals.get('domain', 'this domain')}.",
+                    "steps": [
+                        "Create a `/llms.txt` file at your domain root (see llmstxt.org spec).",
+                        "Start with an H1 site name, a blockquote summary, and H2 sections with markdown link lists.",
+                        "Include this page and your highest-value product/brand pages in a ## Priority Pages section.",
+                        "If pages rely on JavaScript rendering, llms.txt helps AI bots find canonical URLs to cite.",
+                    ],
+                }
+            )
+        elif not signals.get("llms_txt_lists_page"):
+            score = "Medium" if signals.get("llms_txt_valid") else "Bad"
+            guidance.append(
+                {
+                    "id": "llms_txt",
+                    "metric": "LLM Discovery File",
+                    "score": score,
+                    "advice": "/llms.txt exists but does not list this page.",
+                    "steps": [
+                        "Add this URL to the ## Priority Pages section of your /llms.txt file.",
+                        "Use the format: - [Page Name](url): short description of what AI should cite.",
+                        "Prioritize pages that are in your sitemap but missing from AI citations.",
+                        "Keep descriptions concise — one line per link.",
+                    ],
+                }
+            )
+
         # Structured Data
         if not signals.get("has_json_ld"):
             guidance.append(
@@ -311,6 +356,11 @@ Based on this recommendation: '{action_text}', {task}""")
             except Exception as e:
                 logs.append(f"Probe Warning: {str(e)}")
                 signals["raw_text_length"] = 0
+
+        domain = extract_domain(url)
+        signals["domain"] = domain
+        logs.append("Phase 1b: Probing target /llms.txt (parallel with browser)...")
+        llms_task = asyncio.create_task(probe_llms_txt(domain, url))
 
         logs.append("Phase 2: Initializing Browser Render...")
         async with async_playwright() as p:
@@ -439,14 +489,34 @@ Based on this recommendation: '{action_text}', {task}""")
                 )
             except Exception as e:
                 logs.append(f"BROWSER_ERROR: {str(e)}")
+                try:
+                    signals.update(await llms_task)
+                except Exception:
+                    pass
                 return {
                     "error": True,
                     "logs": logs,
                     "message": f"Rendering failed: {str(e)}",
+                    "signals": signals,
+                    "guidance": self._generate_guidance(signals),
                 }
             finally:
                 if "browser" in locals():
                     await browser.close()
+
+        try:
+            llms_signals = await llms_task
+            signals.update(llms_signals)
+            if llms_signals.get("has_llms_txt"):
+                logs.append(
+                    f"llms.txt found ({llms_signals.get('llms_txt_url')}), "
+                    f"{llms_signals.get('llms_txt_link_count')} links, "
+                    f"lists page: {llms_signals.get('llms_txt_lists_page')}"
+                )
+            else:
+                logs.append("No /llms.txt on analyzed domain.")
+        except Exception as e:
+            logs.append(f"llms.txt probe warning: {str(e)}")
 
         if skip_ai:
             return {
