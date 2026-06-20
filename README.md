@@ -43,6 +43,8 @@ Instead of just showing raw data, the tool turns these metrics into immediate ac
 
 ## Architecture
 
+![AI Architecture Overview](artifacts/screenshots/ai_architecture.jpg)
+
 - **Backend**: FastAPI (Python 3.11+)
 - **AI Orchestration**: LangChain (for structured chains and prompt templates)
 - **AI Agent**: Playwright (for rendered HTML analysis) + Gemini 2.5 Flash
