@@ -166,9 +166,38 @@ Or with Docker Desktop: `docker compose up --build`
 ```bash
 npm run setup              # install Python + pnpm deps (first time)
 npm run dev                # start backend + frontend together
+npm run test               # run backend + frontend tests (unit/integration)
+npm run test:backend:integration  # Playwright browser test (optional)
 npm run docker:up          # docker compose up --build
 npm run docker:down        # docker compose down
 ```
+
+### Tests
+
+```bash
+npm run test                      # all unit + API integration tests
+npm run test:backend              # pytest only (skips Playwright by default)
+npm run test:frontend             # vitest only
+npm run typecheck                 # strict TypeScript (frontend)
+npm run test:backend:integration  # Playwright audit on react.dev (needs Chromium)
+npm run validate                  # lint + typecheck + test (same as pre-commit hook)
+```
+
+Backend tests use **pytest** with mocked Peec/sitemap/agent dependencies. The Playwright test is marked `integration` and excluded from the default run.
+
+### Pre-commit hook
+
+After `npm run setup`, every `git commit` automatically runs:
+
+1. Backend lint (`ruff check` + `ruff format --check`)
+2. Frontend typecheck (`tsc --noEmit`)
+3. Frontend lint (`eslint`)
+4. Backend unit tests (`pytest`, integration excluded)
+5. Frontend tests (`vitest run`)
+
+To run the same checks manually: `npm run validate`
+
+To skip once (not recommended): `git commit --no-verify`
 
 **Manual start (two terminals):**
 

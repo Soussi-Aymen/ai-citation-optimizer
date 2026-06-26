@@ -38,8 +38,16 @@ Guidance IDs: `js_hydration`, `js_payload`, `unused_js`, `console_errors`, `lcp`
 
 ## Tests
 
-- `backend/tests/test_agent.py` — Playwright integration (react.dev)
+- `backend/tests/test_api_integration.py` — FastAPI routes with mocked Peec/sitemap/agent
+- `backend/tests/test_peec_client.py` — Peec availability and auth handling
+- `backend/tests/test_sitemap_analyzer.py` — citation gap logic
+- `backend/tests/test_agent_fix.py` — `build_fix_instructions` unit tests
+- `backend/tests/test_agent.py` — Playwright integration (`pytest -m integration`)
 - `backend/tests/test_llms_txt.py` — llms.txt parse/template unit tests
+- `frontend/src/lib/api.test.js` — API base URL helper
+- `frontend/src/pages/Dashboard.test.jsx` — Peec UI visibility integration tests
+
+Run: `npm run test` from project root.
 
 ## Known bugs (unchanged)
 
