@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import axios from 'axios'
+import { apiUrl } from '../lib/api'
 import {
   Search,
   AlertCircle,
@@ -90,13 +91,17 @@ const Dashboard = () => {
     setData(null)
     setBenchmarkData(null)
     try {
-      const response = await axios.get(`http://localhost:8000/api/gaps?domain=${domain}`)
+      const response = await axios.get(apiUrl(`/api/gaps?domain=${domain}`))
       setData(response.data)
       localStorage.setItem('last_analyzed_domain', domain)
       setCurrentPage(1)
 
-      const benchResponse = await axios.get(`http://localhost:8000/api/benchmark?domain=${domain}`)
-      setBenchmarkData(benchResponse.data)
+      if (response.data.peec_available) {
+        const benchResponse = await axios.get(apiUrl(`/api/benchmark?domain=${domain}`))
+        if (benchResponse.data.peec_available !== false) {
+          setBenchmarkData(benchResponse.data)
+        }
+      }
     } catch (err) {
       setError('Failed to fetch data. Ensure backend is running and URL is valid.')
       console.error(err)
@@ -116,7 +121,7 @@ const Dashboard = () => {
     }
     setGeneratingFix((prev) => ({ ...prev, [url]: true }))
     try {
-      const res = await axios.post('http://localhost:8000/api/generate-fix', { url })
+      const res = await axios.post(apiUrl('/api/generate-fix'), { url })
       setGeneratedFixes((prev) => ({ ...prev, [url]: res.data }))
     } catch (err) {
       console.error(err)
@@ -139,7 +144,7 @@ const Dashboard = () => {
   const handleGenerateContent = async (actionType, actionText, key) => {
     setGeneratingContent((prev) => ({ ...prev, [key]: true }))
     try {
-      const res = await axios.post('http://localhost:8000/api/generate-content', {
+      const res = await axios.post(apiUrl('/api/generate-content'), {
         action_type: actionType,
         action_text: actionText,
       })
@@ -155,6 +160,7 @@ const Dashboard = () => {
   const indexOfFirstItem = indexOfLastItem - itemsPerPage
   const currentItems = data?.gaps.slice(indexOfFirstItem, indexOfLastItem) || []
   const totalPages = Math.ceil((data?.gaps.length || 0) / itemsPerPage)
+  const peecAvailable = data?.peec_available === true
 
   return (
     <div className="animate-fade-in">
@@ -163,7 +169,11 @@ const Dashboard = () => {
           AI Search Dashboard
         </h1>
         <p className="text-lg text-slate-500">
-          Analyze your website's visibility and detect citation gaps in AI models.
+          {!data
+            ? "Analyze your website's visibility and detect citation gaps in AI models."
+            : peecAvailable
+              ? "Analyze your website's visibility and detect citation gaps in AI models."
+              : 'Audit your sitemap pages for AI crawler readiness — technical analysis powered by Playwright.'}
         </p>
       </header>
 
@@ -189,7 +199,11 @@ const Dashboard = () => {
 
       {data && (
         <>
-          <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          <div
+            className={`mb-8 grid grid-cols-1 gap-4 ${
+              peecAvailable ? 'sm:grid-cols-2 lg:grid-cols-5' : 'sm:grid-cols-1 lg:max-w-xs'
+            }`}
+          >
             <div className="glass-card stat-box border-blue-500 p-4">
               <div className="mb-1 flex items-center gap-2 text-sm font-semibold text-slate-500">
                 <Globe size={16} /> Sitemap Pages
@@ -197,42 +211,46 @@ const Dashboard = () => {
               <div className="text-2xl font-bold text-slate-900">{data.total_sitemap_pages}</div>
             </div>
 
-            <div className="glass-card stat-box border-emerald-500 p-4">
-              <div className="mb-1 flex items-center gap-2 text-sm font-semibold text-emerald-600">
-                <CheckCircle2 size={16} /> Cited by AI
-              </div>
-              <div className="text-2xl font-bold text-emerald-600">{data.total_cited_pages}</div>
-            </div>
+            {peecAvailable && (
+              <>
+                <div className="glass-card stat-box border-emerald-500 p-4">
+                  <div className="mb-1 flex items-center gap-2 text-sm font-semibold text-emerald-600">
+                    <CheckCircle2 size={16} /> Cited by AI
+                  </div>
+                  <div className="text-2xl font-bold text-emerald-600">{data.total_cited_pages}</div>
+                </div>
 
-            <div className="glass-card stat-box border-red-500 p-4">
-              <div className="mb-1 flex items-center gap-2 text-sm font-semibold text-red-500">
-                <AlertCircle size={16} /> Citation Gaps
-              </div>
-              <div className="text-2xl font-bold text-red-500">
-                {(data.total_sitemap_pages || 0) - (data.total_cited_pages || 0)}
-              </div>
-            </div>
+                <div className="glass-card stat-box border-red-500 p-4">
+                  <div className="mb-1 flex items-center gap-2 text-sm font-semibold text-red-500">
+                    <AlertCircle size={16} /> Citation Gaps
+                  </div>
+                  <div className="text-2xl font-bold text-red-500">
+                    {(data.total_sitemap_pages || 0) - (data.total_cited_pages || 0)}
+                  </div>
+                </div>
 
-            <div className="glass-card stat-box border-amber-500 p-4">
-              <div className="mb-1 flex items-center gap-2 text-sm font-semibold text-amber-600">
-                <Zap size={16} className="fill-amber-500" /> Perf. Ranking
-              </div>
-              <div className="text-2xl font-bold text-amber-600">{data.performance_score}/100</div>
-              <div className="text-[10px] text-slate-400">Based on citation coverage</div>
-            </div>
+                <div className="glass-card stat-box border-amber-500 p-4">
+                  <div className="mb-1 flex items-center gap-2 text-sm font-semibold text-amber-600">
+                    <Zap size={16} className="fill-amber-500" /> Perf. Ranking
+                  </div>
+                  <div className="text-2xl font-bold text-amber-600">{data.performance_score}/100</div>
+                  <div className="text-[10px] text-slate-400">Based on citation coverage</div>
+                </div>
 
-            <div className="glass-card stat-box border-purple-500 p-4">
-              <div className="mb-1 flex items-center gap-2 text-sm font-semibold text-purple-600">
-                <BarChart2 size={16} /> AI Coverage
-              </div>
-              <div className="text-2xl font-bold text-purple-600">
-                {data.citation_coverage_pct}%
-              </div>
-              <div className="text-[10px] text-slate-400">of sitemap cited by AI</div>
-            </div>
+                <div className="glass-card stat-box border-purple-500 p-4">
+                  <div className="mb-1 flex items-center gap-2 text-sm font-semibold text-purple-600">
+                    <BarChart2 size={16} /> AI Coverage
+                  </div>
+                  <div className="text-2xl font-bold text-purple-600">
+                    {data.citation_coverage_pct}%
+                  </div>
+                  <div className="text-[10px] text-slate-400">of sitemap cited by AI</div>
+                </div>
+              </>
+            )}
           </div>
 
-          {benchmarkData && (
+          {peecAvailable && benchmarkData && (
             <div className="mb-8 space-y-6">
               <section className="rounded-xl border border-blue-100 bg-blue-50 p-6 shadow-sm">
                 <h3 className="mb-6 text-xl font-bold text-slate-900">Growth Opportunity</h3>
@@ -327,7 +345,7 @@ const Dashboard = () => {
             </div>
           )}
 
-          {benchmarkData && (
+          {peecAvailable && benchmarkData && (
             <section className="mb-8 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
               <div className="border-b border-slate-200 bg-slate-50 px-6 py-4">
                 <h3 className="flex items-center gap-2 text-lg font-bold text-slate-900">
@@ -463,11 +481,12 @@ const Dashboard = () => {
 
           <section className="glass-card mb-8">
             <h3 className="mb-2 text-xl font-bold text-slate-900">
-              Your Pages Missing from AI Answers
+              {peecAvailable ? 'Your Pages Missing from AI Answers' : 'Your Sitemap Pages'}
             </h3>
             <p className="mb-6 text-sm text-slate-500">
-              These pages exist on your sitemap but AI engines like ChatGPT and Perplexity are not
-              citing them. Click 'How to Fix' on any page for a specific action plan.
+              {peecAvailable
+                ? "These pages exist on your sitemap but AI engines like ChatGPT and Perplexity are not citing them. Click 'How to Fix' on any page for a specific action plan."
+                : "Run a technical AI-readiness audit on any sitemap page. Click 'How to Fix' for Playwright metrics, JSON-LD, and llms.txt guidance."}
             </p>
 
             <div className="overflow-hidden rounded-xl border border-slate-200">
@@ -682,7 +701,9 @@ const Dashboard = () => {
                 ))
               ) : (
                 <div className="py-12 text-center text-slate-400">
-                  No missing pages found. Your sitemap is fully cited!
+                  {peecAvailable
+                    ? 'No missing pages found. Your sitemap is fully cited!'
+                    : 'No sitemap pages found for this domain.'}
                 </div>
               )}
             </div>
@@ -711,7 +732,7 @@ const Dashboard = () => {
           </section>
 
           {/* Fix 4: Gap Sources (Data Fetch Fix and Empty State Message) */}
-          {benchmarkData && benchmarkData.tab_actions && (
+          {peecAvailable && benchmarkData && benchmarkData.tab_actions && (
             <section className="glass-card">
               <h3 className="mb-6 text-xl font-bold text-slate-900">Gap Sources</h3>
               <div className="mb-8 flex gap-2 border-b border-slate-200">

@@ -1,5 +1,7 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom'
+import axios from 'axios'
+import { apiUrl } from './lib/api'
 import Dashboard from './pages/Dashboard'
 import PageDetail from './pages/PageDetail'
 import { Sparkles } from 'lucide-react'
@@ -22,6 +24,22 @@ const NavLink = ({ to, children }) => {
 }
 
 function App() {
+  const [peecAvailable, setPeecAvailable] = useState(null)
+
+  useEffect(() => {
+    axios
+      .get(apiUrl('/api/health'))
+      .then((res) => setPeecAvailable(res.data.peec_available === true))
+      .catch(() => setPeecAvailable(false))
+  }, [])
+
+  const poweredBy =
+    peecAvailable === null
+      ? 'Powered by Gemini'
+      : peecAvailable
+        ? 'Powered by Peec AI & Gemini'
+        : 'Powered by Gemini'
+
   return (
     <Router>
       <div className="mx-auto min-h-screen max-w-6xl px-4 py-8">
@@ -43,7 +61,7 @@ function App() {
         </main>
 
         <footer className="mt-16 border-t border-slate-200 py-8 text-center text-slate-500">
-          <p className="text-sm">&copy; 2026 AI Citation Optimizer. Powered by Peec AI & Gemini.</p>
+          <p className="text-sm">&copy; 2026 AI Citation Optimizer. {poweredBy}.</p>
         </footer>
       </div>
     </Router>

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import axios from 'axios'
+import { apiUrl } from '../lib/api'
 import {
   ArrowLeft,
   Zap,
@@ -28,6 +29,7 @@ const PageDetail = () => {
   const [error, setError] = useState('')
   const [currentStep, setCurrentStep] = useState(0)
   const [expandedGuidance, setExpandedGuidance] = useState({})
+  const [peecAvailable, setPeecAvailable] = useState(false)
 
   const toggleGuidance = (id) => {
     setExpandedGuidance((prev) => ({ ...prev, [id]: !prev[id] }))
@@ -37,9 +39,16 @@ const PageDetail = () => {
     'Spinning up Chromium Cluster...',
     'Awaiting Network Idle (JS Hydration)...',
     'Extracting DevTools Meta-Signals...',
-    'Fetching Peec Competitor Intelligence...',
+    ...(peecAvailable ? ['Fetching Peec Competitor Intelligence...'] : []),
     'Building Multi-Track Report with Gemini...',
   ]
+
+  useEffect(() => {
+    axios
+      .get(apiUrl('/api/health'))
+      .then((res) => setPeecAvailable(res.data.peec_available === true))
+      .catch(() => setPeecAvailable(false))
+  }, [])
 
   useEffect(() => {
     const cacheKey = `audit_cache_${decodedUrl}`
@@ -57,7 +66,7 @@ const PageDetail = () => {
     const runAudit = async () => {
       try {
         const response = await axios.post(
-          'http://localhost:8000/api/audit',
+          apiUrl('/api/audit'),
           { url: decodedUrl },
           {
             timeout: 120000,
@@ -130,7 +139,9 @@ const PageDetail = () => {
         >
           <ArrowLeft size={18} /> Dashboard
         </button>
-        <span className="text-xs font-medium text-slate-400">Powered by Gemini & Peec AI</span>
+        <span className="text-xs font-medium text-slate-400">
+          Powered by Gemini{peecAvailable ? ' & Peec AI' : ''}
+        </span>
       </div>
 
       <header className="mb-10">
