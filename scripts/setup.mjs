@@ -80,6 +80,7 @@ if (!existsSync(venvPython)) {
 
 run('Install backend dependencies', venvPython, ['-m', 'pip', 'install', '--upgrade', 'pip'])
 run('Install backend requirements', venvPython, ['-m', 'pip', 'install', '-r', 'requirements.txt'], backendDir)
+run('Install backend test dependencies', venvPython, ['-m', 'pip', 'install', '-r', 'requirements-dev.txt'], backendDir)
 run('Install Playwright Chromium', venvPython, ['-m', 'playwright', 'install', 'chromium'], backendDir)
 
 if (!isWin) {
@@ -96,6 +97,7 @@ if (!isWin) {
   }
 }
 
+run('Enable git hooks (husky)', 'npm', ['install'], root)
 run('Enable corepack (pnpm)', isWin ? 'corepack.cmd' : 'corepack', ['enable'])
 run('Install frontend dependencies', isWin ? 'pnpm.cmd' : 'pnpm', ['install'], frontendDir)
 
