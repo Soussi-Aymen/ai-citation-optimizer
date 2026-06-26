@@ -56,7 +56,7 @@ function App() {
       <div className="mx-auto min-h-screen max-w-6xl px-4 py-8">
         <nav className="mb-12 flex items-center justify-between border-b border-slate-200 pb-6">
           <div className="flex items-center gap-3">
-            <Sparkles className="text-blue-500" size={32} />
+            <Sparkles className="text-blue-500" size={32} aria-hidden />
             <h1 className="text-2xl font-bold tracking-tight text-slate-900">Citation Optimizer</h1>
           </div>
           <div className="flex gap-2">

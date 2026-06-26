@@ -32,12 +32,7 @@ const PageDetail = () => {
   const [data, setData] = useState<AuditAnalysis | null>(() => readAuditCache(decodedUrl))
   const [error, setError] = useState('')
   const [currentStep, setCurrentStep] = useState(0)
-  const [expandedGuidance, setExpandedGuidance] = useState<Record<string, boolean>>({})
   const [peecAvailable, setPeecAvailable] = useState(false)
-
-  const toggleGuidance = (id: string) => {
-    setExpandedGuidance((prev) => ({ ...prev, [id]: !prev[id] }))
-  }
 
   const simulationSteps = [
     'Spinning up Chromium Cluster...',
@@ -97,8 +92,16 @@ const PageDetail = () => {
 
   if (loading)
     return (
-      <div className="flex flex-col items-center justify-center py-32 text-center">
-        <div className="mb-8 h-12 w-12 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
+      <div
+        className="flex flex-col items-center justify-center py-32 text-center"
+        role="status"
+        aria-live="polite"
+        aria-busy="true"
+      >
+        <div
+          className="mb-8 h-12 w-12 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"
+          aria-hidden
+        />
         <h2 className="mb-2 text-2xl font-bold text-slate-900">{simulationSteps[currentStep]}</h2>
         <p className="text-slate-500">Performing deep technical crawlability audit...</p>
       </div>
@@ -107,7 +110,7 @@ const PageDetail = () => {
   if (error)
     return (
       <div className="glass-card flex flex-col items-center py-16 text-center">
-        <ShieldAlert size={64} className="mb-6 text-red-500" />
+        <ShieldAlert size={64} className="mb-6 text-red-500" aria-hidden />
         <h2 className="mb-2 text-2xl font-bold text-slate-900">Audit Engine Error</h2>
         <p className="mx-auto mb-8 max-w-lg text-slate-500">{error}</p>
 
@@ -125,7 +128,7 @@ const PageDetail = () => {
           </div>
         )}
 
-        <button className="btn-primary" onClick={() => navigate('/')}>
+        <button type="button" className="btn-primary" onClick={() => navigate('/')}>
           Back to Dashboard
         </button>
       </div>
@@ -135,7 +138,7 @@ const PageDetail = () => {
     return (
       <div className="glass-card py-16 text-center">
         <p className="text-slate-500">No audit data available.</p>
-        <button className="btn-primary mt-6" onClick={() => navigate('/')}>
+        <button type="button" className="btn-primary mt-6" onClick={() => navigate('/')}>
           Back to Dashboard
         </button>
       </div>
@@ -148,10 +151,11 @@ const PageDetail = () => {
     <div className="animate-fade-in">
       <div className="mb-8 flex items-center justify-between">
         <button
+          type="button"
           onClick={() => navigate('/')}
           className="flex items-center gap-2 font-bold text-slate-500 transition-colors hover:text-slate-900"
         >
-          <ArrowLeft size={18} /> Dashboard
+          <ArrowLeft size={18} aria-hidden /> Dashboard
         </button>
         <span className="text-xs font-medium text-slate-400">
           Powered by Gemini{peecAvailable ? ' & Peec AI' : ''}
@@ -276,13 +280,13 @@ const PageDetail = () => {
             {audit.guidance.map((item, i) => {
               const guidanceId = item.id ?? `guidance-${i}`
               return (
-              <div
+              <details
                 key={guidanceId}
-                className={`rounded-xl border-l-4 bg-white/80 p-5 shadow-sm ${
+                className={`disclosure rounded-xl border-l-4 bg-white/80 p-5 shadow-sm ${
                   item.score === 'Bad' ? 'border-red-500' : 'border-amber-500'
                 }`}
               >
-                <div className="flex flex-wrap items-start justify-between gap-4">
+                <summary className="flex flex-wrap items-start justify-between gap-4">
                   <div className="flex-1">
                     <div className="mb-2 flex items-center gap-3">
                       <span className="text-[10px] font-black uppercase tracking-widest text-amber-800">
@@ -300,37 +304,34 @@ const PageDetail = () => {
                     </div>
                     <div className="text-sm font-bold text-amber-900">{item.advice}</div>
                   </div>
-                  <button
-                    onClick={() => toggleGuidance(guidanceId)}
-                    className={`rounded-lg px-4 py-2 text-xs font-bold text-white transition-all hover:scale-105 ${
+                  <span
+                    className={`rounded-lg px-4 py-2 text-xs font-bold text-white ${
                       item.score === 'Bad' ? 'bg-red-600' : 'bg-amber-600'
                     }`}
                   >
-                    {expandedGuidance[guidanceId] ? 'Close Guidance' : 'View Fix Steps'}
-                  </button>
-                </div>
+                    View fix steps
+                  </span>
+                </summary>
 
-                {expandedGuidance[guidanceId] && (
-                  <div className="mt-6 animate-fade-in rounded-lg border border-amber-100 bg-white p-5 shadow-inner">
-                    <h4 className="mb-4 flex items-center gap-2 text-xs font-black uppercase tracking-widest text-amber-800">
-                      <Target size={14} className="text-amber-600" /> Framework-Agnostic Implementation
-                    </h4>
-                    <ul className="space-y-3">
-                      {item.steps?.map((step, si) => (
-                        <li
-                          key={si}
-                          className="flex items-start gap-3 text-sm leading-relaxed text-amber-900/80"
-                        >
-                          <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-amber-100 text-[10px] font-black text-amber-700">
-                            {si + 1}
-                          </span>
-                          {step}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
+                <div className="mt-6 rounded-lg border border-amber-100 bg-white p-5 shadow-inner">
+                  <h4 className="mb-4 flex items-center gap-2 text-xs font-black uppercase tracking-widest text-amber-800">
+                    <Target size={14} className="text-amber-600" aria-hidden /> Framework-Agnostic Implementation
+                  </h4>
+                  <ul className="space-y-3">
+                    {item.steps?.map((step, si) => (
+                      <li
+                        key={si}
+                        className="flex items-start gap-3 text-sm leading-relaxed text-amber-900/80"
+                      >
+                        <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-amber-100 text-[10px] font-black text-amber-700">
+                          {si + 1}
+                        </span>
+                        {step}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </details>
               )
             })}
           </div>

@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import axios from 'axios'
 import { apiUrl } from '../lib/api'
+import { handleTabListKeyDown } from '../lib/a11y'
 import type { BenchmarkResponse, ContentResponse, FixResponse, GapsResponse, TabName } from '../types/api'
 import {
   Search,
@@ -59,12 +60,6 @@ const Dashboard = () => {
 
   const [generatedFixes, setGeneratedFixes] = useState<Record<string, FixResponse>>({})
   const [generatingFix, setGeneratingFix] = useState<Record<string, boolean>>({})
-  const [expandedGuidance, setExpandedGuidance] = useState<Record<string, boolean>>({})
-
-  const toggleGuidance = (url: string, metricId: string) => {
-    const key = `${url}-${metricId}`
-    setExpandedGuidance((prev) => ({ ...prev, [key]: !prev[key] }))
-  }
 
   const [generatedContent, setGeneratedContent] = useState<Record<string, string>>({})
   const [generatingContent, setGeneratingContent] = useState<Record<string, boolean>>({})
@@ -105,15 +100,7 @@ const Dashboard = () => {
     }
   }
 
-  const handleHowToFix = async (url: string) => {
-    if (generatedFixes[url]) {
-      setGeneratedFixes((prev) => {
-        const next = { ...prev }
-        delete next[url]
-        return next
-      })
-      return
-    }
+  const handleOpenFix = async (url: string) => {
     setGeneratingFix((prev) => ({ ...prev, [url]: true }))
     try {
       const res = await axios.post<FixResponse>(apiUrl('/api/generate-fix'), { url })
@@ -156,9 +143,13 @@ const Dashboard = () => {
   const currentItems = data?.gaps.slice(indexOfFirstItem, indexOfLastItem) || []
   const totalPages = Math.ceil((data?.gaps.length || 0) / itemsPerPage)
   const peecAvailable = data?.peec_available === true
+  const gapSourceTabs = ['YouTube', 'Reddit', 'Editorial'] as const
 
   return (
     <div className="animate-fade-in">
+      <div aria-live="polite" aria-atomic="true" className="sr-only">
+        {loading ? 'Analyzing domain, please wait.' : error ? error : ''}
+      </div>
       <header className="mb-10">
         <h1 className="mb-2 text-4xl font-extrabold tracking-tight text-slate-900">
           AI Search Dashboard
@@ -173,23 +164,51 @@ const Dashboard = () => {
       </header>
 
       <section className="glass-card mb-8">
-        <form onSubmit={fetchGaps} className="flex gap-4">
-          <div className="relative flex-1">
-            <Search className="absolute top-1/2 left-4 -translate-y-1/2 text-slate-400" size={20} />
-            <input
-              type="text"
-              placeholder="Enter your domain (e.g. nothing.tech)"
-              value={domain}
-              onChange={(e) => setDomain(e.target.value)}
-              className="h-12 w-full rounded-lg border border-slate-200 bg-white pr-4 pl-12 transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
-              required
-            />
+        <form onSubmit={fetchGaps} className="flex flex-col gap-4">
+          <label htmlFor="domain-input" className="text-sm font-semibold text-slate-700">
+            Website domain
+          </label>
+          <div className="flex gap-4">
+            <div className="relative flex-1">
+              <Search
+                className="absolute top-1/2 left-4 -translate-y-1/2 text-slate-400"
+                size={20}
+                aria-hidden
+              />
+              <input
+                id="domain-input"
+                name="domain"
+                type="text"
+                autoComplete="url"
+                enterKeyHint="search"
+                inputMode="url"
+                placeholder="e.g. nothing.tech"
+                value={domain}
+                onChange={(e) => setDomain(e.target.value)}
+                aria-describedby={error ? 'domain-error domain-hint' : 'domain-hint'}
+                aria-invalid={error ? true : undefined}
+                className="h-12 w-full rounded-lg border border-slate-200 bg-white pr-4 pl-12 text-base transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                required
+              />
+            </div>
+            <button
+              type="submit"
+              className="btn-primary h-12"
+              disabled={loading}
+              aria-busy={loading}
+            >
+              {loading ? 'Analyzing...' : 'Run Analysis'}
+            </button>
           </div>
-          <button type="submit" className="btn-primary h-12" disabled={loading}>
-            {loading ? 'Analyzing...' : 'Run Analysis'}
-          </button>
+          <p id="domain-hint" className="text-xs text-slate-500">
+            Enter the root domain of the site you want to analyze.
+          </p>
+          {error && (
+            <p id="domain-error" role="alert" className="text-sm font-medium text-red-500">
+              {error}
+            </p>
+          )}
         </form>
-        {error && <p className="mt-4 text-sm font-medium text-red-500">{error}</p>}
       </section>
 
       {data && (
@@ -414,6 +433,7 @@ const Dashboard = () => {
                         return (
                           <div key={contentKey} className="w-full sm:w-auto">
                             <button
+                              type="button"
                               onClick={() => handleGenerateContent(item.type, act.text, contentKey)}
                               disabled={generatingContent[contentKey]}
                               className="btn-secondary w-full justify-center py-2 text-xs"
@@ -487,33 +507,54 @@ const Dashboard = () => {
             <div className="overflow-hidden rounded-xl border border-slate-200">
               {currentItems.length > 0 ? (
                 currentItems.map((url, index) => (
-                  <div
-                    key={index}
-                    className={`border-b border-slate-100 last:border-0 ${
+                  <details
+                    key={url}
+                    open={!!generatedFixes[url]}
+                    onToggle={(e) => {
+                      if (!e.currentTarget.open) {
+                        setGeneratedFixes((prev) => {
+                          const next = { ...prev }
+                          delete next[url]
+                          return next
+                        })
+                      }
+                    }}
+                    className={`disclosure border-b border-slate-100 last:border-0 ${
                       index % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'
                     }`}
                   >
-                    <div className="flex items-center justify-between p-4">
+                    <summary
+                      className="flex items-center justify-between p-4"
+                      onClick={(e) => {
+                        if (generatingFix[url]) {
+                          e.preventDefault()
+                          return
+                        }
+                        if (!generatedFixes[url]) {
+                          e.preventDefault()
+                          void handleOpenFix(url)
+                        }
+                      }}
+                    >
                       <div className="flex min-w-0 items-center gap-3">
-                        <AlertCircle className="flex-shrink-0 text-red-500" size={18} />
+                        <AlertCircle className="flex-shrink-0 text-red-500" size={18} aria-hidden />
                         <span className="truncate font-mono text-sm text-slate-600">{url}</span>
                       </div>
-                      <button
-                        onClick={() => handleHowToFix(url)}
-                        disabled={generatingFix[url]}
+                      <span
                         className={`ml-4 flex-shrink-0 rounded-lg px-4 py-2 text-xs font-bold transition-all ${
                           generatedFixes[url]
                             ? 'bg-slate-100 text-slate-600'
-                            : 'bg-blue-600 text-white hover:bg-blue-700'
+                            : 'bg-blue-600 text-white'
                         }`}
+                        aria-busy={generatingFix[url]}
                       >
                         {generatingFix[url]
                           ? 'Analyzing...'
                           : generatedFixes[url]
                             ? 'Close Plan'
                             : 'How to Fix →'}
-                      </button>
-                    </div>
+                      </span>
+                    </summary>
 
                     {generatedFixes[url] && (
                       <div className="animate-fade-in border-t border-slate-100 bg-blue-50/30 p-6">
@@ -548,32 +589,46 @@ const Dashboard = () => {
                                         <div className={`text-sm font-bold ${row.color}`}>{row.value}</div>
                                       </div>
                                       {row.score !== 'Good' && (
-                                        <button
-                                          onClick={() => toggleGuidance(url, row.id)}
-                                          className={`mt-2 flex items-center gap-1.5 rounded-lg px-3 py-1 text-[10px] font-black uppercase tracking-tight transition-all hover:scale-105 sm:mt-0 ${
-                                            row.score === 'Bad' ? 'bg-red-50 text-red-600' : 'bg-amber-50 text-amber-600'
-                                          }`}
-                                        >
-                                          {expandedGuidance[`${url}-${row.id}`] ? 'Hide Guidance' : 'Guidance →'}
-                                        </button>
+                                        <details className="disclosure mt-2 sm:mt-0">
+                                          <summary
+                                            className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1 text-[10px] font-black uppercase tracking-tight motion-safe-scale transition-all ${
+                                              row.score === 'Bad'
+                                                ? 'bg-red-50 text-red-600'
+                                                : 'bg-amber-50 text-amber-600'
+                                            }`}
+                                          >
+                                            View guidance steps
+                                          </summary>
+                                          <div
+                                            className={`mt-3 rounded-lg p-4 ring-1 ${
+                                              row.score === 'Bad'
+                                                ? 'bg-red-50/50 ring-red-100'
+                                                : 'bg-amber-50/50 ring-amber-100'
+                                            }`}
+                                          >
+                                            <ul className="space-y-2">
+                                              {generatedFixes[url]?.guidance
+                                                ?.find((g) => g.id === row.id)
+                                                ?.steps?.map((step, si) => (
+                                                  <li
+                                                    key={si}
+                                                    className="flex items-start gap-2 text-xs text-slate-700"
+                                                  >
+                                                    <span
+                                                      className={`mt-1 h-1 w-1 flex-shrink-0 rounded-full ${
+                                                        row.score === 'Bad'
+                                                          ? 'bg-red-400'
+                                                          : 'bg-amber-400'
+                                                      }`}
+                                                    />
+                                                    {step}
+                                                  </li>
+                                                ))}
+                                            </ul>
+                                          </div>
+                                        </details>
                                       )}
                                     </div>
-                                    {expandedGuidance[`${url}-${row.id}`] && (
-                                      <div className={`mt-3 animate-fade-in rounded-lg p-4 ring-1 ${
-                                        row.score === 'Bad' ? 'bg-red-50/50 ring-red-100' : 'bg-amber-50/50 ring-amber-100'
-                                      }`}>
-                                        <ul className="space-y-2">
-                                          {generatedFixes[url]?.guidance?.find((g) => g.id === row.id)?.steps?.map((step, si) => (
-                                            <li key={si} className="flex items-start gap-2 text-xs text-slate-700">
-                                              <span className={`mt-1 h-1 w-1 flex-shrink-0 rounded-full ${
-                                                row.score === 'Bad' ? 'bg-red-400' : 'bg-amber-400'
-                                              }`} />
-                                              {step}
-                                            </li>
-                                          ))}
-                                        </ul>
-                                      </div>
-                                    )}
                                   </div>
                                 ))}
                                 <div className="mt-6 border-t border-slate-100 pt-6">
@@ -632,6 +687,7 @@ const Dashboard = () => {
                                 llms.txt Template (for analyzed site)
                               </h4>
                               <button
+                                type="button"
                                 onClick={() =>
                                   copyToClipboard(
                                     generatedFixes[url]?.llms_txt_template ?? '',
@@ -662,6 +718,7 @@ const Dashboard = () => {
                                 JSON-LD Schema Template
                               </h4>
                               <button
+                                type="button"
                                 onClick={() =>
                                   copyToClipboard(generatedFixes[url]?.json_ld ?? '', url, 'fix')
                                 }
@@ -682,17 +739,18 @@ const Dashboard = () => {
                             </p>
                             <div className="mt-6 border-t border-slate-100 pt-6">
                               <button
+                                type="button"
                                 onClick={() => navigate(`/audit/${encodeURIComponent(url)}`)}
                                 className="flex w-full items-center justify-center gap-2 rounded-lg border border-slate-200 py-2.5 text-xs font-bold text-slate-600 transition-all hover:bg-slate-50"
                               >
-                                View Deep Technical Audit Report <ArrowRight size={14} />
+                                View Deep Technical Audit Report <ArrowRight size={14} aria-hidden />
                               </button>
                             </div>
                           </div>
                         </div>
                       </div>
                     )}
-                  </div>
+                  </details>
                 ))
               ) : (
                 <div className="py-12 text-center text-slate-400">
@@ -706,21 +764,25 @@ const Dashboard = () => {
             {totalPages > 1 && (
               <div className="mt-6 flex items-center justify-center gap-4">
                 <button
+                  type="button"
+                  aria-label="Previous page"
                   className="rounded-lg border border-slate-200 p-2 text-slate-500 transition-all hover:bg-slate-100 disabled:opacity-30"
                   onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                   disabled={currentPage === 1}
                 >
-                  <ChevronLeft size={20} />
+                  <ChevronLeft size={20} aria-hidden />
                 </button>
                 <span className="text-sm font-medium text-slate-600">
                   Page {currentPage} of {totalPages}
                 </span>
                 <button
+                  type="button"
+                  aria-label="Next page"
                   className="rounded-lg border border-slate-200 p-2 text-slate-500 transition-all hover:bg-slate-100 disabled:opacity-30"
                   onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                   disabled={currentPage === totalPages}
                 >
-                  <ChevronRight size={20} />
+                  <ChevronRight size={20} aria-hidden />
                 </button>
               </div>
             )}
@@ -730,24 +792,39 @@ const Dashboard = () => {
           {peecAvailable && benchmarkData && benchmarkData.tab_actions && (
             <section className="glass-card">
               <h3 className="mb-6 text-xl font-bold text-slate-900">Gap Sources</h3>
-              <div className="mb-8 flex gap-2 border-b border-slate-200">
-                {(['YouTube', 'Reddit', 'Editorial'] as const).map((tab) => (
+              <div
+                role="tablist"
+                aria-label="Gap sources by channel"
+                className="mb-8 flex gap-2 border-b border-slate-200"
+              >
+                {gapSourceTabs.map((tab) => (
                   <button
                     key={tab}
+                    type="button"
+                    role="tab"
+                    id={`tab-${tab}`}
+                    aria-selected={activeTab === tab}
+                    aria-controls={`panel-${tab}`}
+                    tabIndex={activeTab === tab ? 0 : -1}
                     onClick={() => setActiveTab(tab)}
-                    className={`relative px-6 py-3 text-sm font-bold transition-all ${
+                    onKeyDown={(e) =>
+                      handleTabListKeyDown(e, gapSourceTabs, activeTab, setActiveTab, 'tab-')
+                    }
+                    className={`relative px-6 py-3 text-sm font-bold transition-colors ${
                       activeTab === tab ? 'text-blue-600' : 'text-slate-500 hover:text-slate-800'
                     }`}
                   >
                     {tab}
-                    {activeTab === tab && (
-                      <div className="absolute bottom-0 left-0 h-0.5 w-full bg-blue-600" />
-                    )}
+                    {activeTab === tab && <span className="tab-indicator motion-safe-scale" />}
                   </button>
                 ))}
               </div>
 
-              <div>
+              <div
+                role="tabpanel"
+                id={`panel-${activeTab}`}
+                aria-labelledby={`tab-${activeTab}`}
+              >
                 {benchmarkData.tab_actions[activeTab] &&
                 benchmarkData.tab_actions[activeTab].has_data ? (
                   <div className="space-y-6">
@@ -784,21 +861,27 @@ const Dashboard = () => {
                             {renderMarkdownLinks(gapItem.text)}
                           </div>
                           <button
+                            type="button"
                             onClick={() =>
                               handleGenerateContent(activeTab, gapItem.text, gapItem.id)
                             }
                             disabled={generatingContent[gapItem.id]}
+                            aria-busy={generatingContent[gapItem.id]}
                             className="btn-primary w-full justify-center py-2 text-xs"
                           >
                             {generatingContent[gapItem.id] ? 'Generating...' : 'Generate Content →'}
                           </button>
 
                           {generatedContent[gapItem.id] && (
-                            <div className="mt-4 rounded-lg bg-white p-4 shadow-sm ring-1 ring-slate-200">
-                              <p className="mb-3 text-xs leading-relaxed whitespace-pre-wrap text-slate-600">
+                            <details className="disclosure mt-4 rounded-lg bg-white p-4 shadow-sm ring-1 ring-slate-200">
+                              <summary className="text-xs font-bold text-slate-600">
+                                Generated content
+                              </summary>
+                              <p className="mt-3 text-xs leading-relaxed whitespace-pre-wrap text-slate-600">
                                 {generatedContent[gapItem.id]}
                               </p>
                               <button
+                                type="button"
                                 onClick={() =>
                                   copyToClipboard(
                                     generatedContent[gapItem.id] ?? '',
@@ -806,16 +889,16 @@ const Dashboard = () => {
                                     'content',
                                   )
                                 }
-                                className="flex items-center gap-1 text-[10px] font-bold text-blue-600"
+                                className="mt-3 flex items-center gap-1 text-[10px] font-bold text-blue-600"
                               >
                                 {copiedContent[gapItem.id] ? (
-                                  <Check size={12} />
+                                  <Check size={12} aria-hidden />
                                 ) : (
-                                  <Copy size={12} />
+                                  <Copy size={12} aria-hidden />
                                 )}
                                 {copiedContent[gapItem.id] ? 'Copied!' : 'Copy'}
                               </button>
-                            </div>
+                            </details>
                           )}
                         </div>
                       ))}

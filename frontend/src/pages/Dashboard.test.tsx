@@ -54,7 +54,7 @@ describe('Dashboard', () => {
 
   it('renders the domain search form', () => {
     renderDashboard()
-    expect(screen.getByPlaceholderText(/enter your domain/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/website domain/i)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /run analysis/i })).toBeInTheDocument()
   })
 
@@ -63,7 +63,7 @@ describe('Dashboard', () => {
     const user = userEvent.setup()
 
     renderDashboard()
-    await user.type(screen.getByPlaceholderText(/enter your domain/i), 'example.com')
+    await user.type(screen.getByLabelText(/website domain/i), 'example.com')
     await user.click(screen.getByRole('button', { name: /run analysis/i }))
 
     await waitFor(() => {
@@ -93,7 +93,7 @@ describe('Dashboard', () => {
 
     const user = userEvent.setup()
     renderDashboard()
-    await user.type(screen.getByPlaceholderText(/enter your domain/i), 'example.com')
+    await user.type(screen.getByLabelText(/website domain/i), 'example.com')
     await user.click(screen.getByRole('button', { name: /run analysis/i }))
 
     await waitFor(() => {
