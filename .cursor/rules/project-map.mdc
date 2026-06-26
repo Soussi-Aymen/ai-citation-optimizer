@@ -1,0 +1,44 @@
+---
+description: Project map, stack, and token-saving navigation hints
+alwaysApply: true
+---
+
+# AI Citation Optimizer — agent navigation
+
+**Start here:** read `docs/AGENT_CONTEXT.md` for the file map, API contracts, and known bugs. Do not explore the whole repo — open only the files listed there.
+
+## Stack
+
+| Layer | Path | Tooling |
+|-------|------|---------|
+| API | `backend/app/` | FastAPI, Python 3.12, Playwright 1.48, LangChain + Gemini |
+| UI | `frontend/src/` | React 19, Vite, Tailwind, **pnpm** |
+| Infra | `docker-compose.yml` | backend :8000, frontend :5173 |
+
+## Where to edit (common tasks)
+
+- New/changed endpoint → `backend/app/main.py`
+- Playwright audit / fix guidance → `backend/app/agent.py`
+- llms.txt probe/template → `backend/app/llms_txt_analyzer.py`
+- Sitemap gaps → `backend/app/sitemap_analyzer.py`
+- Peec API → `backend/app/peec_client.py`
+- Dashboard / fix panel → `frontend/src/pages/Dashboard.jsx`
+- Deep audit page → `frontend/src/pages/PageDetail.jsx`
+
+## Dev commands (local — any OS)
+
+```bash
+npm run setup   # first time: install Python + pnpm deps
+npm run dev     # start backend + frontend together
+
+# Docker (macOS / Windows / WSL)
+npm run docker:up
+```
+
+Env: `PEEC_API_KEY`, `GEMINI_API_KEY` in root `.env`.
+
+## Deeper docs (read on demand only)
+
+- `docs/ARCHITECTURE.md` — system diagram
+- `docs/JS_CITATION_AUDIT.md` — JS metric thresholds
+- `docs/LLMS_TXT_INTEGRATION.md` — llms.txt design

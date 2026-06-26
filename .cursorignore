@@ -1,0 +1,34 @@
+# Dependencies & virtualenvs
+**/node_modules/
+**/.venv/
+**/venv/
+**/__pycache__/
+**/.pytest_cache/
+**/.ruff_cache/
+
+# Build output
+**/dist/
+**/build/
+**/.cache/
+
+# Playwright artifacts
+**/playwright-report/
+**/test-results/
+
+# Secrets (never index or read)
+.env
+.env.*
+**/*.env
+
+# Git internals
+.git/
+
+# Large binaries / screenshots (not source)
+artifacts/
+**/*.png
+**/*.jpg
+**/*.jpeg
+**/*.gif
+**/*.webp
+**/*.zip
+**/*.pdf

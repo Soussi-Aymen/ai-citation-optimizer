@@ -1,0 +1,41 @@
+---
+description: Backend Python conventions and entry points
+globs: backend/**
+alwaysApply: false
+---
+
+# Backend (FastAPI + Playwright)
+
+## Layout
+
+```
+backend/app/
+  main.py              # routes only — orchestration, no heavy logic
+  agent.py             # CrawlabilityAgent — Playwright + guidance
+  llms_txt_analyzer.py # /llms.txt probe + template
+  sitemap_analyzer.py  # sitemap fetch + citation gaps
+  peec_client.py       # Peec AI API client
+backend/tests/         # pytest-style tests
+```
+
+## Conventions
+
+- Pin deps in `requirements.txt`; venv at `backend/.venv` (created via `uv venv`)
+- Lint/format: `ruff check` / `ruff format` (config in `pyproject.toml`)
+- Playwright version must match Docker image (`playwright==1.48.0`)
+- Keep business logic in module files, not `main.py`
+
+## Key flows
+
+1. `POST /api/audit` → `CrawlabilityAgent.fetch_and_analyze`
+2. `POST /api/generate-fix` → `build_fix_instructions` + live metrics + `llms_txt_template`
+3. `probe_llms_txt` runs **in parallel** with Playwright inside `fetch_and_analyze`
+
+## Tests
+
+```bash
+cd backend && source .venv/bin/activate
+python -m pytest tests/ -v
+```
+
+Playwright integration test hits react.dev — needs Chromium + `playwright install-deps` on WSL.

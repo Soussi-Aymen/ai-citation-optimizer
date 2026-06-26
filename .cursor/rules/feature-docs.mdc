@@ -1,0 +1,16 @@
+---
+description: Load when changing llms.txt, JS audit metrics, or system architecture
+alwaysApply: false
+---
+
+# Feature reference docs
+
+Read the relevant doc **instead of** scanning source files:
+
+| Topic | Doc | Code |
+|-------|-----|------|
+| llms.txt probe, template, UI | `docs/LLMS_TXT_INTEGRATION.md` | `llms_txt_analyzer.py`, `Dashboard.jsx` ~L605 |
+| JS metrics & thresholds | `docs/JS_CITATION_AUDIT.md` | `agent.py` `_generate_guidance` |
+| End-to-end architecture | `docs/ARCHITECTURE.md` | `main.py` orchestration |
+
+Guidance signal IDs: `js_hydration`, `js_payload`, `unused_js`, `console_errors`, `lcp`, `structured_data`, `load_time`, `llms_txt`.

@@ -1,0 +1,42 @@
+---
+description: Frontend React/Vite conventions and page map
+globs: frontend/src/**
+alwaysApply: false
+---
+
+# Frontend (React + Vite + pnpm)
+
+## Layout
+
+```
+frontend/src/
+  App.jsx              # router shell
+  pages/Dashboard.jsx  # main dashboard, Technical Health Matrix, llms.txt block
+  pages/PageDetail.jsx # deep audit signals grid
+```
+
+## Conventions
+
+- Package manager: **pnpm** (`packageManager` pinned in `package.json`)
+- Security: `.npmrc` enforces lockfile + `minimum-release-age`; never switch back to npm
+- Styling: Tailwind in JSX; global styles in `index.css` / `App.css`
+- API base URL is hardcoded `http://localhost:8000` (known bug — check env if fixing)
+
+## Scripts
+
+```bash
+pnpm dev      # dev server :5173
+pnpm build    # production build
+pnpm lint     # eslint
+pnpm format   # prettier
+```
+
+## UI ↔ API mapping
+
+| UI area | Endpoint |
+|---------|----------|
+| Domain gaps | `GET /api/gaps?domain=` |
+| Roadmap | `GET /api/benchmark?domain=` |
+| How to Fix panel | `POST /api/generate-fix` |
+| Draft Content | `POST /api/generate-content` |
+| Deep audit | `POST /api/audit` |

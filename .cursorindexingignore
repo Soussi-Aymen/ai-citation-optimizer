@@ -1,0 +1,10 @@
+# Large lockfiles — still @-mentionable, excluded from semantic search
+**/pnpm-lock.yaml
+**/package-lock.json
+**/yarn.lock
+
+# Generated frontend bundle
+frontend/dist/
+
+# License is static; rarely needed in search
+LICENSE
