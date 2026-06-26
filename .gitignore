@@ -41,6 +41,7 @@ node_modules/.cache/playwright/
 node_modules/
 dist/
 build/
+*.tsbuildinfo
 .cache/
 .next/
 out/
@@ -57,9 +58,10 @@ pnpm-debug.log*
 .vscode/
 .idea/
 
-# =========================
-# Misc
-# =========================
+# Agent skill installs (re-run: npx -y modern-web-guidance@0.0.174 install)
+.agents/
+frontend/.agents/
+
 coverage/
 *.coverage
 .cache/
