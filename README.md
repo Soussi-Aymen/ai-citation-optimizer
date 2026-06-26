@@ -49,8 +49,9 @@ Instead of just showing raw data, the tool turns these metrics into immediate ac
 - **AI Orchestration**: LangChain (for structured chains and prompt templates)
 - **AI Agent**: Playwright (for rendered HTML analysis) + Gemini 2.5 Flash
 - **Data Provider**: Peec AI API (for citation metrics and domain visibility)
-- **Frontend**: React + Vite + pnpm (Tailwind CSS)
-- **Code Quality**: Integrated Linters for both Backend and Frontend
+- **Frontend**: React + Vite + TypeScript (strict) + pnpm (Tailwind CSS)
+- **Code Quality**: Ruff (backend), ESLint + `tsc` (frontend), Husky pre-commit hook
+- **Web standards**: Frontend UI follows [modern-web-guidance](https://github.com/GoogleChrome/modern-web-guidance) patterns — accessible forms, native `<details>` disclosures, ARIA tabs, `:focus-visible`, and `prefers-reduced-motion`
 - **Progress Tracking**: Dynamic visibility progress visualization at the top of the dashboard
 
 ## Getting Started
@@ -183,6 +184,13 @@ npm run test:backend:integration  # Playwright audit on react.dev (needs Chromiu
 npm run validate                  # lint + typecheck + test (same as pre-commit hook)
 ```
 
+| Layer | Runner | What is covered |
+|-------|--------|-----------------|
+| **Backend unit** | pytest | Peec client, sitemap analyzer, llms.txt probe, agent fix generation |
+| **Backend API** | pytest | FastAPI routes (`/api/gaps`, `/api/benchmark`, `/api/audit`, etc.) with mocked dependencies |
+| **Backend integration** | pytest (`-m integration`) | Playwright browser audit on react.dev — optional, excluded by default |
+| **Frontend** | vitest | API base URL helper, Dashboard form and Peec visibility toggling |
+
 Backend tests use **pytest** with mocked Peec/sitemap/agent dependencies. The Playwright test is marked `integration` and excluded from the default run.
 
 ### Pre-commit hook
@@ -228,7 +236,7 @@ Windows backend activation: `.\.venv\Scripts\Activate.ps1`
 2. Review the **Growth Opportunity** and **Competitor Advantage Breakdown** to see where you stand. (Note: Estimated progress in a realistic benchmark shows around 50% improvement for targeted businesses).
 3. Check the **Optimization Roadmap** for high-priority actions and click "Draft Content" to instantly generate outreach emails or comments.
 4. Drill down into specific **Gap Sources** (YouTube, Reddit, Editorial) to identify missed citation opportunities.
-5. In the **Pages Missing** section, click "How to Fix" to get step-by-step instructions, live JS performance metrics, and an **llms.txt template** to publish on the analyzed domain. Use the expandable guidance buttons for framework-agnostic fixes. Open **View Deep Technical Audit Report** for the full signal breakdown.
+5. In the **Pages Missing** section, click "How to Fix" to get step-by-step instructions, live JS performance metrics, and an **llms.txt template** to publish on the analyzed domain. Expand guidance sections inline for framework-agnostic fixes. Open **View Deep Technical Audit Report** for the full signal breakdown.
 
 ## Developer Docs
 
@@ -238,3 +246,22 @@ Compact reference docs for contributors and AI coding agents (start with `docs/A
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — system design and data flows
 - [`docs/JS_CITATION_AUDIT.md`](docs/JS_CITATION_AUDIT.md) — Playwright JS metrics and thresholds
 - [`docs/LLMS_TXT_INTEGRATION.md`](docs/LLMS_TXT_INTEGRATION.md) — llms.txt probe, guidance, and UI
+
+### Modern web guidance (frontend)
+
+UI and layout work should follow **[modern-web-guidance](https://github.com/GoogleChrome/modern-web-guidance)** (pinned CLI `0.0.174`). Search before implementing forms, tabs, disclosures, or motion:
+
+```bash
+npx -y modern-web-guidance@0.0.174 search "<what you are building>" --skill-version 2026_05_16-c5e7870
+npx -y modern-web-guidance@0.0.174 retrieve "<guide-id>"
+```
+
+Project skill for Cursor agents: `.cursor/skills/modern-web-guidance/SKILL.md`  
+Reinstall upstream skill files: `npx -y modern-web-guidance@0.0.174 install`
+
+**Patterns used in this app:**
+
+- Visible form labels, `autocomplete`, and `aria-describedby` for errors (domain search)
+- Native `<details>` / `<summary>` for expandable fix panels and guidance steps
+- WAI-ARIA tablist with keyboard navigation (Gap Sources tabs)
+- Global `:focus-visible` rings and `prefers-reduced-motion` for animations
