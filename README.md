@@ -49,94 +49,139 @@ Instead of just showing raw data, the tool turns these metrics into immediate ac
 - **AI Orchestration**: LangChain (for structured chains and prompt templates)
 - **AI Agent**: Playwright (for rendered HTML analysis) + Gemini 2.5 Flash
 - **Data Provider**: Peec AI API (for citation metrics and domain visibility)
-- **Frontend**: React + Vite (Tailwind CSS Premium Design)
+- **Frontend**: React + Vite + pnpm (Tailwind CSS)
 - **Code Quality**: Integrated Linters for both Backend and Frontend
 - **Progress Tracking**: Dynamic visibility progress visualization at the top of the dashboard
 
-## Setup Instructions
+## Getting Started
 
-### 1. Environment Variables
+### 1. API keys
 
-Create a `.env` file in the root directory (based on `.env.example`):
+Copy the example env file and add your keys:
+
+```bash
+cp .env.example .env          # macOS, WSL, Git Bash
+```
+
+```powershell
+Copy-Item .env.example .env   # Windows PowerShell
+```
 
 ```env
-PEEC_API_KEY=your_peec_api_key
 GEMINI_API_KEY=your_gemini_api_key
+PEEC_API_KEY=your_peec_api_key   # optional — Peec features hide if missing or invalid
 ```
+
+### 2. Choose how to run the app
+
+| Where you work | Easiest command | Notes |
+|----------------|-----------------|-------|
+| **Windows PowerShell** | `docker compose up --build` | Same as before — use your Windows project folder |
+| **WSL Ubuntu (first time)** | `npm run setup` then `npm run dev` | No Docker permissions needed |
+| **WSL Ubuntu (with Docker)** | `docker compose up --build` | One-time fix below, then same as Windows |
+| **macOS** | `npm run setup` then `npm run dev` | Or Docker Desktop |
+
+**App URL:** [http://localhost:5173](http://localhost:5173)  
+**API docs:** [http://localhost:8000/docs](http://localhost:8000/docs)
 
 ---
 
-## 🐳 Running with Docker (Recommended)
+## Windows (PowerShell)
 
-Docker is the easiest way to run the app as it pre-configures all Playwright browser dependencies.
+If the app already worked on Windows, keep using PowerShell — nothing special required.
 
-### Run everything with Docker Compose
+```powershell
+cd C:\path\to\ai-citation-optimizer
+Copy-Item .env.example .env   # first time only — add your API keys
 
-```bash
-# Build and start both services
-docker-compose up --build
+# With Docker (recommended)
+docker compose up --build
 
-# Start in background
-docker-compose up -d
-
-# Stop services
-docker-compose down
-```
-
-### Build & Run Individual Containers (Optional)
-
-**Backend:**
-
-```bash
-cd backend
-docker build -t ai-citation-backend .
-docker run -p 8000:8000 --env-file ../.env ai-citation-backend
-```
-
-**Frontend:**
-
-```bash
-cd frontend
-docker build -t ai-citation-frontend .
-docker run -p 5173:5173 ai-citation-frontend
-```
-
----
-
-## 🛠️ Running without Docker (Manual)
-
-### 1. Backend Setup
-
-```bash
-cd backend
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install -r requirements.txt
-python -m playwright install chromium
-```
-
-### 2. Frontend Setup
-
-```bash
-cd frontend
-npm install
-```
-
-### 3. Start the Application
-
-**Start Backend:**
-
-```bash
-cd backend
-uvicorn app.main:app --reload --port 8000
-```
-
-**Start Frontend:**
-
-```bash
-cd frontend
+# Without Docker
+npm run setup
 npm run dev
 ```
+
+---
+
+## WSL Ubuntu (first time)
+
+WSL is a separate Linux environment from Windows. The app is the same; only the setup differs.
+
+### Fastest way (no Docker)
+
+```bash
+cd ~/projects/ai-citation-optimizer
+cp .env.example .env          # add your API keys
+npm run setup                 # first time only
+npm run dev
+```
+
+Open [http://localhost:5173](http://localhost:5173)
+
+### With Docker
+
+1. **Docker Desktop must be running on Windows**
+2. Enable **Settings → Resources → WSL Integration → Ubuntu**
+3. **One-time permission fix** in Ubuntu (even after enabling integration):
+
+```bash
+sudo usermod -aG docker $USER
+```
+
+4. **Close Ubuntu and reopen it** (or run `wsl --shutdown` in PowerShell, then reopen)
+5. Start the app:
+
+```bash
+cd ~/projects/ai-citation-optimizer
+docker compose up --build
+```
+
+**Verify Docker works:**
+
+```bash
+groups        # should list "docker"
+docker ps
+```
+
+**If Docker still fails:** use `npm run dev` instead — the app works fine without Docker.
+
+---
+
+## macOS
+
+```bash
+brew install node python@3.12   # if needed
+cp .env.example .env
+npm run setup
+npm run dev
+```
+
+Or with Docker Desktop: `docker compose up --build`
+
+---
+
+## All commands (reference)
+
+```bash
+npm run setup              # install Python + pnpm deps (first time)
+npm run dev                # start backend + frontend together
+npm run docker:up          # docker compose up --build
+npm run docker:down        # docker compose down
+```
+
+**Manual start (two terminals):**
+
+```bash
+# Terminal 1 — backend
+cd backend && source .venv/bin/activate    # WSL/macOS
+uvicorn app.main:app --reload --port 8000
+
+# Terminal 2 — frontend
+cd frontend && pnpm dev
+```
+
+Windows backend activation: `.\.venv\Scripts\Activate.ps1`
 
 ---
 

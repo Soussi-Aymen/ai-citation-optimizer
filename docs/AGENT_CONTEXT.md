@@ -44,7 +44,7 @@ Guidance IDs: `js_hydration`, `js_payload`, `unused_js`, `console_errors`, `lcp`
 ## Known bugs (unchanged)
 
 - `build_fix_instructions` Nothing-branded JSON-LD
-- Frontend hardcodes `http://localhost:8000`
+- Frontend uses `VITE_API_URL` via `frontend/src/lib/api.js` (defaults to localhost:8000)
 - `main.py` L170: benchmark `len(sitemap_urls)` on dict
 
 ## Env
