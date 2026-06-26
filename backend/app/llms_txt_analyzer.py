@@ -92,9 +92,7 @@ async def probe_llms_txt(
     if own_client:
         client = httpx.AsyncClient(timeout=10.0, follow_redirects=True)
 
-    headers = {
-        "User-Agent": "Mozilla/5.0 (compatible; AICitationOptimizer/1.0)"
-    }
+    headers = {"User-Agent": "Mozilla/5.0 (compatible; AICitationOptimizer/1.0)"}
 
     try:
         for llms_url in probe_urls:

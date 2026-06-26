@@ -126,7 +126,9 @@ async def get_gaps(domain: str = Query(...)):
             "peec_available": peec_available,
             "total_sitemap_pages": total,
             "total_cited_pages": cited if peec_available else None,
-            "citation_coverage_pct": round(citation_rate * 100, 1) if peec_available else None,
+            "citation_coverage_pct": round(citation_rate * 100, 1)
+            if peec_available
+            else None,
             "performance_score": perf_score,
             "gaps": gaps[:20],
             "orphans": orphans[:10],

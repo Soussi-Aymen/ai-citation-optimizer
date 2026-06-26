@@ -74,3 +74,13 @@ docstring-code-format = true
 #
 # ruff format --docstring-code-line-length
 docstring-code-line-length = "dynamic"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+markers = [
+    "integration: tests that need Playwright/Chromium or live network (deselect with '-m not integration')",
+]
+addopts = "-m 'not integration'"
+filterwarnings = ["ignore::DeprecationWarning"]
+
