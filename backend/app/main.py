@@ -47,6 +47,12 @@ class ContentRequest(BaseModel):
     action_text: str
 
 
+@app.get("/api/health")
+async def health():
+    peec_available = await peec.is_available()
+    return {"peec_available": peec_available}
+
+
 @app.get("/api/gaps")
 async def get_gaps(domain: str = Query(...)):
     try:
@@ -62,49 +68,65 @@ async def get_gaps(domain: str = Query(...)):
         sitemap_urls = sitemap_res.get("urls", [])
         sitemap_metrics = sitemap_res.get("metrics", {})
 
-        cited_urls = await peec.get_cited_urls(clean_domain)
-        gaps, orphans = get_ai_citation_gaps(sitemap_urls, cited_urls)
+        peec_available = await peec.is_available()
+
+        if peec_available:
+            cited_urls = await peec.get_cited_urls(clean_domain)
+            gaps, orphans = get_ai_citation_gaps(sitemap_urls, cited_urls)
+        else:
+            cited_urls = []
+            gaps = list(sitemap_urls)
+            orphans = []
 
         total = len(sitemap_urls)
         cited = len(cited_urls)
         citation_rate = (cited / total) if total > 0 else 0
-        perf_score = min(
-            100,
-            round((citation_rate * 60) + 20 + min(20, max(0, 20 - len(clean_domain)))),
+        perf_score = (
+            min(
+                100,
+                round(
+                    (citation_rate * 60) + 20 + min(20, max(0, 20 - len(clean_domain)))
+                ),
+            )
+            if peec_available
+            else None
         )
 
-        brands_data = await peec.list_brands(pid)
-        brands = brands_data.get("data", [])
-
         competitors = []
-        for b in brands:
-            brand_domain = b.get("domain")
-            if not brand_domain:
-                continue
-            comp_report = await peec.get_domain_report(brand_domain)
-            comp_data = (
-                comp_report.get("data", [{}])[0]
-                if isinstance(comp_report.get("data"), list)
-                else comp_report.get("data", {})
-            )
-            visibility = comp_data.get("visibility_score", 0)
-            if visibility == 0:
-                visibility = comp_data.get("retrieved_percentage", 0)
-            competitors.append(
-                {
-                    "name": b.get("name", brand_domain),
-                    "domain": brand_domain,
-                    "is_own": b.get("is_own", False),
-                    "citations": comp_data.get("citation_count", 0),
-                    "visibility": round(visibility, 1),
-                }
-            )
+        brands = []
+        if peec_available:
+            brands_data = await peec.list_brands(pid)
+            brands = brands_data.get("data", [])
+
+            for b in brands:
+                brand_domain = b.get("domain")
+                if not brand_domain:
+                    continue
+                comp_report = await peec.get_domain_report(brand_domain)
+                comp_data = (
+                    comp_report.get("data", [{}])[0]
+                    if isinstance(comp_report.get("data"), list)
+                    else comp_report.get("data", {})
+                )
+                visibility = comp_data.get("visibility_score", 0)
+                if visibility == 0:
+                    visibility = comp_data.get("retrieved_percentage", 0)
+                competitors.append(
+                    {
+                        "name": b.get("name", brand_domain),
+                        "domain": brand_domain,
+                        "is_own": b.get("is_own", False),
+                        "citations": comp_data.get("citation_count", 0),
+                        "visibility": round(visibility, 1),
+                    }
+                )
 
         return {
             "domain": domain,
+            "peec_available": peec_available,
             "total_sitemap_pages": total,
-            "total_cited_pages": cited,
-            "citation_coverage_pct": round(citation_rate * 100, 1),
+            "total_cited_pages": cited if peec_available else None,
+            "citation_coverage_pct": round(citation_rate * 100, 1) if peec_available else None,
             "performance_score": perf_score,
             "gaps": gaps[:20],
             "orphans": orphans[:10],
@@ -150,6 +172,9 @@ async def generate_content(request: ContentRequest):
 @app.get("/api/benchmark")
 async def get_benchmark(domain: str = Query(...)):
     try:
+        if not await peec.is_available():
+            return {"peec_available": False}
+
         clean_domain = (
             domain.replace("https://", "")
             .replace("http://", "")
@@ -410,6 +435,7 @@ async def get_benchmark(domain: str = Query(...)):
 
         return {
             "domain": domain,
+            "peec_available": True,
             "total_pages": total_pages,
             "current": {"visibility_score": visibility, "citation_count": citations},
             "estimated": {
@@ -434,8 +460,10 @@ async def audit_page(request: AuditRequest):
             .replace("www.", "")
             .split("/")[0]
         )
-        report = await peec.get_domain_report(domain)
-        comp_context = json.dumps(report.get("data", [])[:3])
+        comp_context = ""
+        if await peec.is_available():
+            report = await peec.get_domain_report(domain)
+            comp_context = json.dumps(report.get("data", [])[:3])
         result = await agent.audit_url(request.url, competitor_data=comp_context)
         return {"url": request.url, "analysis": result}
     except Exception as e:

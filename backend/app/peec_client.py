@@ -10,11 +10,42 @@ load_dotenv()
 
 
 class PeecClient:
+    _PLACEHOLDER_KEYS = frozenset(
+        {"", "your_peec_api_key", "changeme", "replace_me", "xxx"}
+    )
+
     def __init__(self):
-        self.api_key = os.getenv("PEEC_API_KEY")
+        self.api_key = (os.getenv("PEEC_API_KEY") or "").strip()
         self.base_url = "https://api.peec.ai/customer/v1"
         self.headers = {"x-api-key": self.api_key, "Content-Type": "application/json"}
         self._cache = {}
+        self._available: bool | None = None
+
+    @property
+    def is_configured(self) -> bool:
+        return self.api_key.lower() not in self._PLACEHOLDER_KEYS
+
+    async def is_available(self) -> bool:
+        """True when PEEC_API_KEY is set and the API accepts it."""
+        if not self.is_configured:
+            self._available = False
+            return False
+        if self._available is not None:
+            return self._available
+
+        async with httpx.AsyncClient() as client:
+            try:
+                response = await client.post(
+                    f"{self.base_url}/reports",
+                    headers=self.headers,
+                    json={"domain": "example.com"},
+                    timeout=10.0,
+                )
+                self._available = response.status_code not in (401, 403)
+            except Exception as e:
+                print(f"Peec API availability check failed: {e}")
+                self._available = False
+        return self._available
 
     def _get_cache(self, key):
         if key in self._cache:
@@ -27,6 +58,9 @@ class PeecClient:
         self._cache[key] = (data, time.time())
 
     async def _post(self, endpoint, payload):
+        if not self.is_configured or self._available is False:
+            return {}
+
         cache_key = f"{endpoint}:{json.dumps(payload, sort_keys=True)}"
         cached = self._get_cache(cache_key)
         if cached:
@@ -43,7 +77,13 @@ class PeecClient:
                 response.raise_for_status()
                 data = response.json()
                 self._set_cache(cache_key, data)
+                self._available = True
                 return data
+            except httpx.HTTPStatusError as e:
+                if e.response.status_code in (401, 403):
+                    self._available = False
+                print(f"Peec API Error ({endpoint}): {e}")
+                return {}
             except Exception as e:
                 print(f"Peec API Error ({endpoint}): {e}")
                 return {}
