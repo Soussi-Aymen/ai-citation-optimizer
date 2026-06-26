@@ -1,3 +1,5 @@
+name: ai-citation-optimizer
+
 services:
   backend:
     build: ./backend
@@ -7,17 +9,22 @@ services:
       - .env
     volumes:
       - ./backend:/app
-    restart: always
+    restart: unless-stopped
 
   frontend:
     build: ./frontend
     ports:
       - "5173:5173"
+    env_file:
+      - .env
     environment:
       - VITE_API_URL=http://localhost:8000
     volumes:
       - ./frontend:/app
-      - /app/node_modules
+      - frontend_node_modules:/app/node_modules
     depends_on:
       - backend
-    restart: always
+    restart: unless-stopped
+
+volumes:
+  frontend_node_modules:

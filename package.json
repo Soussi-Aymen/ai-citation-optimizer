@@ -1,0 +1,15 @@
+{
+  "name": "ai-citation-optimizer",
+  "private": true,
+  "description": "AI Citation Optimizer — cross-platform dev scripts",
+  "scripts": {
+    "setup": "node scripts/setup.mjs",
+    "dev": "node scripts/dev.mjs",
+    "docker:up": "docker compose up --build",
+    "docker:up:detached": "docker compose up --build -d",
+    "docker:down": "docker compose down"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
