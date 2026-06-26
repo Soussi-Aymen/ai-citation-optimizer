@@ -1,12 +1,18 @@
-import React, { useEffect, useState } from 'react'
-import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom'
+import { useEffect, useState, type ReactNode } from 'react'
+import { BrowserRouter as Router, Routes, Route, Link, useLocation, useParams } from 'react-router-dom'
 import axios from 'axios'
 import { apiUrl } from './lib/api'
+import type { HealthResponse } from './types/api'
 import Dashboard from './pages/Dashboard'
 import PageDetail from './pages/PageDetail'
 import { Sparkles } from 'lucide-react'
 
-const NavLink = ({ to, children }) => {
+interface NavLinkProps {
+  to: string
+  children: ReactNode
+}
+
+const NavLink = ({ to, children }: NavLinkProps) => {
   const location = useLocation()
   const isActive = location.pathname === to
   return (
@@ -23,12 +29,17 @@ const NavLink = ({ to, children }) => {
   )
 }
 
+function AuditPage() {
+  const { url } = useParams()
+  return <PageDetail key={url} />
+}
+
 function App() {
-  const [peecAvailable, setPeecAvailable] = useState(null)
+  const [peecAvailable, setPeecAvailable] = useState<boolean | null>(null)
 
   useEffect(() => {
     axios
-      .get(apiUrl('/api/health'))
+      .get<HealthResponse>(apiUrl('/api/health'))
       .then((res) => setPeecAvailable(res.data.peec_available === true))
       .catch(() => setPeecAvailable(false))
   }, [])
@@ -56,7 +67,7 @@ function App() {
         <main className="min-h-[calc(100vh-250px)]">
           <Routes>
             <Route path="/" element={<Dashboard />} />
-            <Route path="/audit/:url" element={<PageDetail />} />
+            <Route path="/audit/:url" element={<AuditPage />} />
           </Routes>
         </main>
 

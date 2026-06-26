@@ -1,37 +1,41 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import { apiUrl } from '../lib/api'
+import type { AuditAnalysis, AuditResponse, HealthResponse } from '../types/api'
 import {
   ArrowLeft,
   Zap,
   ShieldAlert,
-  CheckCircle2,
   Cpu,
   Activity,
   Clock,
   Globe,
   FileJson,
   Target,
-  BarChart2,
   Code2,
   Layers,
   CheckSquare,
   XSquare,
 } from 'lucide-react'
 
+function readAuditCache(url: string): AuditAnalysis | null {
+  const cached = localStorage.getItem(`audit_cache_${url}`)
+  return cached ? (JSON.parse(cached) as AuditAnalysis) : null
+}
+
 const PageDetail = () => {
   const { url } = useParams()
-  const decodedUrl = decodeURIComponent(url)
+  const decodedUrl = decodeURIComponent(url ?? '')
   const navigate = useNavigate()
-  const [loading, setLoading] = useState(true)
-  const [data, setData] = useState(null)
+  const [loading, setLoading] = useState(() => readAuditCache(decodedUrl) === null)
+  const [data, setData] = useState<AuditAnalysis | null>(() => readAuditCache(decodedUrl))
   const [error, setError] = useState('')
   const [currentStep, setCurrentStep] = useState(0)
-  const [expandedGuidance, setExpandedGuidance] = useState({})
+  const [expandedGuidance, setExpandedGuidance] = useState<Record<string, boolean>>({})
   const [peecAvailable, setPeecAvailable] = useState(false)
 
-  const toggleGuidance = (id) => {
+  const toggleGuidance = (id: string) => {
     setExpandedGuidance((prev) => ({ ...prev, [id]: !prev[id] }))
   }
 
@@ -45,27 +49,24 @@ const PageDetail = () => {
 
   useEffect(() => {
     axios
-      .get(apiUrl('/api/health'))
+      .get<HealthResponse>(apiUrl('/api/health'))
       .then((res) => setPeecAvailable(res.data.peec_available === true))
       .catch(() => setPeecAvailable(false))
   }, [])
 
   useEffect(() => {
     const cacheKey = `audit_cache_${decodedUrl}`
-    const cachedResult = localStorage.getItem(cacheKey)
-    if (cachedResult) {
-      setData(JSON.parse(cachedResult))
-      setLoading(false)
+    if (localStorage.getItem(cacheKey)) {
       return
     }
 
-    let stepInterval = setInterval(() => {
+    const stepInterval = setInterval(() => {
       setCurrentStep((prev) => (prev < simulationSteps.length - 1 ? prev + 1 : prev))
     }, 3000)
 
     const runAudit = async () => {
       try {
-        const response = await axios.post(
+        const response = await axios.post<AuditResponse>(
           apiUrl('/api/audit'),
           { url: decodedUrl },
           {
@@ -92,7 +93,7 @@ const PageDetail = () => {
     }
     runAudit()
     return () => clearInterval(stepInterval)
-  }, [decodedUrl])
+  }, [decodedUrl, simulationSteps.length])
 
   if (loading)
     return (
@@ -130,6 +131,19 @@ const PageDetail = () => {
       </div>
     )
 
+  if (!data) {
+    return (
+      <div className="glass-card py-16 text-center">
+        <p className="text-slate-500">No audit data available.</p>
+        <button className="btn-primary mt-6" onClick={() => navigate('/')}>
+          Back to Dashboard
+        </button>
+      </div>
+    )
+  }
+
+  const audit = data
+
   return (
     <div className="animate-fade-in">
       <div className="mb-8 flex items-center justify-between">
@@ -151,7 +165,7 @@ const PageDetail = () => {
         <p className="font-mono text-sm break-all text-slate-500">{decodedUrl}</p>
       </header>
 
-      {data.signals && (
+      {audit.signals && (
         <section className="glass-card mb-8">
           <div className="mb-6 flex items-center gap-2">
             <Cpu size={20} className="text-slate-400" />
@@ -171,14 +185,14 @@ const PageDetail = () => {
               </div>
               <div
                 className={`text-2xl font-black ${
-                  data.signals.load_time_ms < 2000
+                  (audit.signals.load_time_ms ?? 0) < 2000
                     ? 'text-emerald-600'
-                    : data.signals.load_time_ms < 4000
+                    : (audit.signals.load_time_ms ?? 0) < 4000
                       ? 'text-amber-600'
                       : 'text-red-600'
                 }`}
               >
-                {data.signals.load_time_ms}ms
+                {(audit.signals.load_time_ms ?? 0)}ms
               </div>
             </div>
 
@@ -189,10 +203,10 @@ const PageDetail = () => {
               </div>
               <div
                 className={`text-2xl font-black ${
-                  data.signals.js_impact === 'CRITICAL' ? 'text-red-600' : 'text-amber-600'
+                  audit.signals.js_impact === 'CRITICAL' ? 'text-red-600' : 'text-amber-600'
                 }`}
               >
-                {data.signals.js_impact}
+                {audit.signals.js_impact}
               </div>
             </div>
 
@@ -201,7 +215,7 @@ const PageDetail = () => {
               <div className="mb-2 flex items-center gap-2 text-[10px] font-bold tracking-widest text-slate-400 uppercase">
                 <Layers size={12} /> DOM Depth
               </div>
-              <div className="text-2xl font-black text-slate-900">{data.signals.dom_depth}</div>
+              <div className="text-2xl font-black text-slate-900">{audit.signals.dom_depth}</div>
             </div>
 
             {/* Structured Data */}
@@ -210,7 +224,7 @@ const PageDetail = () => {
                 <FileJson size={12} /> JSON-LD
               </div>
               <div className="flex items-center gap-2">
-                {data.signals.has_json_ld ? (
+                {audit.signals.has_json_ld ? (
                   <>
                     <CheckSquare size={20} className="text-emerald-500" />
                     <span className="text-lg font-black text-emerald-600">Present</span>
@@ -230,12 +244,12 @@ const PageDetail = () => {
                 <Globe size={12} /> llms.txt
               </div>
               <div className="flex items-center gap-2">
-                {!data.signals.has_llms_txt ? (
+                {!audit.signals.has_llms_txt ? (
                   <>
                     <XSquare size={20} className="text-red-500" />
                     <span className="text-lg font-black text-red-600">Missing</span>
                   </>
-                ) : data.signals.llms_txt_lists_page ? (
+                ) : audit.signals.llms_txt_lists_page ? (
                   <>
                     <CheckSquare size={20} className="text-emerald-500" />
                     <span className="text-lg font-black text-emerald-600">Listed</span>
@@ -253,15 +267,17 @@ const PageDetail = () => {
       )}
 
       {/* Technical Optimization Guidance — Only shows Medium/Bad scores */}
-      {data.guidance && data.guidance.length > 0 && (
+      {audit.guidance && audit.guidance.length > 0 && (
         <section className="glass-card mb-8 border-amber-200 bg-amber-50/50">
           <h3 className="mb-6 flex items-center gap-2 text-lg font-bold text-amber-900">
             <Activity size={20} className="text-amber-600" /> Recommended Performance Optimizations
           </h3>
           <div className="grid grid-cols-1 gap-4">
-            {data.guidance.map((item, i) => (
+            {audit.guidance.map((item, i) => {
+              const guidanceId = item.id ?? `guidance-${i}`
+              return (
               <div
-                key={i}
+                key={guidanceId}
                 className={`rounded-xl border-l-4 bg-white/80 p-5 shadow-sm ${
                   item.score === 'Bad' ? 'border-red-500' : 'border-amber-500'
                 }`}
@@ -285,22 +301,22 @@ const PageDetail = () => {
                     <div className="text-sm font-bold text-amber-900">{item.advice}</div>
                   </div>
                   <button
-                    onClick={() => toggleGuidance(item.id)}
+                    onClick={() => toggleGuidance(guidanceId)}
                     className={`rounded-lg px-4 py-2 text-xs font-bold text-white transition-all hover:scale-105 ${
                       item.score === 'Bad' ? 'bg-red-600' : 'bg-amber-600'
                     }`}
                   >
-                    {expandedGuidance[item.id] ? 'Close Guidance' : 'View Fix Steps'}
+                    {expandedGuidance[guidanceId] ? 'Close Guidance' : 'View Fix Steps'}
                   </button>
                 </div>
 
-                {expandedGuidance[item.id] && (
+                {expandedGuidance[guidanceId] && (
                   <div className="mt-6 animate-fade-in rounded-lg border border-amber-100 bg-white p-5 shadow-inner">
                     <h4 className="mb-4 flex items-center gap-2 text-xs font-black uppercase tracking-widest text-amber-800">
                       <Target size={14} className="text-amber-600" /> Framework-Agnostic Implementation
                     </h4>
                     <ul className="space-y-3">
-                      {item.steps.map((step, si) => (
+                      {item.steps?.map((step, si) => (
                         <li
                           key={si}
                           className="flex items-start gap-3 text-sm leading-relaxed text-amber-900/80"
@@ -315,20 +331,22 @@ const PageDetail = () => {
                   </div>
                 )}
               </div>
-            ))}
+              )
+            })}
           </div>
         </section>
       )}
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
         {/* Performance Report */}
+        {audit.performance_report && (
         <section className="glass-card">
           <div className="mb-6 flex items-center justify-between">
             <h3 className="flex items-center gap-2 text-lg font-bold text-slate-900">
               <Zap size={20} className="text-amber-500" /> Performance Audit
             </h3>
             <span className="rounded-full bg-amber-50 px-3 py-1 text-sm font-bold text-amber-600">
-              Score: {data.performance_report.score}/100
+              Score: {audit.performance_report.score}/100
             </span>
           </div>
 
@@ -338,7 +356,7 @@ const PageDetail = () => {
                 Critical Issues
               </h4>
               <ul className="space-y-2">
-                {data.performance_report?.issues?.map((issue, i) => (
+                {audit.performance_report?.issues?.map((issue, i) => (
                   <li key={i} className="flex items-start gap-2 text-sm text-slate-600">
                     <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-red-400" />
                     {issue}
@@ -352,7 +370,7 @@ const PageDetail = () => {
                 Recommended Fixes
               </h4>
               <ul className="space-y-2">
-                {data.performance_report?.fixes?.map((fix, i) => (
+                {audit.performance_report?.fixes?.map((fix, i) => (
                   <li key={i} className="flex items-start gap-2 text-sm text-slate-600">
                     <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-emerald-400" />
                     {fix}
@@ -362,27 +380,28 @@ const PageDetail = () => {
             </div>
           </div>
         </section>
+        )}
 
-        {/* Sitemap Audit */}
+        {audit.sitemap_audit && (
         <section className="glass-card">
           <div className="mb-6 flex items-center justify-between">
             <h3 className="flex items-center gap-2 text-lg font-bold text-slate-900">
               <Globe size={20} className="text-blue-500" /> Content & Sitemap
             </h3>
             <span className="rounded-full bg-blue-50 px-3 py-1 text-sm font-bold text-blue-600">
-              Health: {data.sitemap_audit.score}%
+              Health: {audit.sitemap_audit.score}%
             </span>
           </div>
 
           <div className="mb-6 rounded-lg bg-slate-50 p-4 text-sm leading-relaxed text-slate-600">
-            {data.sitemap_audit.analysis}
+            {audit.sitemap_audit.analysis}
           </div>
 
           <h4 className="mb-3 text-xs font-bold tracking-widest text-blue-500 uppercase">
             Roadmap for Visibility
           </h4>
           <div className="grid grid-cols-1 gap-2">
-            {data.sitemap_audit?.improvements?.map((imp, i) => (
+            {audit.sitemap_audit?.improvements?.map((imp, i) => (
               <div
                 key={i}
                 className="rounded-lg border border-slate-100 bg-white p-3 text-sm text-slate-700 shadow-sm"
@@ -392,9 +411,10 @@ const PageDetail = () => {
             ))}
           </div>
         </section>
+        )}
       </div>
 
-      {/* Competitive Edge */}
+      {audit.competitive_analysis && (
       <section className="glass-card mt-8 border-indigo-100 bg-indigo-50/30">
         <h3 className="mb-6 flex items-center gap-2 text-lg font-bold text-slate-900">
           <Target size={20} className="text-indigo-500" /> Competitive Landscape
@@ -405,7 +425,7 @@ const PageDetail = () => {
               Competitor Advantages
             </h4>
             <p className="text-sm leading-relaxed text-slate-600">
-              {data.competitive_analysis.competitor_edge}
+              {audit.competitive_analysis.competitor_edge}
             </p>
           </div>
           <div>
@@ -413,35 +433,40 @@ const PageDetail = () => {
               Strategic Gap to Close
             </h4>
             <div className="rounded-xl border border-indigo-200 bg-white p-5 text-lg font-bold text-indigo-600 shadow-sm">
-              {data.competitive_analysis.gap_to_close}
+              {audit.competitive_analysis.gap_to_close}
             </div>
           </div>
         </div>
       </section>
+      )}
 
       {/* Final Verdict */}
       <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
+        {audit.ai_readiness && (
         <div className="glass-card flex flex-col items-center justify-center py-8 text-center">
           <span className="mb-1 text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase">
             AI READINESS
           </span>
           <div className="text-4xl font-black text-slate-900">
-            {data.ai_readiness.overall_score}%
+            {audit.ai_readiness.overall_score}%
           </div>
         </div>
+        )}
+        {audit.ai_readiness && (
         <div className="glass-card flex flex-col items-center justify-center border-emerald-100 bg-emerald-50 py-8 text-center">
           <span className="mb-1 text-[10px] font-bold tracking-[0.2em] text-emerald-500 uppercase">
             ESTIMATED IMPACT
           </span>
           <div className="text-4xl font-black text-emerald-600">
-            {data.ai_readiness.estimated_impact}
+            {audit.ai_readiness.estimated_impact}
           </div>
         </div>
+        )}
         <div className="glass-card flex flex-col items-center justify-center py-8 text-center">
           <span className="mb-1 text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase">
             AUDIT SPEED
           </span>
-          <div className="text-4xl font-black text-blue-500">{data.execution_time_ms}ms</div>
+          <div className="text-4xl font-black text-blue-500">{audit.execution_time_ms}ms</div>
         </div>
       </div>
 
@@ -451,8 +476,8 @@ const PageDetail = () => {
           Execution Trace
         </h3>
         <div className="max-h-32 overflow-auto rounded-lg bg-slate-900 p-4 font-mono text-[10px] text-slate-500">
-          {data.logs &&
-            data.logs.map((log, i) => (
+          {audit.logs &&
+            audit.logs.map((log, i) => (
               <div key={i}>
                 <span className="mr-2 text-slate-700">&gt;</span>
                 {log}

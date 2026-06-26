@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react'
+import { useState, type FormEvent } from 'react'
 import axios from 'axios'
 import { apiUrl } from '../lib/api'
+import type { BenchmarkResponse, ContentResponse, FixResponse, GapsResponse, TabName } from '../types/api'
 import {
   Search,
   AlertCircle,
@@ -13,20 +14,18 @@ import {
   ListChecks,
   Globe,
   CheckCircle2,
-  Trophy,
   Copy,
   Check,
   FileCode,
   Cpu,
   ExternalLink,
-  Mail,
   MessageSquare,
   PlayCircle,
   FileText,
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
-const renderMarkdownLinks = (text) => {
+const renderMarkdownLinks = (text: string | undefined) => {
   if (!text) return null
   const parts = text.split(/(\[[^\]]+\]\([^)]+\))/g)
   return parts.map((part, i) => {
@@ -49,40 +48,34 @@ const renderMarkdownLinks = (text) => {
 }
 
 const Dashboard = () => {
-  const [domain, setDomain] = useState('')
+  const [domain, setDomain] = useState(
+    () => localStorage.getItem('last_analyzed_domain') || '',
+  )
   const [loading, setLoading] = useState(false)
-  const [data, setData] = useState(null)
+  const [data, setData] = useState<GapsResponse | null>(null)
   const [error, setError] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
-  const [benchmarkData, setBenchmarkData] = useState(null)
+  const [benchmarkData, setBenchmarkData] = useState<BenchmarkResponse | null>(null)
 
-  const [generatedFixes, setGeneratedFixes] = useState({})
-  const [generatingFix, setGeneratingFix] = useState({})
-  const [expandedFix, setExpandedFix] = useState({})
-  const [expandedGuidance, setExpandedGuidance] = useState({})
+  const [generatedFixes, setGeneratedFixes] = useState<Record<string, FixResponse>>({})
+  const [generatingFix, setGeneratingFix] = useState<Record<string, boolean>>({})
+  const [expandedGuidance, setExpandedGuidance] = useState<Record<string, boolean>>({})
 
-  const toggleGuidance = (url, metricId) => {
+  const toggleGuidance = (url: string, metricId: string) => {
     const key = `${url}-${metricId}`
     setExpandedGuidance((prev) => ({ ...prev, [key]: !prev[key] }))
   }
 
-  const [generatedContent, setGeneratedContent] = useState({})
-  const [generatingContent, setGeneratingContent] = useState({})
-  const [copiedContent, setCopiedContent] = useState({})
-  const [copiedFix, setCopiedFix] = useState({})
-  const [activeTab, setActiveTab] = useState('YouTube')
+  const [generatedContent, setGeneratedContent] = useState<Record<string, string>>({})
+  const [generatingContent, setGeneratingContent] = useState<Record<string, boolean>>({})
+  const [copiedContent, setCopiedContent] = useState<Record<string, boolean>>({})
+  const [copiedFix, setCopiedFix] = useState<Record<string, boolean>>({})
+  const [activeTab, setActiveTab] = useState<TabName>('YouTube')
 
   const itemsPerPage = 5
   const navigate = useNavigate()
 
-  useEffect(() => {
-    const cachedDomain = localStorage.getItem('last_analyzed_domain')
-    if (cachedDomain) {
-      setDomain(cachedDomain)
-    }
-  }, [])
-
-  const fetchGaps = async (e) => {
+  const fetchGaps = async (e?: FormEvent) => {
     if (e) e.preventDefault()
     if (!domain) return
 
@@ -91,13 +84,15 @@ const Dashboard = () => {
     setData(null)
     setBenchmarkData(null)
     try {
-      const response = await axios.get(apiUrl(`/api/gaps?domain=${domain}`))
+      const response = await axios.get<GapsResponse>(apiUrl(`/api/gaps?domain=${domain}`))
       setData(response.data)
       localStorage.setItem('last_analyzed_domain', domain)
       setCurrentPage(1)
 
       if (response.data.peec_available) {
-        const benchResponse = await axios.get(apiUrl(`/api/benchmark?domain=${domain}`))
+        const benchResponse = await axios.get<BenchmarkResponse>(
+          apiUrl(`/api/benchmark?domain=${domain}`),
+        )
         if (benchResponse.data.peec_available !== false) {
           setBenchmarkData(benchResponse.data)
         }
@@ -110,7 +105,7 @@ const Dashboard = () => {
     }
   }
 
-  const handleHowToFix = async (url) => {
+  const handleHowToFix = async (url: string) => {
     if (generatedFixes[url]) {
       setGeneratedFixes((prev) => {
         const next = { ...prev }
@@ -121,7 +116,7 @@ const Dashboard = () => {
     }
     setGeneratingFix((prev) => ({ ...prev, [url]: true }))
     try {
-      const res = await axios.post(apiUrl('/api/generate-fix'), { url })
+      const res = await axios.post<FixResponse>(apiUrl('/api/generate-fix'), { url })
       setGeneratedFixes((prev) => ({ ...prev, [url]: res.data }))
     } catch (err) {
       console.error(err)
@@ -130,7 +125,7 @@ const Dashboard = () => {
     }
   }
 
-  const copyToClipboard = (text, key, type = 'fix') => {
+  const copyToClipboard = (text: string, key: string, type: 'fix' | 'content' = 'fix') => {
     navigator.clipboard.writeText(text)
     if (type === 'fix') {
       setCopiedFix((prev) => ({ ...prev, [key]: true }))
@@ -141,10 +136,10 @@ const Dashboard = () => {
     }
   }
 
-  const handleGenerateContent = async (actionType, actionText, key) => {
+  const handleGenerateContent = async (actionType: string, actionText: string, key: string) => {
     setGeneratingContent((prev) => ({ ...prev, [key]: true }))
     try {
-      const res = await axios.post(apiUrl('/api/generate-content'), {
+      const res = await axios.post<ContentResponse>(apiUrl('/api/generate-content'), {
         action_type: actionType,
         action_text: actionText,
       })
@@ -449,7 +444,7 @@ const Dashboard = () => {
                                   <button
                                     onClick={() =>
                                       copyToClipboard(
-                                        generatedContent[contentKey],
+                                        generatedContent[contentKey] ?? '',
                                         contentKey,
                                         'content',
                                       )
@@ -568,7 +563,7 @@ const Dashboard = () => {
                                         row.score === 'Bad' ? 'bg-red-50/50 ring-red-100' : 'bg-amber-50/50 ring-amber-100'
                                       }`}>
                                         <ul className="space-y-2">
-                                          {generatedFixes[url].guidance.find(g => g.id === row.id)?.steps?.map((step, si) => (
+                                          {generatedFixes[url]?.guidance?.find((g) => g.id === row.id)?.steps?.map((step, si) => (
                                             <li key={si} className="flex items-start gap-2 text-xs text-slate-700">
                                               <span className={`mt-1 h-1 w-1 flex-shrink-0 rounded-full ${
                                                 row.score === 'Bad' ? 'bg-red-400' : 'bg-amber-400'
@@ -639,7 +634,7 @@ const Dashboard = () => {
                               <button
                                 onClick={() =>
                                   copyToClipboard(
-                                    generatedFixes[url].llms_txt_template,
+                                    generatedFixes[url]?.llms_txt_template ?? '',
                                     `${url}-llms`,
                                     'fix',
                                   )
@@ -668,7 +663,7 @@ const Dashboard = () => {
                               </h4>
                               <button
                                 onClick={() =>
-                                  copyToClipboard(generatedFixes[url].json_ld, url, 'fix')
+                                  copyToClipboard(generatedFixes[url]?.json_ld ?? '', url, 'fix')
                                 }
                                 className="flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:text-blue-800"
                               >
@@ -736,7 +731,7 @@ const Dashboard = () => {
             <section className="glass-card">
               <h3 className="mb-6 text-xl font-bold text-slate-900">Gap Sources</h3>
               <div className="mb-8 flex gap-2 border-b border-slate-200">
-                {['YouTube', 'Reddit', 'Editorial'].map((tab) => (
+                {(['YouTube', 'Reddit', 'Editorial'] as const).map((tab) => (
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
@@ -806,7 +801,7 @@ const Dashboard = () => {
                               <button
                                 onClick={() =>
                                   copyToClipboard(
-                                    generatedContent[gapItem.id],
+                                    generatedContent[gapItem.id] ?? '',
                                     gapItem.id,
                                     'content',
                                   )
