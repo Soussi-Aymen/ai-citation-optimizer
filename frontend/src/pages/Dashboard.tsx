@@ -48,11 +48,48 @@ const renderMarkdownLinks = (text: string | undefined) => {
   })
 }
 
-const Dashboard = () => {
+const BenchmarkInsightsSkeleton = () => (
+  <div className="mb-8 space-y-6" aria-busy="true" aria-label="Loading Peec insights">
+    <section className="rounded-xl border border-blue-100 bg-blue-50 p-6 shadow-sm">
+      <div className="mb-6 h-7 w-48 animate-pulse rounded bg-blue-100" />
+      <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="space-y-2">
+            <div className="h-3 w-24 animate-pulse rounded bg-slate-200" />
+            <div className="h-8 w-16 animate-pulse rounded bg-slate-200" />
+          </div>
+        ))}
+      </div>
+      <div className="mt-8 space-y-4 border-t border-blue-100 pt-8">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className="h-12 animate-pulse rounded-lg bg-blue-100/60" />
+        ))}
+      </div>
+    </section>
+    <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+      <div className="border-b border-slate-200 bg-slate-50 px-6 py-4">
+        <div className="h-6 w-72 animate-pulse rounded bg-slate-200" />
+      </div>
+      <div className="space-y-4 p-6">
+        {Array.from({ length: 2 }).map((_, i) => (
+          <div key={i} className="h-24 animate-pulse rounded-lg bg-slate-100" />
+        ))}
+      </div>
+    </section>
+  </div>
+)
+
+interface DashboardProps {
+  /** From GET /api/health — false when Peec key is missing or expired */
+  peecServiceAvailable?: boolean | null
+}
+
+const Dashboard = ({ peecServiceAvailable = null }: DashboardProps) => {
   const [domain, setDomain] = useState(
     () => localStorage.getItem('last_analyzed_domain') || '',
   )
-  const [loading, setLoading] = useState(false)
+  const [loadingGaps, setLoadingGaps] = useState(false)
+  const [loadingBenchmark, setLoadingBenchmark] = useState(false)
   const [data, setData] = useState<GapsResponse | null>(null)
   const [error, setError] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
@@ -74,29 +111,60 @@ const Dashboard = () => {
     if (e) e.preventDefault()
     if (!domain) return
 
-    setLoading(true)
+    setLoadingGaps(true)
+    setLoadingBenchmark(false)
     setError('')
     setData(null)
     setBenchmarkData(null)
+
+    const skipBenchmark = peecServiceAvailable === false
+
     try {
-      const response = await axios.get<GapsResponse>(apiUrl(`/api/gaps?domain=${domain}`))
+      const gapsUrl = apiUrl(`/api/gaps?domain=${domain}`)
+      const benchmarkUrl = apiUrl(`/api/benchmark?domain=${domain}`)
+
+      if (!skipBenchmark && peecServiceAvailable === true) {
+        setLoadingBenchmark(true)
+        const [gapsResult, benchmarkResult] = await Promise.all([
+          axios.get<GapsResponse>(gapsUrl),
+          axios.get<BenchmarkResponse>(benchmarkUrl),
+        ])
+        setData(gapsResult.data)
+        localStorage.setItem('last_analyzed_domain', domain)
+        setCurrentPage(1)
+        setLoadingGaps(false)
+
+        if (gapsResult.data.peec_available && benchmarkResult.data.peec_available !== false) {
+          setBenchmarkData(benchmarkResult.data)
+        }
+        setLoadingBenchmark(false)
+        return
+      }
+
+      const response = await axios.get<GapsResponse>(gapsUrl)
       setData(response.data)
       localStorage.setItem('last_analyzed_domain', domain)
       setCurrentPage(1)
+      setLoadingGaps(false)
 
-      if (response.data.peec_available) {
-        const benchResponse = await axios.get<BenchmarkResponse>(
-          apiUrl(`/api/benchmark?domain=${domain}`),
-        )
-        if (benchResponse.data.peec_available !== false) {
-          setBenchmarkData(benchResponse.data)
+      if (!skipBenchmark && response.data.peec_available) {
+        setLoadingBenchmark(true)
+        try {
+          const benchResponse = await axios.get<BenchmarkResponse>(benchmarkUrl)
+          if (benchResponse.data.peec_available !== false) {
+            setBenchmarkData(benchResponse.data)
+          }
+        } catch (benchErr) {
+          console.error(benchErr)
+        } finally {
+          setLoadingBenchmark(false)
         }
       }
     } catch (err) {
       setError('Failed to fetch data. Ensure backend is running and URL is valid.')
       console.error(err)
-    } finally {
-      setLoading(false)
+      setLoadingGaps(false)
+      setLoadingBenchmark(false)
     }
   }
 
@@ -148,7 +216,13 @@ const Dashboard = () => {
   return (
     <div className="animate-fade-in">
       <div aria-live="polite" aria-atomic="true" className="sr-only">
-        {loading ? 'Analyzing domain, please wait.' : error ? error : ''}
+        {loadingGaps
+          ? 'Analyzing domain, please wait.'
+          : loadingBenchmark
+            ? 'Loading citation insights.'
+            : error
+              ? error
+              : ''}
       </div>
       <header className="mb-10">
         <h1 className="mb-2 text-4xl font-extrabold tracking-tight text-slate-900">
@@ -194,10 +268,10 @@ const Dashboard = () => {
             <button
               type="submit"
               className="btn-primary h-12"
-              disabled={loading}
-              aria-busy={loading}
+              disabled={loadingGaps}
+              aria-busy={loadingGaps}
             >
-              {loading ? 'Analyzing...' : 'Run Analysis'}
+              {loadingGaps ? 'Analyzing...' : 'Run Analysis'}
             </button>
           </div>
           <p id="domain-hint" className="text-xs text-slate-500">
@@ -263,6 +337,8 @@ const Dashboard = () => {
               </>
             )}
           </div>
+
+          {peecAvailable && loadingBenchmark && <BenchmarkInsightsSkeleton />}
 
           {peecAvailable && benchmarkData && (
             <div className="mb-8 space-y-6">

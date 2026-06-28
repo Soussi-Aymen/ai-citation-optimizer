@@ -18,9 +18,9 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# 2. Install Python dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# 2. Install Python dependencies (incl. dev tools for containerized lint/test)
+COPY requirements.txt requirements-dev.txt ./
+RUN pip install --no-cache-dir -r requirements.txt -r requirements-dev.txt
 
 # 3. Copy code
 COPY . .

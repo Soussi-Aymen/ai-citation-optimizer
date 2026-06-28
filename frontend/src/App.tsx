@@ -66,7 +66,7 @@ function App() {
 
         <main className="min-h-[calc(100vh-250px)]">
           <Routes>
-            <Route path="/" element={<Dashboard />} />
+            <Route path="/" element={<Dashboard peecServiceAvailable={peecAvailable} />} />
             <Route path="/audit/:url" element={<AuditPage />} />
           </Routes>
         </main>

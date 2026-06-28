@@ -47,7 +47,16 @@ Guidance IDs: `js_hydration`, `js_payload`, `unused_js`, `console_errors`, `lcp`
 - `frontend/src/lib/api.test.js` — API base URL helper
 - `frontend/src/pages/Dashboard.test.jsx` — Peec UI visibility integration tests
 
-Run: `npm run test` from project root.
+Run: `sh scripts/validate.sh` (lint + tests via Docker Compose).
+
+## Dev workflow
+
+Docker Compose is the only required tooling at the repo root:
+
+```bash
+docker compose up --build   # run app
+sh scripts/validate.sh      # lint + test in containers
+```
 
 ## Known bugs (unchanged)
 

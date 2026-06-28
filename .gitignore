@@ -58,7 +58,7 @@ pnpm-debug.log*
 .vscode/
 .idea/
 
-# Agent skill installs (re-run: npx -y modern-web-guidance@0.0.174 install)
+# Agent skill installs (re-run from frontend/: npx -y modern-web-guidance@0.0.174 install)
 .agents/
 frontend/.agents/
 

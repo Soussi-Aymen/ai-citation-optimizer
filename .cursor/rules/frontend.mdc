@@ -27,16 +27,16 @@ frontend/src/
 - API types live in `src/types/api.ts`; use `apiUrl()` from `src/lib/api.ts`
 - Peec UI is hidden when `peec_available: false` from `GET /api/health`
 
-## Scripts
+## Scripts (Docker)
 
 ```bash
-pnpm dev        # dev server :5173
-pnpm build      # tsc + production build
-pnpm typecheck  # strict TS check
-pnpm lint       # eslint
-pnpm test       # vitest
-pnpm format     # prettier
+docker compose run --rm --no-deps frontend pnpm dev        # dev server :5173
+docker compose run --rm --no-deps frontend pnpm typecheck  # strict TS check
+docker compose run --rm --no-deps frontend pnpm lint       # eslint
+docker compose run --rm --no-deps frontend pnpm test:run   # vitest
 ```
+
+Local `pnpm` in `frontend/` is only needed for the optional non-Docker path below.
 
 ## UI ↔ API mapping
 

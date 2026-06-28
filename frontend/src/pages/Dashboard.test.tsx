@@ -38,10 +38,10 @@ const gapsWithPeec: GapsResponse = {
   competitors: [],
 }
 
-function renderDashboard() {
+function renderDashboard(peecServiceAvailable: boolean | null = null) {
   return render(
     <MemoryRouter>
-      <Dashboard />
+      <Dashboard peecServiceAvailable={peecServiceAvailable} />
     </MemoryRouter>,
   )
 }
@@ -58,11 +58,11 @@ describe('Dashboard', () => {
     expect(screen.getByRole('button', { name: /run analysis/i })).toBeInTheDocument()
   })
 
-  it('hides Peec citation stats when API reports unavailable', async () => {
+  it('skips benchmark when Peec service is unavailable', async () => {
     mockedAxios.get.mockResolvedValueOnce({ data: gapsWithoutPeec } as AxiosResponse)
     const user = userEvent.setup()
 
-    renderDashboard()
+    renderDashboard(false)
     await user.type(screen.getByLabelText(/website domain/i), 'example.com')
     await user.click(screen.getByRole('button', { name: /run analysis/i }))
 
@@ -71,12 +71,13 @@ describe('Dashboard', () => {
     })
 
     expect(screen.queryByText('Cited by AI')).not.toBeInTheDocument()
-    expect(screen.queryByText('AI Coverage')).not.toBeInTheDocument()
+    expect(screen.queryByText('Growth Opportunity')).not.toBeInTheDocument()
     expect(screen.getByText('Your Sitemap Pages')).toBeInTheDocument()
     expect(mockedAxios.get).toHaveBeenCalledTimes(1)
+    expect(mockedAxios.get).toHaveBeenCalledWith(expect.stringContaining('/api/gaps'))
   })
 
-  it('shows Peec citation stats and fetches benchmark when available', async () => {
+  it('shows Peec citation stats and fetches benchmark in parallel when available', async () => {
     const benchmark: BenchmarkResponse = {
       domain: 'example.com',
       current: { visibility_score: 10, citation_count: 1 },
@@ -87,12 +88,18 @@ describe('Dashboard', () => {
       own_brand_name: 'Example',
     }
 
-    mockedAxios.get
-      .mockResolvedValueOnce({ data: gapsWithPeec } as AxiosResponse)
-      .mockResolvedValueOnce({ data: benchmark } as AxiosResponse)
+    mockedAxios.get.mockImplementation((url: string) => {
+      if (url.includes('/api/gaps')) {
+        return Promise.resolve({ data: gapsWithPeec } as AxiosResponse)
+      }
+      if (url.includes('/api/benchmark')) {
+        return Promise.resolve({ data: benchmark } as AxiosResponse)
+      }
+      return Promise.reject(new Error(`Unexpected URL: ${url}`))
+    })
 
     const user = userEvent.setup()
-    renderDashboard()
+    renderDashboard(true)
     await user.type(screen.getByLabelText(/website domain/i), 'example.com')
     await user.click(screen.getByRole('button', { name: /run analysis/i }))
 

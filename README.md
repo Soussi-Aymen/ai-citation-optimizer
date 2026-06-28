@@ -50,11 +50,13 @@ Instead of just showing raw data, the tool turns these metrics into immediate ac
 - **AI Agent**: Playwright (for rendered HTML analysis) + Gemini 2.5 Flash
 - **Data Provider**: Peec AI API (for citation metrics and domain visibility)
 - **Frontend**: React + Vite + TypeScript (strict) + pnpm (Tailwind CSS)
-- **Code Quality**: Ruff (backend), ESLint + `tsc` (frontend), Husky pre-commit hook
+- **Code Quality**: Ruff (backend), ESLint + `tsc` (frontend), optional git pre-commit via Docker
 - **Web standards**: Frontend UI follows [modern-web-guidance](https://github.com/GoogleChrome/modern-web-guidance) patterns — accessible forms, native `<details>` disclosures, ARIA tabs, `:focus-visible`, and `prefers-reduced-motion`
 - **Progress Tracking**: Dynamic visibility progress visualization at the top of the dashboard
 
 ## Getting Started
+
+Docker Compose is the **default, cross-platform** way to run the app (Windows, macOS, WSL/Linux). No local Python or pnpm required — only Docker.
 
 ### 1. API keys
 
@@ -73,154 +75,97 @@ GEMINI_API_KEY=your_gemini_api_key
 PEEC_API_KEY=your_peec_api_key   # optional — Peec features hide if missing or invalid
 ```
 
-### 2. Choose how to run the app
+### 2. Start the app
 
-| Where you work | Easiest command | Notes |
-|----------------|-----------------|-------|
-| **Windows PowerShell** | `docker compose up --build` | Same as before — use your Windows project folder |
-| **WSL Ubuntu (first time)** | `npm run setup` then `npm run dev` | No Docker permissions needed |
-| **WSL Ubuntu (with Docker)** | `docker compose up --build` | One-time fix below, then same as Windows |
-| **macOS** | `npm run setup` then `npm run dev` | Or Docker Desktop |
+```bash
+docker compose up --build
+```
 
 **App URL:** [http://localhost:5173](http://localhost:5173)  
 **API docs:** [http://localhost:8000/docs](http://localhost:8000/docs)
 
----
+### Platform notes
 
-## Windows (PowerShell)
+| Platform | Requirement |
+|----------|-------------|
+| **Windows / macOS** | [Docker Desktop](https://www.docker.com/products/docker-desktop/) running |
+| **WSL Ubuntu** | Docker Desktop with **Settings → Resources → WSL Integration → Ubuntu** enabled |
 
-If the app already worked on Windows, keep using PowerShell — nothing special required.
-
-```powershell
-cd C:\path\to\ai-citation-optimizer
-Copy-Item .env.example .env   # first time only — add your API keys
-
-# With Docker (recommended)
-docker compose up --build
-
-# Without Docker
-npm run setup
-npm run dev
-```
-
----
-
-## WSL Ubuntu (first time)
-
-WSL is a separate Linux environment from Windows. The app is the same; only the setup differs.
-
-### Fastest way (no Docker)
+Frontend dependencies live in the **Docker volume** `frontend_node_modules`, not on your host. If you have `frontend/node_modules/` from an old local setup, delete it — Docker does not need it:
 
 ```bash
-cd ~/projects/ai-citation-optimizer
-cp .env.example .env          # add your API keys
-npm run setup                 # first time only
-npm run dev
+rm -rf frontend/node_modules
 ```
 
-Open [http://localhost:5173](http://localhost:5173)
-
-### With Docker
-
-1. **Docker Desktop must be running on Windows**
-2. Enable **Settings → Resources → WSL Integration → Ubuntu**
-3. **One-time permission fix** in Ubuntu (even after enabling integration):
+**WSL one-time Docker permission** (if `docker ps` fails):
 
 ```bash
 sudo usermod -aG docker $USER
+# then close and reopen Ubuntu (or: wsl --shutdown in PowerShell)
 ```
-
-4. **Close Ubuntu and reopen it** (or run `wsl --shutdown` in PowerShell, then reopen)
-5. Start the app:
-
-```bash
-cd ~/projects/ai-citation-optimizer
-docker compose up --build
-```
-
-**Verify Docker works:**
-
-```bash
-groups        # should list "docker"
-docker ps
-```
-
-**If Docker still fails:** use `npm run dev` instead — the app works fine without Docker.
 
 ---
 
-## macOS
+## Commands (reference)
 
 ```bash
-brew install node python@3.12   # if needed
-cp .env.example .env
-npm run setup
-npm run dev
-```
-
-Or with Docker Desktop: `docker compose up --build`
-
----
-
-## All commands (reference)
-
-```bash
-npm run setup              # install Python + pnpm deps (first time)
-npm run dev                # start backend + frontend together
-npm run test               # run backend + frontend tests (unit/integration)
-npm run test:backend:integration  # Playwright browser test (optional)
-npm run docker:up          # docker compose up --build
-npm run docker:down        # docker compose down
+docker compose up --build           # start backend + frontend
+docker compose down                 # stop services
+sh scripts/validate.sh              # lint + test (all checks)
+sh scripts/validate.sh --tests-only # pytest + vitest only
+sh scripts/validate.sh --lint-only  # ruff + eslint + tsc only
 ```
 
 ### Tests
 
+All checks run **inside Docker**:
+
 ```bash
-npm run test                      # all unit + API integration tests
-npm run test:backend              # pytest only (skips Playwright by default)
-npm run test:frontend             # vitest only
-npm run typecheck                 # strict TypeScript (frontend)
-npm run test:backend:integration  # Playwright audit on react.dev (needs Chromium)
-npm run validate                  # lint + typecheck + test (same as pre-commit hook)
+sh scripts/validate.sh
+docker compose run --rm --no-deps backend pytest
+docker compose run --rm --no-deps frontend pnpm test:run
 ```
 
 | Layer | Runner | What is covered |
 |-------|--------|-----------------|
 | **Backend unit** | pytest | Peec client, sitemap analyzer, llms.txt probe, agent fix generation |
-| **Backend API** | pytest | FastAPI routes (`/api/gaps`, `/api/benchmark`, `/api/audit`, etc.) with mocked dependencies |
-| **Backend integration** | pytest (`-m integration`) | Playwright browser audit on react.dev — optional, excluded by default |
+| **Backend API** | pytest | FastAPI routes with mocked dependencies |
+| **Backend integration** | pytest (`-m integration`) | Playwright audit on react.dev — optional, excluded by default |
 | **Frontend** | vitest | API base URL helper, Dashboard form and Peec visibility toggling |
 
-Backend tests use **pytest** with mocked Peec/sitemap/agent dependencies. The Playwright test is marked `integration` and excluded from the default run.
-
-### Pre-commit hook
-
-After `npm run setup`, every `git commit` automatically runs:
-
-1. Backend lint (`ruff check` + `ruff format --check`)
-2. Frontend typecheck (`tsc --noEmit`)
-3. Frontend lint (`eslint`)
-4. Backend unit tests (`pytest`, integration excluded)
-5. Frontend tests (`vitest run`)
-
-To run the same checks manually: `npm run validate`
-
-To skip once (not recommended): `git commit --no-verify`
-
-**Manual start (two terminals):**
+Playwright integration test (optional):
 
 ```bash
-# Terminal 1 — backend
-cd backend && source .venv/bin/activate    # WSL/macOS
-uvicorn app.main:app --reload --port 8000
-
-# Terminal 2 — frontend
-cd frontend && pnpm dev
+docker compose run --rm backend pytest -m integration
 ```
 
-Windows backend activation: `.\.venv\Scripts\Activate.ps1`
+### Pre-commit hook (optional)
+
+```bash
+git config core.hooksPath .husky   # one-time
+```
+
+Every `git commit` then runs `sh scripts/validate.sh`. Skip once: `git commit --no-verify`.
 
 ---
+
+## Optional: local development without Docker
+
+For faster hot-reload iteration, you can run services natively. This path is **not required** for normal use.
+
+```bash
+# Backend — Python 3.10+ with venv
+cd backend
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt -r requirements-dev.txt
+playwright install chromium
+uvicorn app.main:app --reload --port 8000
+
+# Frontend — Node 20+ with pnpm
+cd frontend
+corepack enable && pnpm install
+pnpm dev
+```
 
 ## API Endpoints
 
@@ -257,7 +202,7 @@ npx -y modern-web-guidance@0.0.174 retrieve "<guide-id>"
 ```
 
 Project skill for Cursor agents: `.cursor/skills/modern-web-guidance/SKILL.md`  
-Reinstall upstream skill files: `npx -y modern-web-guidance@0.0.174 install`
+Reinstall upstream skill files (from `frontend/`): `cd frontend && npx -y modern-web-guidance@0.0.174 install`
 
 **Patterns used in this app:**
 

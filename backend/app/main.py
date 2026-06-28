@@ -1,3 +1,4 @@
+import asyncio
 import json
 
 from fastapi import FastAPI, HTTPException, Query
@@ -64,11 +65,17 @@ async def get_gaps(domain: str = Query(...)):
         )
         pid = get_project_id(clean_domain)
 
-        sitemap_res = await fetch_sitemap_urls(clean_domain)
+        if peec.is_configured:
+            sitemap_res, peec_available = await asyncio.gather(
+                fetch_sitemap_urls(clean_domain),
+                peec.is_available(),
+            )
+        else:
+            sitemap_res = await fetch_sitemap_urls(clean_domain)
+            peec_available = False
+
         sitemap_urls = sitemap_res.get("urls", [])
         sitemap_metrics = sitemap_res.get("metrics", {})
-
-        peec_available = await peec.is_available()
 
         if peec_available:
             cited_urls = await peec.get_cited_urls(clean_domain)

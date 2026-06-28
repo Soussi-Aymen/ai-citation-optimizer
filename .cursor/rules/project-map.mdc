@@ -25,14 +25,11 @@ alwaysApply: true
 - Dashboard / fix panel → `frontend/src/pages/Dashboard.jsx`
 - Deep audit page → `frontend/src/pages/PageDetail.jsx`
 
-## Dev commands (local — any OS)
+## Dev commands (Docker — any OS)
 
 ```bash
-npm run setup   # first time: install Python + pnpm deps
-npm run dev     # start backend + frontend together
-
-# Docker (macOS / Windows / WSL)
-npm run docker:up
+docker compose up --build   # start backend + frontend
+sh scripts/validate.sh      # lint + test via Docker
 ```
 
 Env: `PEEC_API_KEY`, `GEMINI_API_KEY` in root `.env`.

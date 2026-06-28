@@ -33,7 +33,7 @@ npx -y modern-web-guidance@0.0.174 list
 
 On Windows PowerShell use `npx.cmd` if `npx` fails.
 
-Reinstall upstream skill files: `npx -y modern-web-guidance@0.0.174 install` from repo root (writes to `.agents/skills/`).
+Reinstall upstream skill files: `npx -y modern-web-guidance@0.0.174 install` from `frontend/` (writes to `frontend/.agents/skills/`; lockfile: `frontend/skills-lock.json`).
 
 ## Project browser policy
 
