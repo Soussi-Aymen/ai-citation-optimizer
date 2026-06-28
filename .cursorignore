@@ -1,6 +1,7 @@
 # Dependencies & virtualenvs
 **/node_modules/
 **/.venv/
+**/.pnpm-store/
 **/venv/
 **/__pycache__/
 **/.pytest_cache/

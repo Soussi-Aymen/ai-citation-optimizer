@@ -91,9 +91,10 @@ docker compose up --build
 | **Windows / macOS** | [Docker Desktop](https://www.docker.com/products/docker-desktop/) running |
 | **WSL Ubuntu** | Docker Desktop with **Settings → Resources → WSL Integration → Ubuntu** enabled |
 
-Frontend dependencies live in the **Docker volume** `frontend_node_modules`, not on your host. If you have `frontend/node_modules/` from an old local setup, delete it — Docker does not need it:
+Frontend dependencies live in the **Docker volume** `frontend_node_modules`, not on your host. If you have `frontend/node_modules/` or `frontend/.pnpm-store/` from an old local setup, remove them — Docker does not need them on the host:
 
 ```bash
+sh scripts/clean-pnpm-store.sh
 rm -rf frontend/node_modules
 ```
 
@@ -109,12 +110,29 @@ sudo usermod -aG docker $USER
 ## Commands (reference)
 
 ```bash
-docker compose up --build           # start backend + frontend
-docker compose down                 # stop services
-sh scripts/validate.sh              # lint + test (all checks)
-sh scripts/validate.sh --tests-only # pytest + vitest only
-sh scripts/validate.sh --lint-only  # ruff + eslint + tsc only
+docker compose up --build                              # dev — hot reload (frontend :5173)
+docker compose -f docker-compose.prod.yml up --build # prod — built assets + nginx (:8080)
+docker compose down                                  # stop dev services
+docker compose -f docker-compose.prod.yml down       # stop prod services
+sh scripts/validate.sh                               # lint + test (all checks)
+sh scripts/validate.sh --tests-only                  # pytest + vitest only
+sh scripts/validate.sh --lint-only                   # ruff + eslint + tsc only
 ```
+
+### Production mode (faster runtime)
+
+Use when you want snappy page loads in Docker without Vite dev overhead:
+
+```bash
+docker compose -f docker-compose.prod.yml up --build
+```
+
+| Service | URL | Notes |
+|---------|-----|-------|
+| Frontend | [http://localhost:8080](http://localhost:8080) | nginx serving `pnpm build` output |
+| Backend | [http://localhost:8000/docs](http://localhost:8000/docs) | runtime deps only, no source bind mount |
+
+Set `VITE_API_URL` at build time via `docker-compose.prod.yml` `build.args` if the API is not on `localhost:8000`.
 
 ### Tests
 

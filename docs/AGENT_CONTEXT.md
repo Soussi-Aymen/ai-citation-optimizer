@@ -54,8 +54,9 @@ Run: `sh scripts/validate.sh` (lint + tests via Docker Compose).
 Docker Compose is the only required tooling at the repo root:
 
 ```bash
-docker compose up --build   # run app
-sh scripts/validate.sh      # lint + test in containers
+docker compose up --build                              # dev — hot reload
+docker compose -f docker-compose.prod.yml up --build   # prod — nginx + slim images
+sh scripts/validate.sh                                 # lint + test in containers
 ```
 
 ## Known bugs (unchanged)

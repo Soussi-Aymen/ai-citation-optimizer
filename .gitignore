@@ -36,9 +36,12 @@ test-results/
 node_modules/.cache/playwright/
 
 # =========================
-# Node / Frontend
+# Node / Frontend / pnpm
 # =========================
 node_modules/
+**/.pnpm-store/
+.pnpm-store/
+frontend/.pnpm-store/
 dist/
 build/
 *.tsbuildinfo
@@ -55,7 +58,8 @@ pnpm-debug.log*
 # =========================
 # IDEs
 # =========================
-.vscode/
+.vscode/*
+!.vscode/settings.json
 .idea/
 
 # Agent skill installs (re-run from frontend/: npx -y modern-web-guidance@0.0.174 install)

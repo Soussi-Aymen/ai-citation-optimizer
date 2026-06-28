@@ -13,7 +13,7 @@ alwaysApply: true
 |-------|------|---------|
 | API | `backend/app/` | FastAPI, Python 3.12, Playwright 1.48, LangChain + Gemini |
 | UI | `frontend/src/` | React 19, Vite, Tailwind, **pnpm** |
-| Infra | `docker-compose.yml` | backend :8000, frontend :5173 |
+| Infra | `docker-compose.yml` | dev: backend :8000, frontend :5173; prod: `docker-compose.prod.yml` → :8080 |
 
 ## Where to edit (common tasks)
 

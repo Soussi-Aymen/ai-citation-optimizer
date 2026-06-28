@@ -1,0 +1,15 @@
+{
+  "git.untrackedChanges": "hidden",
+  "files.exclude": {
+    "**/.pnpm-store": true,
+    "**/node_modules": true
+  },
+  "files.watcherExclude": {
+    "**/.pnpm-store/**": true,
+    "**/node_modules/**": true
+  },
+  "search.exclude": {
+    "**/.pnpm-store": true,
+    "**/node_modules": true
+  }
+}

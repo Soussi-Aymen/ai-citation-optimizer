@@ -1,7 +1,10 @@
 node_modules
+.pnpm-store
 dist
 .git
 .gitignore
 README.md
 Dockerfile
+Dockerfile.prod
 .dockerignore
+.agents
