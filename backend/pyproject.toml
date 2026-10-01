@@ -81,6 +81,6 @@ testpaths = ["tests"]
 markers = [
     "integration: tests that need Playwright/Chromium or live network (deselect with '-m not integration')",
 ]
-addopts = "-m 'not integration'"
+addopts = "-n auto -m 'not integration'"
 filterwarnings = ["ignore::DeprecationWarning"]
 
