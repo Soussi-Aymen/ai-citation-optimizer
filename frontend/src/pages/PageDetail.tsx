@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import axios from 'axios'
+import { GeoCheckMatrix } from '../components/GeoCheckMatrix'
 import { apiUrl } from '../lib/api'
-import type { AuditAnalysis, AuditResponse, HealthResponse } from '../types/api'
+import { mergeDeepChecks } from '../lib/geoChecks'
+import type { AuditAnalysis, AuditResponse, GeoJob, HealthResponse } from '../types/api'
 import {
   ArrowLeft,
   Zap,
@@ -39,7 +41,7 @@ const PageDetail = () => {
     'Awaiting Network Idle (JS Hydration)...',
     'Extracting DevTools Meta-Signals...',
     ...(peecAvailable ? ['Fetching Peec Competitor Intelligence...'] : []),
-    'Building Multi-Track Report with Gemini...',
+    'Building Multi-Track Report with OpenRouter...',
   ]
 
   useEffect(() => {
@@ -73,8 +75,13 @@ const PageDetail = () => {
           setData(response.data.analysis)
           setError('Audit Engine Error: ' + (response.data.analysis.message || 'Unknown Error'))
         } else {
-          setData(response.data.analysis)
-          localStorage.setItem(cacheKey, JSON.stringify(response.data.analysis))
+          const analysis = {
+            ...response.data.analysis,
+            geo_checks: response.data.geo_checks ?? response.data.analysis.geo_checks,
+            geo_job_id: response.data.geo_job_id ?? response.data.analysis.geo_job_id,
+          }
+          setData(analysis)
+          localStorage.setItem(cacheKey, JSON.stringify(analysis))
         }
       } catch (err) {
         console.error(err)
@@ -89,6 +96,38 @@ const PageDetail = () => {
     runAudit()
     return () => clearInterval(stepInterval)
   }, [decodedUrl, simulationSteps.length])
+
+  const geoJobId = data?.geo_job_id
+  useEffect(() => {
+    if (!geoJobId || !decodedUrl) return
+    let cancelled = false
+    const timer = window.setInterval(() => {
+      void axios
+        .get<GeoJob>(apiUrl(`/api/geo-jobs/${geoJobId}`))
+        .then((res) => {
+          if (cancelled) return
+          setData((current) => {
+            if (!current) return current
+            const next = {
+              ...current,
+              geo_checks: mergeDeepChecks(current.geo_checks ?? [], res.data.checks),
+              geo_job_id: res.data.status === 'done' ? null : current.geo_job_id,
+            }
+            localStorage.setItem(`audit_cache_${decodedUrl}`, JSON.stringify(next))
+            return next
+          })
+        })
+        .catch(() => {
+          if (!cancelled) {
+            setData((current) => (current ? { ...current, geo_job_id: null } : current))
+          }
+        })
+    }, 1000)
+    return () => {
+      cancelled = true
+      window.clearInterval(timer)
+    }
+  }, [decodedUrl, geoJobId])
 
   if (loading)
     return (
@@ -158,7 +197,7 @@ const PageDetail = () => {
           <ArrowLeft size={18} aria-hidden /> Dashboard
         </button>
         <span className="text-xs font-medium text-slate-400">
-          Powered by Gemini{peecAvailable ? ' & Peec AI' : ''}
+          Powered by OpenRouter{peecAvailable ? ' & Peec AI' : ''}
         </span>
       </div>
 
@@ -267,6 +306,7 @@ const PageDetail = () => {
               </div>
             </div>
           </div>
+          <GeoCheckMatrix checks={audit.geo_checks ?? []} deepLoading={Boolean(audit.geo_job_id)} />
         </section>
       )}
 

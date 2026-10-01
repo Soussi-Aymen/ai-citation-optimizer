@@ -101,6 +101,24 @@ export interface AuditSignals {
   domain?: string
 }
 
+export type GeoCheckStatus = 'pass' | 'warn' | 'fail' | 'skipped' | 'error'
+export type GeoCheckTier = 'fast' | 'deep'
+
+export interface GeoCheck {
+  id: string
+  name: string
+  tier: GeoCheckTier
+  status: GeoCheckStatus
+  evidence?: Record<string, unknown>
+  fix_hint?: string
+}
+
+export interface GeoJob {
+  id: string
+  status: 'running' | 'done'
+  checks: GeoCheck[]
+}
+
 export interface FixResponse {
   problem: string
   checklist: string[]
@@ -108,6 +126,8 @@ export interface FixResponse {
   llms_txt_template: string
   metrics?: AuditSignals
   guidance?: GuidanceItem[]
+  geo_checks?: GeoCheck[]
+  geo_job_id?: string | null
 }
 
 export interface AuditAnalysis {
@@ -135,11 +155,15 @@ export interface AuditAnalysis {
   execution_time_ms?: number
   error?: boolean
   message?: string
+  geo_checks?: GeoCheck[]
+  geo_job_id?: string | null
 }
 
 export interface AuditResponse {
   url: string
   analysis: AuditAnalysis
+  geo_checks?: GeoCheck[]
+  geo_job_id?: string | null
 }
 
 export interface ContentResponse {

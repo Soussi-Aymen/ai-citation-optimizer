@@ -1,12 +1,15 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import axios from 'axios'
+import { GeoCheckMatrix } from '../components/GeoCheckMatrix'
 import { apiUrl } from '../lib/api'
+import { appendFixHints, mergeDeepChecks } from '../lib/geoChecks'
 import { handleTabListKeyDown } from '../lib/a11y'
 import type {
   BenchmarkResponse,
   ContentResponse,
   FixResponse,
   GapsResponse,
+  GeoJob,
   TabName,
 } from '../types/api'
 import {
@@ -171,6 +174,56 @@ const Dashboard = ({ peecServiceAvailable = null }: DashboardProps) => {
       setLoadingBenchmark(false)
     }
   }
+
+  const pendingJobs = Object.entries(generatedFixes)
+    .filter((entry): entry is [string, FixResponse & { geo_job_id: string }] =>
+      Boolean(entry[1].geo_job_id),
+    )
+    .map(([url, fix]) => `${url}\n${fix.geo_job_id}`)
+    .join('\n')
+
+  useEffect(() => {
+    if (!pendingJobs) return
+    let cancelled = false
+    const pairs = pendingJobs.split('\n')
+    const timer = window.setInterval(() => {
+      for (let index = 0; index < pairs.length; index += 2) {
+        const url = pairs[index]
+        const jobId = pairs[index + 1]
+        if (!url || !jobId) continue
+        void axios
+          .get<GeoJob>(apiUrl(`/api/geo-jobs/${jobId}`))
+          .then((res) => {
+            if (cancelled) return
+            setGeneratedFixes((prev) => {
+              const current = prev[url]
+              if (!current) return prev
+              return {
+                ...prev,
+                [url]: {
+                  ...current,
+                  geo_checks: mergeDeepChecks(current.geo_checks ?? [], res.data.checks),
+                  checklist: appendFixHints(current.checklist, res.data.checks),
+                  geo_job_id: res.data.status === 'done' ? null : current.geo_job_id,
+                },
+              }
+            })
+          })
+          .catch(() => {
+            if (cancelled) return
+            setGeneratedFixes((prev) => {
+              const current = prev[url]
+              if (!current) return prev
+              return { ...prev, [url]: { ...current, geo_job_id: null } }
+            })
+          })
+      }
+    }, 1000)
+    return () => {
+      cancelled = true
+      window.clearInterval(timer)
+    }
+  }, [pendingJobs])
 
   const handleOpenFix = async (url: string) => {
     setGeneratingFix((prev) => ({ ...prev, [url]: true }))
@@ -846,6 +899,10 @@ const Dashboard = ({ peecServiceAvailable = null }: DashboardProps) => {
                                     </div>
                                   </div>
                                 ))}
+                                <GeoCheckMatrix
+                                  checks={generatedFixes[url]?.geo_checks ?? []}
+                                  deepLoading={Boolean(generatedFixes[url]?.geo_job_id)}
+                                />
                                 <div className="mt-6 border-t border-slate-100 pt-6">
                                   <div className="flex items-center gap-2 font-bold text-slate-900">
                                     Overall:{' '}
