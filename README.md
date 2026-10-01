@@ -4,7 +4,7 @@ AI Citation Optimizer helps early-stage brands like Nothing Phone, Attio, and BY
 
 ![AI Search Dashboard](artifacts/screenshots/dashboard.png)
 
-![How to Fix](artifacts/screenshots/how_to_fix.png)
+![What to fix first](artifacts/screenshots/what_to_fix_first.png)
 
 ## Key Features
 
