@@ -1,5 +1,12 @@
 import { useEffect, useState, type ReactNode } from 'react'
-import { BrowserRouter as Router, Routes, Route, Link, useLocation, useParams } from 'react-router-dom'
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Link,
+  useLocation,
+  useParams,
+} from 'react-router-dom'
 import axios from 'axios'
 import { apiUrl } from './lib/api'
 import type { HealthResponse } from './types/api'

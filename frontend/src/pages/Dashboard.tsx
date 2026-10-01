@@ -2,7 +2,13 @@ import { useState, type FormEvent } from 'react'
 import axios from 'axios'
 import { apiUrl } from '../lib/api'
 import { handleTabListKeyDown } from '../lib/a11y'
-import type { BenchmarkResponse, ContentResponse, FixResponse, GapsResponse, TabName } from '../types/api'
+import type {
+  BenchmarkResponse,
+  ContentResponse,
+  FixResponse,
+  GapsResponse,
+  TabName,
+} from '../types/api'
 import {
   Search,
   AlertCircle,
@@ -85,9 +91,7 @@ interface DashboardProps {
 }
 
 const Dashboard = ({ peecServiceAvailable = null }: DashboardProps) => {
-  const [domain, setDomain] = useState(
-    () => localStorage.getItem('last_analyzed_domain') || '',
-  )
+  const [domain, setDomain] = useState(() => localStorage.getItem('last_analyzed_domain') || '')
   const [loadingGaps, setLoadingGaps] = useState(false)
   const [loadingBenchmark, setLoadingBenchmark] = useState(false)
   const [data, setData] = useState<GapsResponse | null>(null)
@@ -245,7 +249,7 @@ const Dashboard = ({ peecServiceAvailable = null }: DashboardProps) => {
           <div className="flex gap-4">
             <div className="relative flex-1">
               <Search
-                className="absolute top-1/2 left-4 -translate-y-1/2 text-slate-400"
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
                 size={20}
                 aria-hidden
               />
@@ -261,7 +265,7 @@ const Dashboard = ({ peecServiceAvailable = null }: DashboardProps) => {
                 onChange={(e) => setDomain(e.target.value)}
                 aria-describedby={error ? 'domain-error domain-hint' : 'domain-hint'}
                 aria-invalid={error ? true : undefined}
-                className="h-12 w-full rounded-lg border border-slate-200 bg-white pr-4 pl-12 text-base transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                className="h-12 w-full rounded-lg border border-slate-200 bg-white pl-12 pr-4 text-base transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                 required
               />
             </div>
@@ -305,7 +309,9 @@ const Dashboard = ({ peecServiceAvailable = null }: DashboardProps) => {
                   <div className="mb-1 flex items-center gap-2 text-sm font-semibold text-emerald-600">
                     <CheckCircle2 size={16} /> Cited by AI
                   </div>
-                  <div className="text-2xl font-bold text-emerald-600">{data.total_cited_pages}</div>
+                  <div className="text-2xl font-bold text-emerald-600">
+                    {data.total_cited_pages}
+                  </div>
                 </div>
 
                 <div className="glass-card stat-box border-red-500 p-4">
@@ -321,7 +327,9 @@ const Dashboard = ({ peecServiceAvailable = null }: DashboardProps) => {
                   <div className="mb-1 flex items-center gap-2 text-sm font-semibold text-amber-600">
                     <Zap size={16} className="fill-amber-500" /> Perf. Ranking
                   </div>
-                  <div className="text-2xl font-bold text-amber-600">{data.performance_score}/100</div>
+                  <div className="text-2xl font-bold text-amber-600">
+                    {data.performance_score}/100
+                  </div>
                   <div className="text-[10px] text-slate-400">Based on citation coverage</div>
                 </div>
 
@@ -346,7 +354,7 @@ const Dashboard = ({ peecServiceAvailable = null }: DashboardProps) => {
                 <h3 className="mb-6 text-xl font-bold text-slate-900">Growth Opportunity</h3>
                 <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
                   <div>
-                    <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                       CURRENT VISIBILITY
                     </span>
                     <div className="text-2xl font-black text-slate-900">
@@ -354,7 +362,7 @@ const Dashboard = ({ peecServiceAvailable = null }: DashboardProps) => {
                     </div>
                   </div>
                   <div>
-                    <span className="text-[10px] font-bold tracking-wider text-blue-400 uppercase">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-blue-400">
                       TARGET VISIBILITY
                     </span>
                     <div className="flex items-center gap-2 text-2xl font-black text-blue-600">
@@ -363,7 +371,7 @@ const Dashboard = ({ peecServiceAvailable = null }: DashboardProps) => {
                     <p className="mt-1 text-[10px] text-slate-500">if top 3 actions completed</p>
                   </div>
                   <div>
-                    <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                       CURRENT CITATIONS
                     </span>
                     <div className="text-2xl font-black text-slate-900">
@@ -371,7 +379,7 @@ const Dashboard = ({ peecServiceAvailable = null }: DashboardProps) => {
                     </div>
                   </div>
                   <div>
-                    <span className="text-[10px] font-bold tracking-wider text-blue-400 uppercase">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-blue-400">
                       TARGET CITATIONS
                     </span>
                     <div className="flex items-center gap-2 text-2xl font-black text-blue-600">
@@ -381,7 +389,7 @@ const Dashboard = ({ peecServiceAvailable = null }: DashboardProps) => {
                 </div>
 
                 <div className="mt-8 border-t border-blue-100 pt-8">
-                  <h4 className="mb-6 text-[10px] font-bold tracking-[0.2em] text-blue-500 uppercase">
+                  <h4 className="mb-6 text-[10px] font-bold uppercase tracking-[0.2em] text-blue-500">
                     WHERE COMPETITORS HAVE THE ADVANTAGE OVER YOU (last 30 days)
                   </h4>
                   <div className="space-y-4">
@@ -449,7 +457,7 @@ const Dashboard = ({ peecServiceAvailable = null }: DashboardProps) => {
                     <div className="mb-4 flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <span
-                          className={`rounded-full px-3 py-1 text-[10px] font-black tracking-wider uppercase ${
+                          className={`rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-wider ${
                             item.priority === 'HIGH'
                               ? 'bg-red-100 text-red-600'
                               : item.priority === 'MEDIUM'
@@ -472,7 +480,7 @@ const Dashboard = ({ peecServiceAvailable = null }: DashboardProps) => {
                     </p>
 
                     <div className="mb-6 rounded-lg bg-slate-50 p-4 ring-1 ring-slate-100">
-                      <h5 className="mb-3 text-xs font-bold tracking-widest text-slate-400 uppercase">
+                      <h5 className="mb-3 text-xs font-bold uppercase tracking-widest text-slate-400">
                         What to do:
                       </h5>
                       <ul className="space-y-3">
@@ -534,7 +542,7 @@ const Dashboard = ({ peecServiceAvailable = null }: DashboardProps) => {
                             {generatedContent[contentKey] && (
                               <div className="mt-4 rounded-lg border border-blue-100 bg-blue-50/50 p-4">
                                 <div className="mb-3 flex items-center justify-between">
-                                  <span className="text-[10px] font-bold tracking-widest text-blue-500 uppercase">
+                                  <span className="text-[10px] font-bold uppercase tracking-widest text-blue-500">
                                     GEMINI DRAFT
                                   </span>
                                   <button
@@ -555,7 +563,7 @@ const Dashboard = ({ peecServiceAvailable = null }: DashboardProps) => {
                                     {copiedContent[contentKey] ? 'Copied!' : 'Copy Draft'}
                                   </button>
                                 </div>
-                                <div className="text-sm leading-relaxed whitespace-pre-wrap text-slate-700">
+                                <div className="whitespace-pre-wrap text-sm leading-relaxed text-slate-700">
                                   {generatedContent[contentKey]}
                                 </div>
                               </div>
@@ -645,29 +653,160 @@ const Dashboard = ({ peecServiceAvailable = null }: DashboardProps) => {
                                 {(() => {
                                   const m = generatedFixes[url]?.metrics ?? {}
                                   const llmsRow = !m.has_llms_txt
-                                    ? { id: 'llms_txt', label: 'LLM Discovery File', value: '🔴 No /llms.txt on domain — bots lack a curated index', color: 'text-red-600', score: 'Bad' }
+                                    ? {
+                                        id: 'llms_txt',
+                                        label: 'LLM Discovery File',
+                                        value:
+                                          '🔴 No /llms.txt on domain — bots lack a curated index',
+                                        color: 'text-red-600',
+                                        score: 'Bad',
+                                      }
                                     : !m.llms_txt_lists_page
-                                      ? { id: 'llms_txt', label: 'LLM Discovery File', value: '🟡 /llms.txt exists but does not list this page', color: 'text-amber-600', score: m.llms_txt_valid ? 'Medium' : 'Bad' }
-                                      : { id: 'llms_txt', label: 'LLM Discovery File', value: '✅ Page listed in /llms.txt', color: 'text-emerald-600', score: 'Good' }
+                                      ? {
+                                          id: 'llms_txt',
+                                          label: 'LLM Discovery File',
+                                          value: '🟡 /llms.txt exists but does not list this page',
+                                          color: 'text-amber-600',
+                                          score: m.llms_txt_valid ? 'Medium' : 'Bad',
+                                        }
+                                      : {
+                                          id: 'llms_txt',
+                                          label: 'LLM Discovery File',
+                                          value: '✅ Page listed in /llms.txt',
+                                          color: 'text-emerald-600',
+                                          score: 'Good',
+                                        }
                                   return [
-                                  { id: 'js_hydration', label: 'JS Dependency', value: m.js_impact === 'CRITICAL' ? '🔴 CRITICAL — heavy JS dependency' : (m.js_impact === 'MODERATE' ? '🟡 Moderate JS dependency' : '✅ Low JS dependency'), color: m.js_impact === 'CRITICAL' ? 'text-red-600' : (m.js_impact === 'MODERATE' ? 'text-amber-600' : 'text-emerald-600'), score: m.js_impact === 'LOW' ? 'Good' : (m.js_impact === 'MODERATE' ? 'Medium' : 'Bad') },
-                                  { id: 'unused_js', label: 'Unused JavaScript', value: (m.unused_js_pct ?? 0) > 60 ? `🔴 ${m.unused_js_pct}% unused (dead code blocking crawlers)` : ((m.unused_js_pct ?? 0) >= 30 ? `🟡 ${m.unused_js_pct}% unused JS is downloaded but never executed` : `✅ ${m.unused_js_pct ?? 0}% unused — highly efficient`), color: (m.unused_js_pct ?? 0) > 60 ? 'text-red-600' : ((m.unused_js_pct ?? 0) >= 30 ? 'text-amber-600' : 'text-emerald-600'), score: (m.unused_js_pct ?? 0) > 60 ? 'Bad' : ((m.unused_js_pct ?? 0) >= 30 ? 'Medium' : 'Good') },
-                                  { id: 'js_payload', label: 'JS Bundle Size', value: (m.js_payload_mb ?? 0) > 3 ? `🔴 ${m.js_payload_mb}MB — timeout risk for bots` : ((m.js_payload_mb ?? 0) >= 1 ? `🟡 ${m.js_payload_mb}MB — may slow AI crawler indexing` : `✅ ${m.js_payload_mb ?? 0}MB JS payload — crawler friendly`), color: (m.js_payload_mb ?? 0) > 3 ? 'text-red-600' : ((m.js_payload_mb ?? 0) >= 1 ? 'text-amber-600' : 'text-emerald-600'), score: (m.js_payload_mb ?? 0) > 3 ? 'Bad' : ((m.js_payload_mb ?? 0) >= 1 ? 'Medium' : 'Good') },
-                                  { id: 'lcp', label: 'Page Load (LCP)', value: (m.lcp_seconds ?? 0) > 4 ? `🔴 ${m.lcp_seconds}s LCP — too slow for bot timeouts` : ((m.lcp_seconds ?? 0) >= 2.5 ? `🟡 ${m.lcp_seconds}s LCP — borderline for AI crawlers` : `✅ ${m.lcp_seconds ?? 0}s LCP — fast enough for AI crawlers`), color: (m.lcp_seconds ?? 0) > 4 ? 'text-red-600' : ((m.lcp_seconds ?? 0) >= 2.5 ? 'text-amber-600' : 'text-emerald-600'), score: (m.lcp_seconds ?? 0) > 4 ? 'Bad' : ((m.lcp_seconds ?? 0) >= 2.5 ? 'Medium' : 'Good') },
-                                  { id: 'console_errors', label: 'Console Errors', value: (m.console_errors ?? 0) >= 3 ? `🔴 ${m.console_errors} errors — page may appear broken to bots` : ((m.console_errors ?? 0) >= 1 ? `🟡 ${m.console_errors} errors — check for failed API calls` : '✅ No JS errors detected'), color: (m.console_errors ?? 0) >= 3 ? 'text-red-600' : ((m.console_errors ?? 0) >= 1 ? 'text-amber-600' : 'text-emerald-600'), score: (m.console_errors ?? 0) >= 3 ? 'Bad' : ((m.console_errors ?? 0) >= 1 ? 'Medium' : 'Good') },
-                                  llmsRow,
-                                ]
+                                    {
+                                      id: 'js_hydration',
+                                      label: 'JS Dependency',
+                                      value:
+                                        m.js_impact === 'CRITICAL'
+                                          ? '🔴 CRITICAL — heavy JS dependency'
+                                          : m.js_impact === 'MODERATE'
+                                            ? '🟡 Moderate JS dependency'
+                                            : '✅ Low JS dependency',
+                                      color:
+                                        m.js_impact === 'CRITICAL'
+                                          ? 'text-red-600'
+                                          : m.js_impact === 'MODERATE'
+                                            ? 'text-amber-600'
+                                            : 'text-emerald-600',
+                                      score:
+                                        m.js_impact === 'LOW'
+                                          ? 'Good'
+                                          : m.js_impact === 'MODERATE'
+                                            ? 'Medium'
+                                            : 'Bad',
+                                    },
+                                    {
+                                      id: 'unused_js',
+                                      label: 'Unused JavaScript',
+                                      value:
+                                        (m.unused_js_pct ?? 0) > 60
+                                          ? `🔴 ${m.unused_js_pct}% unused (dead code blocking crawlers)`
+                                          : (m.unused_js_pct ?? 0) >= 30
+                                            ? `🟡 ${m.unused_js_pct}% unused JS is downloaded but never executed`
+                                            : `✅ ${m.unused_js_pct ?? 0}% unused — highly efficient`,
+                                      color:
+                                        (m.unused_js_pct ?? 0) > 60
+                                          ? 'text-red-600'
+                                          : (m.unused_js_pct ?? 0) >= 30
+                                            ? 'text-amber-600'
+                                            : 'text-emerald-600',
+                                      score:
+                                        (m.unused_js_pct ?? 0) > 60
+                                          ? 'Bad'
+                                          : (m.unused_js_pct ?? 0) >= 30
+                                            ? 'Medium'
+                                            : 'Good',
+                                    },
+                                    {
+                                      id: 'js_payload',
+                                      label: 'JS Bundle Size',
+                                      value:
+                                        (m.js_payload_mb ?? 0) > 3
+                                          ? `🔴 ${m.js_payload_mb}MB — timeout risk for bots`
+                                          : (m.js_payload_mb ?? 0) >= 1
+                                            ? `🟡 ${m.js_payload_mb}MB — may slow AI crawler indexing`
+                                            : `✅ ${m.js_payload_mb ?? 0}MB JS payload — crawler friendly`,
+                                      color:
+                                        (m.js_payload_mb ?? 0) > 3
+                                          ? 'text-red-600'
+                                          : (m.js_payload_mb ?? 0) >= 1
+                                            ? 'text-amber-600'
+                                            : 'text-emerald-600',
+                                      score:
+                                        (m.js_payload_mb ?? 0) > 3
+                                          ? 'Bad'
+                                          : (m.js_payload_mb ?? 0) >= 1
+                                            ? 'Medium'
+                                            : 'Good',
+                                    },
+                                    {
+                                      id: 'lcp',
+                                      label: 'Page Load (LCP)',
+                                      value:
+                                        (m.lcp_seconds ?? 0) > 4
+                                          ? `🔴 ${m.lcp_seconds}s LCP — too slow for bot timeouts`
+                                          : (m.lcp_seconds ?? 0) >= 2.5
+                                            ? `🟡 ${m.lcp_seconds}s LCP — borderline for AI crawlers`
+                                            : `✅ ${m.lcp_seconds ?? 0}s LCP — fast enough for AI crawlers`,
+                                      color:
+                                        (m.lcp_seconds ?? 0) > 4
+                                          ? 'text-red-600'
+                                          : (m.lcp_seconds ?? 0) >= 2.5
+                                            ? 'text-amber-600'
+                                            : 'text-emerald-600',
+                                      score:
+                                        (m.lcp_seconds ?? 0) > 4
+                                          ? 'Bad'
+                                          : (m.lcp_seconds ?? 0) >= 2.5
+                                            ? 'Medium'
+                                            : 'Good',
+                                    },
+                                    {
+                                      id: 'console_errors',
+                                      label: 'Console Errors',
+                                      value:
+                                        (m.console_errors ?? 0) >= 3
+                                          ? `🔴 ${m.console_errors} errors — page may appear broken to bots`
+                                          : (m.console_errors ?? 0) >= 1
+                                            ? `🟡 ${m.console_errors} errors — check for failed API calls`
+                                            : '✅ No JS errors detected',
+                                      color:
+                                        (m.console_errors ?? 0) >= 3
+                                          ? 'text-red-600'
+                                          : (m.console_errors ?? 0) >= 1
+                                            ? 'text-amber-600'
+                                            : 'text-emerald-600',
+                                      score:
+                                        (m.console_errors ?? 0) >= 3
+                                          ? 'Bad'
+                                          : (m.console_errors ?? 0) >= 1
+                                            ? 'Medium'
+                                            : 'Good',
+                                    },
+                                    llmsRow,
+                                  ]
                                 })().map((row) => (
-                                  <div key={row.id} className="border-b border-slate-50 pb-3 last:border-0 last:pb-0">
+                                  <div
+                                    key={row.id}
+                                    className="border-b border-slate-50 pb-3 last:border-0 last:pb-0"
+                                  >
                                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
                                       <div className="flex flex-col sm:flex-row sm:items-center">
-                                        <div className="w-full text-xs font-semibold text-slate-400 sm:w-48">{row.label}</div>
-                                        <div className={`text-sm font-bold ${row.color}`}>{row.value}</div>
+                                        <div className="w-full text-xs font-semibold text-slate-400 sm:w-48">
+                                          {row.label}
+                                        </div>
+                                        <div className={`text-sm font-bold ${row.color}`}>
+                                          {row.value}
+                                        </div>
                                       </div>
                                       {row.score !== 'Good' && (
                                         <details className="disclosure mt-2 sm:mt-0">
                                           <summary
-                                            className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1 text-[10px] font-black uppercase tracking-tight motion-safe-scale transition-all ${
+                                            className={`motion-safe-scale inline-flex items-center gap-1.5 rounded-lg px-3 py-1 text-[10px] font-black uppercase tracking-tight transition-all ${
                                               row.score === 'Bad'
                                                 ? 'bg-red-50 text-red-600'
                                                 : 'bg-amber-50 text-amber-600'
@@ -709,17 +848,51 @@ const Dashboard = ({ peecServiceAvailable = null }: DashboardProps) => {
                                 ))}
                                 <div className="mt-6 border-t border-slate-100 pt-6">
                                   <div className="flex items-center gap-2 font-bold text-slate-900">
-                                    Overall: {
-                                      (() => {
-                                        const m = generatedFixes[url]?.metrics;
-                                        if (!m) return <span className="text-slate-400">Analysis Pending</span>;
-                                        const isBad = m.js_impact === 'CRITICAL' || (m.unused_js_pct ?? 0) > 60 || (m.js_payload_mb ?? 0) > 3 || (m.lcp_seconds ?? 0) > 4 || (m.console_errors ?? 0) >= 3 || !m.has_llms_txt;
-                                        const isMed = m.js_impact === 'MODERATE' || (m.unused_js_pct ?? 0) >= 30 || (m.js_payload_mb ?? 0) >= 1 || (m.lcp_seconds ?? 0) >= 2.5 || (m.console_errors ?? 0) >= 1 || (m.has_llms_txt && !m.llms_txt_lists_page);
-                                        if (isBad) return <><span className="text-red-600">🔴 Poor AI Crawlability</span></>;
-                                        if (isMed) return <><span className="text-amber-600">🟡 Moderate AI Crawlability</span></>;
-                                        return <><span className="text-emerald-600">✅ Good AI Crawlability</span></>;
-                                      })()
-                                    }
+                                    Overall:{' '}
+                                    {(() => {
+                                      const m = generatedFixes[url]?.metrics
+                                      if (!m)
+                                        return (
+                                          <span className="text-slate-400">Analysis Pending</span>
+                                        )
+                                      const isBad =
+                                        m.js_impact === 'CRITICAL' ||
+                                        (m.unused_js_pct ?? 0) > 60 ||
+                                        (m.js_payload_mb ?? 0) > 3 ||
+                                        (m.lcp_seconds ?? 0) > 4 ||
+                                        (m.console_errors ?? 0) >= 3 ||
+                                        !m.has_llms_txt
+                                      const isMed =
+                                        m.js_impact === 'MODERATE' ||
+                                        (m.unused_js_pct ?? 0) >= 30 ||
+                                        (m.js_payload_mb ?? 0) >= 1 ||
+                                        (m.lcp_seconds ?? 0) >= 2.5 ||
+                                        (m.console_errors ?? 0) >= 1 ||
+                                        (m.has_llms_txt && !m.llms_txt_lists_page)
+                                      if (isBad)
+                                        return (
+                                          <>
+                                            <span className="text-red-600">
+                                              🔴 Poor AI Crawlability
+                                            </span>
+                                          </>
+                                        )
+                                      if (isMed)
+                                        return (
+                                          <>
+                                            <span className="text-amber-600">
+                                              🟡 Moderate AI Crawlability
+                                            </span>
+                                          </>
+                                        )
+                                      return (
+                                        <>
+                                          <span className="text-emerald-600">
+                                            ✅ Good AI Crawlability
+                                          </span>
+                                        </>
+                                      )
+                                    })()}
                                   </div>
                                 </div>
                               </div>
@@ -773,17 +946,25 @@ const Dashboard = ({ peecServiceAvailable = null }: DashboardProps) => {
                                 }
                                 className="flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:text-blue-800"
                               >
-                                {copiedFix[`${url}-llms`] ? <Check size={14} /> : <Copy size={14} />}
+                                {copiedFix[`${url}-llms`] ? (
+                                  <Check size={14} />
+                                ) : (
+                                  <Copy size={14} />
+                                )}
                                 {copiedFix[`${url}-llms`] ? 'Copied!' : 'Copy File'}
                               </button>
                             </div>
                             <div className="relative">
                               <pre className="max-h-64 overflow-auto rounded-lg bg-slate-900 p-4 font-mono text-[10px] leading-relaxed text-slate-300">
-                                <code>{generatedFixes[url]?.llms_txt_template ?? '# No template generated'}</code>
+                                <code>
+                                  {generatedFixes[url]?.llms_txt_template ??
+                                    '# No template generated'}
+                                </code>
                               </pre>
                             </div>
                             <p className="mt-4 text-[10px] italic text-slate-400">
-                              Deploy at https://your-domain/llms.txt on the site you are analyzing — not this tool.
+                              Deploy at https://your-domain/llms.txt on the site you are analyzing —
+                              not this tool.
                             </p>
                           </div>
 
@@ -806,7 +987,9 @@ const Dashboard = ({ peecServiceAvailable = null }: DashboardProps) => {
                             </div>
                             <div className="relative">
                               <pre className="max-h-80 overflow-auto rounded-lg bg-slate-900 p-4 font-mono text-[10px] leading-relaxed text-slate-300">
-                                <code>{generatedFixes[url]?.json_ld ?? '// No schema generated'}</code>
+                                <code>
+                                  {generatedFixes[url]?.json_ld ?? '// No schema generated'}
+                                </code>
                               </pre>
                             </div>
                             <p className="mt-4 text-[10px] italic text-slate-400">
@@ -819,7 +1002,8 @@ const Dashboard = ({ peecServiceAvailable = null }: DashboardProps) => {
                                 onClick={() => navigate(`/audit/${encodeURIComponent(url)}`)}
                                 className="flex w-full items-center justify-center gap-2 rounded-lg border border-slate-200 py-2.5 text-xs font-bold text-slate-600 transition-all hover:bg-slate-50"
                               >
-                                View Deep Technical Audit Report <ArrowRight size={14} aria-hidden />
+                                View Deep Technical Audit Report{' '}
+                                <ArrowRight size={14} aria-hidden />
                               </button>
                             </div>
                           </div>
@@ -896,17 +1080,13 @@ const Dashboard = ({ peecServiceAvailable = null }: DashboardProps) => {
                 ))}
               </div>
 
-              <div
-                role="tabpanel"
-                id={`panel-${activeTab}`}
-                aria-labelledby={`tab-${activeTab}`}
-              >
+              <div role="tabpanel" id={`panel-${activeTab}`} aria-labelledby={`tab-${activeTab}`}>
                 {benchmarkData.tab_actions[activeTab] &&
                 benchmarkData.tab_actions[activeTab].has_data ? (
                   <div className="space-y-6">
                     <div className="flex items-center gap-3">
                       <span
-                        className={`rounded-full px-3 py-1 text-[10px] font-black tracking-widest uppercase ${
+                        className={`rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-widest ${
                           benchmarkData.tab_actions[activeTab].opportunity_score > 70
                             ? 'bg-red-100 text-red-600'
                             : benchmarkData.tab_actions[activeTab].opportunity_score > 40
@@ -953,7 +1133,7 @@ const Dashboard = ({ peecServiceAvailable = null }: DashboardProps) => {
                               <summary className="text-xs font-bold text-slate-600">
                                 Generated content
                               </summary>
-                              <p className="mt-3 text-xs leading-relaxed whitespace-pre-wrap text-slate-600">
+                              <p className="mt-3 whitespace-pre-wrap text-xs leading-relaxed text-slate-600">
                                 {generatedContent[gapItem.id]}
                               </p>
                               <button

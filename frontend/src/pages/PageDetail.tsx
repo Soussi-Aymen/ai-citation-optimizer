@@ -166,7 +166,7 @@ const PageDetail = () => {
         <h1 className="mb-2 text-3xl font-extrabold tracking-tight text-slate-900">
           Technical Audit Report
         </h1>
-        <p className="font-mono text-sm break-all text-slate-500">{decodedUrl}</p>
+        <p className="break-all font-mono text-sm text-slate-500">{decodedUrl}</p>
       </header>
 
       {audit.signals && (
@@ -184,7 +184,7 @@ const PageDetail = () => {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {/* Load Time */}
             <div className="rounded-xl border border-slate-100 bg-slate-50 p-4 ring-1 ring-slate-100">
-              <div className="mb-2 flex items-center gap-2 text-[10px] font-bold tracking-widest text-slate-400 uppercase">
+              <div className="mb-2 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
                 <Clock size={12} /> Load Time
               </div>
               <div
@@ -196,13 +196,13 @@ const PageDetail = () => {
                       : 'text-red-600'
                 }`}
               >
-                {(audit.signals.load_time_ms ?? 0)}ms
+                {audit.signals.load_time_ms ?? 0}ms
               </div>
             </div>
 
             {/* JS Impact */}
             <div className="rounded-xl border border-slate-100 bg-slate-50 p-4 ring-1 ring-slate-100">
-              <div className="mb-2 flex items-center gap-2 text-[10px] font-bold tracking-widest text-slate-400 uppercase">
+              <div className="mb-2 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
                 <Code2 size={12} /> JS Hydration
               </div>
               <div
@@ -216,7 +216,7 @@ const PageDetail = () => {
 
             {/* DOM Depth */}
             <div className="rounded-xl border border-slate-100 bg-slate-50 p-4 ring-1 ring-slate-100">
-              <div className="mb-2 flex items-center gap-2 text-[10px] font-bold tracking-widest text-slate-400 uppercase">
+              <div className="mb-2 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
                 <Layers size={12} /> DOM Depth
               </div>
               <div className="text-2xl font-black text-slate-900">{audit.signals.dom_depth}</div>
@@ -224,7 +224,7 @@ const PageDetail = () => {
 
             {/* Structured Data */}
             <div className="rounded-xl border border-slate-100 bg-slate-50 p-4 ring-1 ring-slate-100">
-              <div className="mb-2 flex items-center gap-2 text-[10px] font-bold tracking-widest text-slate-400 uppercase">
+              <div className="mb-2 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
                 <FileJson size={12} /> JSON-LD
               </div>
               <div className="flex items-center gap-2">
@@ -244,7 +244,7 @@ const PageDetail = () => {
 
             {/* LLM Discovery File */}
             <div className="rounded-xl border border-slate-100 bg-slate-50 p-4 ring-1 ring-slate-100">
-              <div className="mb-2 flex items-center gap-2 text-[10px] font-bold tracking-widest text-slate-400 uppercase">
+              <div className="mb-2 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
                 <Globe size={12} /> llms.txt
               </div>
               <div className="flex items-center gap-2">
@@ -280,58 +280,59 @@ const PageDetail = () => {
             {audit.guidance.map((item, i) => {
               const guidanceId = item.id ?? `guidance-${i}`
               return (
-              <details
-                key={guidanceId}
-                className={`disclosure rounded-xl border-l-4 bg-white/80 p-5 shadow-sm ${
-                  item.score === 'Bad' ? 'border-red-500' : 'border-amber-500'
-                }`}
-              >
-                <summary className="flex flex-wrap items-start justify-between gap-4">
-                  <div className="flex-1">
-                    <div className="mb-2 flex items-center gap-3">
-                      <span className="text-[10px] font-black uppercase tracking-widest text-amber-800">
-                        {item.metric.toUpperCase()}
-                      </span>
-                      <span
-                        className={`rounded-full px-2 py-0.5 text-[10px] font-black uppercase ${
-                          item.score === 'Bad'
-                            ? 'bg-red-100 text-red-600'
-                            : 'bg-amber-100 text-amber-600'
-                        }`}
-                      >
-                        {item.score}
-                      </span>
-                    </div>
-                    <div className="text-sm font-bold text-amber-900">{item.advice}</div>
-                  </div>
-                  <span
-                    className={`rounded-lg px-4 py-2 text-xs font-bold text-white ${
-                      item.score === 'Bad' ? 'bg-red-600' : 'bg-amber-600'
-                    }`}
-                  >
-                    View fix steps
-                  </span>
-                </summary>
-
-                <div className="mt-6 rounded-lg border border-amber-100 bg-white p-5 shadow-inner">
-                  <h4 className="mb-4 flex items-center gap-2 text-xs font-black uppercase tracking-widest text-amber-800">
-                    <Target size={14} className="text-amber-600" aria-hidden /> Framework-Agnostic Implementation
-                  </h4>
-                  <ul className="space-y-3">
-                    {item.steps?.map((step, si) => (
-                      <li
-                        key={si}
-                        className="flex items-start gap-3 text-sm leading-relaxed text-amber-900/80"
-                      >
-                        <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-amber-100 text-[10px] font-black text-amber-700">
-                          {si + 1}
+                <details
+                  key={guidanceId}
+                  className={`disclosure rounded-xl border-l-4 bg-white/80 p-5 shadow-sm ${
+                    item.score === 'Bad' ? 'border-red-500' : 'border-amber-500'
+                  }`}
+                >
+                  <summary className="flex flex-wrap items-start justify-between gap-4">
+                    <div className="flex-1">
+                      <div className="mb-2 flex items-center gap-3">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-amber-800">
+                          {item.metric.toUpperCase()}
                         </span>
-                        {step}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </details>
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-[10px] font-black uppercase ${
+                            item.score === 'Bad'
+                              ? 'bg-red-100 text-red-600'
+                              : 'bg-amber-100 text-amber-600'
+                          }`}
+                        >
+                          {item.score}
+                        </span>
+                      </div>
+                      <div className="text-sm font-bold text-amber-900">{item.advice}</div>
+                    </div>
+                    <span
+                      className={`rounded-lg px-4 py-2 text-xs font-bold text-white ${
+                        item.score === 'Bad' ? 'bg-red-600' : 'bg-amber-600'
+                      }`}
+                    >
+                      View fix steps
+                    </span>
+                  </summary>
+
+                  <div className="mt-6 rounded-lg border border-amber-100 bg-white p-5 shadow-inner">
+                    <h4 className="mb-4 flex items-center gap-2 text-xs font-black uppercase tracking-widest text-amber-800">
+                      <Target size={14} className="text-amber-600" aria-hidden /> Framework-Agnostic
+                      Implementation
+                    </h4>
+                    <ul className="space-y-3">
+                      {item.steps?.map((step, si) => (
+                        <li
+                          key={si}
+                          className="flex items-start gap-3 text-sm leading-relaxed text-amber-900/80"
+                        >
+                          <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-amber-100 text-[10px] font-black text-amber-700">
+                            {si + 1}
+                          </span>
+                          {step}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </details>
               )
             })}
           </div>
@@ -341,130 +342,130 @@ const PageDetail = () => {
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
         {/* Performance Report */}
         {audit.performance_report && (
-        <section className="glass-card">
-          <div className="mb-6 flex items-center justify-between">
-            <h3 className="flex items-center gap-2 text-lg font-bold text-slate-900">
-              <Zap size={20} className="text-amber-500" /> Performance Audit
-            </h3>
-            <span className="rounded-full bg-amber-50 px-3 py-1 text-sm font-bold text-amber-600">
-              Score: {audit.performance_report.score}/100
-            </span>
-          </div>
-
-          <div className="space-y-6">
-            <div>
-              <h4 className="mb-3 text-xs font-bold tracking-widest text-red-500 uppercase">
-                Critical Issues
-              </h4>
-              <ul className="space-y-2">
-                {audit.performance_report?.issues?.map((issue, i) => (
-                  <li key={i} className="flex items-start gap-2 text-sm text-slate-600">
-                    <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-red-400" />
-                    {issue}
-                  </li>
-                ))}
-              </ul>
+          <section className="glass-card">
+            <div className="mb-6 flex items-center justify-between">
+              <h3 className="flex items-center gap-2 text-lg font-bold text-slate-900">
+                <Zap size={20} className="text-amber-500" /> Performance Audit
+              </h3>
+              <span className="rounded-full bg-amber-50 px-3 py-1 text-sm font-bold text-amber-600">
+                Score: {audit.performance_report.score}/100
+              </span>
             </div>
 
-            <div>
-              <h4 className="mb-3 text-xs font-bold tracking-widest text-emerald-500 uppercase">
-                Recommended Fixes
-              </h4>
-              <ul className="space-y-2">
-                {audit.performance_report?.fixes?.map((fix, i) => (
-                  <li key={i} className="flex items-start gap-2 text-sm text-slate-600">
-                    <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-emerald-400" />
-                    {fix}
-                  </li>
-                ))}
-              </ul>
+            <div className="space-y-6">
+              <div>
+                <h4 className="mb-3 text-xs font-bold uppercase tracking-widest text-red-500">
+                  Critical Issues
+                </h4>
+                <ul className="space-y-2">
+                  {audit.performance_report?.issues?.map((issue, i) => (
+                    <li key={i} className="flex items-start gap-2 text-sm text-slate-600">
+                      <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-red-400" />
+                      {issue}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div>
+                <h4 className="mb-3 text-xs font-bold uppercase tracking-widest text-emerald-500">
+                  Recommended Fixes
+                </h4>
+                <ul className="space-y-2">
+                  {audit.performance_report?.fixes?.map((fix, i) => (
+                    <li key={i} className="flex items-start gap-2 text-sm text-slate-600">
+                      <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-emerald-400" />
+                      {fix}
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
         )}
 
         {audit.sitemap_audit && (
-        <section className="glass-card">
-          <div className="mb-6 flex items-center justify-between">
-            <h3 className="flex items-center gap-2 text-lg font-bold text-slate-900">
-              <Globe size={20} className="text-blue-500" /> Content & Sitemap
-            </h3>
-            <span className="rounded-full bg-blue-50 px-3 py-1 text-sm font-bold text-blue-600">
-              Health: {audit.sitemap_audit.score}%
-            </span>
-          </div>
+          <section className="glass-card">
+            <div className="mb-6 flex items-center justify-between">
+              <h3 className="flex items-center gap-2 text-lg font-bold text-slate-900">
+                <Globe size={20} className="text-blue-500" /> Content & Sitemap
+              </h3>
+              <span className="rounded-full bg-blue-50 px-3 py-1 text-sm font-bold text-blue-600">
+                Health: {audit.sitemap_audit.score}%
+              </span>
+            </div>
 
-          <div className="mb-6 rounded-lg bg-slate-50 p-4 text-sm leading-relaxed text-slate-600">
-            {audit.sitemap_audit.analysis}
-          </div>
+            <div className="mb-6 rounded-lg bg-slate-50 p-4 text-sm leading-relaxed text-slate-600">
+              {audit.sitemap_audit.analysis}
+            </div>
 
-          <h4 className="mb-3 text-xs font-bold tracking-widest text-blue-500 uppercase">
-            Roadmap for Visibility
-          </h4>
-          <div className="grid grid-cols-1 gap-2">
-            {audit.sitemap_audit?.improvements?.map((imp, i) => (
-              <div
-                key={i}
-                className="rounded-lg border border-slate-100 bg-white p-3 text-sm text-slate-700 shadow-sm"
-              >
-                {imp}
-              </div>
-            ))}
-          </div>
-        </section>
+            <h4 className="mb-3 text-xs font-bold uppercase tracking-widest text-blue-500">
+              Roadmap for Visibility
+            </h4>
+            <div className="grid grid-cols-1 gap-2">
+              {audit.sitemap_audit?.improvements?.map((imp, i) => (
+                <div
+                  key={i}
+                  className="rounded-lg border border-slate-100 bg-white p-3 text-sm text-slate-700 shadow-sm"
+                >
+                  {imp}
+                </div>
+              ))}
+            </div>
+          </section>
         )}
       </div>
 
       {audit.competitive_analysis && (
-      <section className="glass-card mt-8 border-indigo-100 bg-indigo-50/30">
-        <h3 className="mb-6 flex items-center gap-2 text-lg font-bold text-slate-900">
-          <Target size={20} className="text-indigo-500" /> Competitive Landscape
-        </h3>
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-          <div>
-            <h4 className="mb-2 text-xs font-bold tracking-widest text-indigo-500 uppercase">
-              Competitor Advantages
-            </h4>
-            <p className="text-sm leading-relaxed text-slate-600">
-              {audit.competitive_analysis.competitor_edge}
-            </p>
-          </div>
-          <div>
-            <h4 className="mb-2 text-xs font-bold tracking-widest text-indigo-500 uppercase">
-              Strategic Gap to Close
-            </h4>
-            <div className="rounded-xl border border-indigo-200 bg-white p-5 text-lg font-bold text-indigo-600 shadow-sm">
-              {audit.competitive_analysis.gap_to_close}
+        <section className="glass-card mt-8 border-indigo-100 bg-indigo-50/30">
+          <h3 className="mb-6 flex items-center gap-2 text-lg font-bold text-slate-900">
+            <Target size={20} className="text-indigo-500" /> Competitive Landscape
+          </h3>
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+            <div>
+              <h4 className="mb-2 text-xs font-bold uppercase tracking-widest text-indigo-500">
+                Competitor Advantages
+              </h4>
+              <p className="text-sm leading-relaxed text-slate-600">
+                {audit.competitive_analysis.competitor_edge}
+              </p>
+            </div>
+            <div>
+              <h4 className="mb-2 text-xs font-bold uppercase tracking-widest text-indigo-500">
+                Strategic Gap to Close
+              </h4>
+              <div className="rounded-xl border border-indigo-200 bg-white p-5 text-lg font-bold text-indigo-600 shadow-sm">
+                {audit.competitive_analysis.gap_to_close}
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
       )}
 
       {/* Final Verdict */}
       <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
         {audit.ai_readiness && (
-        <div className="glass-card flex flex-col items-center justify-center py-8 text-center">
-          <span className="mb-1 text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase">
-            AI READINESS
-          </span>
-          <div className="text-4xl font-black text-slate-900">
-            {audit.ai_readiness.overall_score}%
+          <div className="glass-card flex flex-col items-center justify-center py-8 text-center">
+            <span className="mb-1 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">
+              AI READINESS
+            </span>
+            <div className="text-4xl font-black text-slate-900">
+              {audit.ai_readiness.overall_score}%
+            </div>
           </div>
-        </div>
         )}
         {audit.ai_readiness && (
-        <div className="glass-card flex flex-col items-center justify-center border-emerald-100 bg-emerald-50 py-8 text-center">
-          <span className="mb-1 text-[10px] font-bold tracking-[0.2em] text-emerald-500 uppercase">
-            ESTIMATED IMPACT
-          </span>
-          <div className="text-4xl font-black text-emerald-600">
-            {audit.ai_readiness.estimated_impact}
+          <div className="glass-card flex flex-col items-center justify-center border-emerald-100 bg-emerald-50 py-8 text-center">
+            <span className="mb-1 text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-500">
+              ESTIMATED IMPACT
+            </span>
+            <div className="text-4xl font-black text-emerald-600">
+              {audit.ai_readiness.estimated_impact}
+            </div>
           </div>
-        </div>
         )}
         <div className="glass-card flex flex-col items-center justify-center py-8 text-center">
-          <span className="mb-1 text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase">
+          <span className="mb-1 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">
             AUDIT SPEED
           </span>
           <div className="text-4xl font-black text-blue-500">{audit.execution_time_ms}ms</div>
@@ -473,7 +474,7 @@ const PageDetail = () => {
 
       {/* Audit Logs */}
       <div className="mt-8">
-        <h3 className="mb-4 text-xs font-bold tracking-widest text-slate-400 uppercase">
+        <h3 className="mb-4 text-xs font-bold uppercase tracking-widest text-slate-400">
           Execution Trace
         </h3>
         <div className="max-h-32 overflow-auto rounded-lg bg-slate-900 p-4 font-mono text-[10px] text-slate-500">

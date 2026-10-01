@@ -32,7 +32,8 @@ if [ "$tests_only" = false ]; then
   docker_run 'Backend lint (ruff)' backend ruff check .
   docker_run 'Backend format (ruff)' backend ruff format --check .
   docker_run 'Frontend typecheck' frontend pnpm typecheck
-  docker_run 'Frontend lint (eslint)' frontend pnpm lint
+  docker_run 'Frontend lint (oxlint)' frontend pnpm lint
+  docker_run 'Frontend format (oxfmt)' frontend pnpm format:check
 fi
 
 if [ "$lint_only" = false ]; then

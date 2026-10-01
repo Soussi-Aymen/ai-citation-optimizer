@@ -32,7 +32,7 @@ frontend/src/
 ```bash
 docker compose run --rm --no-deps frontend pnpm dev        # dev server :5173
 docker compose run --rm --no-deps frontend pnpm typecheck  # strict TS check
-docker compose run --rm --no-deps frontend pnpm lint       # eslint
+docker compose run --rm --no-deps frontend pnpm lint       # oxlint
 docker compose run --rm --no-deps frontend pnpm test:run   # vitest
 ```
 
@@ -51,4 +51,4 @@ Local `pnpm` in `frontend/` is only needed for the optional non-Docker path belo
 
 ## Modern web guidance
 
-Before UI/layout/a11y work, search `.cursor/skills/modern-web-guidance/SKILL.md` and use `npx -y modern-web-guidance@0.0.174 search "<query>"`.
+Before UI/layout/a11y work, search `.cursor/skills/modern-web-guidance/SKILL.md` and use `npx -y modern-web-guidance@0.0.191 search "<query>" --skill-version 2026_09_04-7de96777`.
