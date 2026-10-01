@@ -4,19 +4,21 @@
 
 ## What this project does
 
-Peec AI → sitemap/citation gaps → Playwright JS audit + **target-site /llms.txt probe** → fix templates (JSON-LD + llms.txt) + Gemini outreach.
+Peec AI → sitemap/citation gaps → Playwright JS audit + **target-site /llms.txt probe** + GEO checks → fix templates (JSON-LD + llms.txt) + OpenRouter outreach.
 
 ## File map (where to edit)
 
 | Feature | File | Key symbols |
 |---------|------|-------------|
-| API routes | `backend/app/main.py` | `/api/gaps`, `/api/generate-fix`, `/api/audit` |
+| API routes | `backend/app/main.py` | `/api/gaps`, `/api/generate-fix`, `/api/audit`, `/api/geo-jobs/{job_id}` |
 | Playwright + guidance | `backend/app/agent.py` | `CrawlabilityAgent`, `fetch_and_analyze`, `_generate_guidance`, `build_fix_instructions` |
+| Chat model | `backend/app/llm.py` | `make_chat_model` — OpenRouter, `OPEN_ROUTE_API_KEY`, `google/gemma-4-26b-a4b-it:free` |
+| GEO checks | `backend/app/geo/` | `AuditContext`, `catalog.py` registry, fast/deep tiers, `InMemoryTTLCache`, `jobs.py` |
 | **llms.txt probe + template** | `backend/app/llms_txt_analyzer.py` | `probe_llms_txt`, `build_llms_txt_template`, `parse_llms_txt_links` |
 | Sitemap gaps | `backend/app/sitemap_analyzer.py` | `fetch_sitemap_urls`, `get_ai_citation_gaps` |
 | Peec API | `backend/app/peec_client.py` | `PeecClient` |
-| Fix panel UI | `frontend/src/pages/Dashboard.jsx` | Technical Health Matrix ~L514, llms.txt template ~L605 |
-| Deep audit UI | `frontend/src/pages/PageDetail.jsx` | signals grid ~L143, llms.txt card |
+| Fix panel UI | `frontend/src/pages/Dashboard.tsx` | Technical Health Matrix, `GeoCheckMatrix` |
+| Deep audit UI | `frontend/src/pages/PageDetail.tsx` | signals grid, GEO matrix, llms.txt card |
 
 ## llms.txt flow (implemented)
 
@@ -26,9 +28,13 @@ Peec AI → sitemap/citation gaps → Playwright JS audit + **target-site /llms.
 4. `build_fix_instructions` → `llms_txt_template` + checklist item
 5. Dashboard matrix row + copy-paste template block
 
-## API: POST /api/generate-fix
+## API: POST /api/audit and POST /api/generate-fix
 
-Returns: `metrics`, `guidance`, `checklist`, `json_ld`, **`llms_txt_template`**
+Existing fields stay. Both add `geo_checks` and `geo_job_id`.
+
+Fast checks are finished in that response. Deep checks poll from `GET /api/geo-jobs/{job_id}` until `status` is `done`. A cache hit (10 minutes, normalized URL) sets `geo_job_id` to null and includes both tiers.
+
+`/api/generate-fix` also returns `metrics`, `guidance`, `checklist`, `json_ld`, **`llms_txt_template`**. Fail and warn `fix_hint` values are appended to `checklist`.
 
 ## JS audit signals (same `metrics` object)
 
@@ -44,8 +50,10 @@ Guidance IDs: `js_hydration`, `js_payload`, `unused_js`, `console_errors`, `lcp`
 - `backend/tests/test_agent_fix.py` — `build_fix_instructions` unit tests
 - `backend/tests/test_agent.py` — Playwright integration (`pytest -m integration`)
 - `backend/tests/test_llms_txt.py` — llms.txt parse/template unit tests
-- `frontend/src/lib/api.test.js` — API base URL helper
-- `frontend/src/pages/Dashboard.test.jsx` — Peec UI visibility integration tests
+- `backend/tests/test_geo_registry.py`, `test_geo_checks.py`, `test_geo_deep.py`, `test_geo_api.py` — GEO registry, checks, and job polling
+- `frontend/src/lib/api.test.ts` — API base URL helper
+- `frontend/src/pages/Dashboard.test.tsx` — Peec UI visibility
+- `frontend/src/components/GeoCheckMatrix.test.tsx` — matrix groups and deep loading
 
 Run: `sh scripts/validate.sh` (lint + tests via Docker Compose).
 
@@ -62,15 +70,16 @@ sh scripts/validate.sh                                 # lint + test in containe
 ## Known bugs (unchanged)
 
 - `build_fix_instructions` Nothing-branded JSON-LD
-- Frontend uses `VITE_API_URL` via `frontend/src/lib/api.js` (defaults to localhost:8000)
+- Frontend uses `VITE_API_URL` via `frontend/src/lib/api.ts` (defaults to localhost:8000)
 - `main.py` L170: benchmark `len(sitemap_urls)` on dict
 
 ## Env
 
-`PEEC_API_KEY`, `GEMINI_API_KEY` in root `.env`
+`PEEC_API_KEY`, `OPEN_ROUTE_API_KEY` in root `.env`. Do not print secret values.
 
 ## More detail
 
+- `docs/GEO_CHECKS.md` — registry, tiers, thresholds, fix hints
 - `docs/LLMS_TXT_INTEGRATION.md` — llms.txt design
 - `docs/JS_CITATION_AUDIT.md` — JS thresholds
 - `docs/ARCHITECTURE.md` — system diagram

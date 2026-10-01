@@ -38,6 +38,7 @@ Env: `PEEC_API_KEY`, `OPEN_ROUTE_API_KEY` in root `.env`. Do not print secret va
 
 ## Deeper docs (read on demand only)
 
+- `docs/GEO_CHECKS.md` — GEO registry, tiers, thresholds
 - `docs/ARCHITECTURE.md` — system diagram
 - `docs/JS_CITATION_AUDIT.md` — JS metric thresholds
 - `docs/LLMS_TXT_INTEGRATION.md` — llms.txt design

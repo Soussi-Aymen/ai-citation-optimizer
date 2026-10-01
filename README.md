@@ -13,7 +13,8 @@ AI Citation Optimizer helps early-stage brands like Nothing Phone, Attio, and BY
 - **Deep Technical AI Audit:** Simulates an AI indexer using a Headless Chromium instance (via Playwright & CDP) to capture and analyze precise technical layers—like Unused JS, JS-to-Text ratio, and DOM depth—that specifically cause AI search bots to fail or time out.
 - **Automated Sitemap-to-Citation Mapping:** Instantly identifies the "Discovery Gap" by cross-referencing your sitemap against real-time AI citations, revealing exactly which high-value pages are being ignored by LLM crawlers.
 - **Actionable AI-Readiness Fixes:** Provides step-by-step technical instructions, generated copy-paste JSON-LD schema snippets, and **llms.txt templates** for the analyzed site to improve AI discovery and LLM ingestion.
-- **Instant Outreach Content Drafting:** Uses Gemini to draft tailored collaboration pitches, Reddit comments, and PR emails for specific gaps identified in your optimization roadmap.
+- **Instant Outreach Content Drafting:** Uses OpenRouter (`google/gemma-4-26b-a4b-it:free`) to draft tailored collaboration pitches, Reddit comments, and PR emails for specific gaps identified in your optimization roadmap.
+- **GEO checks:** Fast checks (bot access, raw-versus-rendered content, answer readiness, schema, freshness, canonicals) return with the audit. Deep checks (orphan pages and an LLM citability review) load in the background.
 - **Dynamic Growth Projection:** Uses a realistic 50% recovery model to project visibility and citation growth based on technical gap closure and off-page strategic actions.
 
 ## How We Measure & Optimize for AI Crawlers
@@ -37,7 +38,7 @@ When you audit a URL, our backend spins up a Headless Chromium browser and attac
 Instead of just showing raw data, the tool turns these metrics into immediate action:
 
 - **Unified Action Plan:** Every audit generates a single, comprehensive "General Chromium Optimization Tips" section. This provides a framework-agnostic implementation plan to solve all flagged technical issues (JS bloat, LCP, console errors) in one centralized view.
-- **Deep Technical Health Matrix:** Replaces generic scores with a detailed list of bot-centric metrics, including JS Hydration impact, Unused JS coverage, LCP, and **llms.txt status**, with explicit 🔴/🟡/✅ status indicators.
+- **Deep Technical Health Matrix:** Replaces generic scores with a detailed list of bot-centric metrics, including JS Hydration impact, Unused JS coverage, LCP, and **llms.txt status**, plus GEO checks grouped into fast and deep tiers, with explicit 🔴/🟡/✅ status indicators. Deep checks show a loading state until the job finishes.
 - **Copy-Paste Schema Generation:** Automatically generates custom JSON-LD (e.g., `Product`, `Organization`) tailored to the specific URL path to accelerate AI entity recognition.
 - **llms.txt Template Generation:** When the analyzed site lacks `/llms.txt` or does not list the page, generates a ready-to-deploy markdown file for `https://your-domain/llms.txt`.
 
@@ -47,10 +48,10 @@ Instead of just showing raw data, the tool turns these metrics into immediate ac
 
 - **Backend**: FastAPI (Python 3.11+)
 - **AI Orchestration**: LangChain (for structured chains and prompt templates)
-- **AI Agent**: Playwright (for rendered HTML analysis) + Gemini 2.5 Flash
+- **AI Agent**: Playwright (for rendered HTML analysis) + OpenRouter model `google/gemma-4-26b-a4b-it:free`
 - **Data Provider**: Peec AI API (for citation metrics and domain visibility)
-- **Frontend**: React + Vite + TypeScript (strict) + pnpm (Tailwind CSS)
-- **Code Quality**: Ruff (backend), ESLint + `tsc` (frontend), optional git pre-commit via Docker
+- **Frontend**: React + Vite + TypeScript (strict) + pnpm (Tailwind CSS), Node 22
+- **Code Quality**: Ruff (backend), oxlint + oxfmt + `tsc` (frontend), optional git pre-commit via Docker
 - **Web standards**: Frontend UI follows [modern-web-guidance](https://github.com/GoogleChrome/modern-web-guidance) patterns — accessible forms, native `<details>` disclosures, ARIA tabs, `:focus-visible`, and `prefers-reduced-motion`
 - **Progress Tracking**: Dynamic visibility progress visualization at the top of the dashboard
 
@@ -71,7 +72,7 @@ Copy-Item .env.example .env   # Windows PowerShell
 ```
 
 ```env
-GEMINI_API_KEY=your_gemini_api_key
+OPEN_ROUTE_API_KEY=your_openrouter_api_key
 PEEC_API_KEY=your_peec_api_key   # optional — Peec features hide if missing or invalid
 ```
 
@@ -188,8 +189,9 @@ pnpm dev
 
 - `GET /api/gaps?domain=<domain>`: Returns a list of non-cited pages, overall performance metrics, and competitor visibility data.
 - `GET /api/benchmark?domain=<domain>`: Provides the detailed optimization roadmap, competitor breakdown, and gap sources.
-- `POST /api/audit`: Conducts a deep crawlability and AI-readiness audit of a specific URL.
-- `POST /api/generate-fix`: Generates an actionable fix checklist, JSON-LD schema, live Playwright metrics, and an **llms.txt template** for the analyzed site.
+- `POST /api/audit`: Conducts a deep crawlability and AI-readiness audit of a specific URL. Returns fast GEO checks and a `geo_job_id` for deep checks.
+- `GET /api/geo-jobs/{job_id}`: Returns deep GEO checks as they finish.
+- `POST /api/generate-fix`: Generates an actionable fix checklist, JSON-LD schema, live Playwright metrics, GEO checks, and an **llms.txt template** for the analyzed site.
 - `POST /api/generate-content`: Drafts targeted outreach content (emails, comments, scripts) for specific optimization roadmap items.
 
 ## Example Usage
@@ -206,6 +208,7 @@ Compact reference docs for contributors and AI coding agents (start with `docs/A
 
 - [`docs/AGENT_CONTEXT.md`](docs/AGENT_CONTEXT.md) — file map and key symbols (token-optimized)
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — system design and data flows
+- [`docs/GEO_CHECKS.md`](docs/GEO_CHECKS.md) — GEO check registry, tiers, thresholds, and fix hints
 - [`docs/JS_CITATION_AUDIT.md`](docs/JS_CITATION_AUDIT.md) — Playwright JS metrics and thresholds
 - [`docs/LLMS_TXT_INTEGRATION.md`](docs/LLMS_TXT_INTEGRATION.md) — llms.txt probe, guidance, and UI
 
