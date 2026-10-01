@@ -1,5 +1,5 @@
 # Use the required Playwright version to match the library
-FROM mcr.microsoft.com/playwright/python:v1.48.0-jammy
+FROM mcr.microsoft.com/playwright/python:v1.63.0-jammy
 
 COPY --from=ghcr.io/astral-sh/uv:0.11.24 /uv /uvx /bin/
 
