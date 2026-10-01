@@ -5,7 +5,7 @@ alwaysApply: true
 
 # AI Citation Optimizer — agent navigation
 
-**Start here:** read `docs/AGENT_CONTEXT.md` for the file map, API contracts, and known bugs. Do not explore the whole repo — open only the files listed there.
+**Start here:** read `.cursor/skills/repo-map/SKILL.md` for the task-to-file lookup before searching the repo. Then read `docs/AGENT_CONTEXT.md` for API contracts and known bugs. Do not explore the whole repo.
 
 ## Stack
 
