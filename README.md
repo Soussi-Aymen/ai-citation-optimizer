@@ -14,7 +14,7 @@ AI Citation Optimizer helps early-stage brands like Nothing Phone, Attio, and BY
 - **Automated Sitemap-to-Citation Mapping:** Instantly identifies the "Discovery Gap" by cross-referencing your sitemap against real-time AI citations, revealing exactly which high-value pages are being ignored by LLM crawlers.
 - **Actionable AI-Readiness Fixes:** Provides step-by-step technical instructions, generated copy-paste JSON-LD schema snippets, and **llms.txt templates** for the analyzed site to improve AI discovery and LLM ingestion.
 - **Instant Outreach Content Drafting:** Uses OpenRouter (`google/gemma-4-26b-a4b-it:free`) to draft tailored collaboration pitches, Reddit comments, and PR emails for specific gaps identified in your optimization roadmap.
-- **GEO checks:** Fast checks (bot access, raw-versus-rendered content, answer readiness, schema, freshness, canonicals) return with the audit. Deep checks (orphan pages and an LLM citability review) load in the background.
+- **GEO checks:** Fast checks (bot access, raw-versus-rendered content, answer readiness, schema, freshness, canonicals, llms.txt, and mobile HTML parity) return with the audit. Deep checks (orphan pages, an LLM citability review, and an optional phone render) load in the background. The phone render runs only when mobile HTML differs or `MOBILE_RENDER_ENABLED` is set.
 - **Dynamic Growth Projection:** An assumption, not a measured forecast. Technical fixes can add up to 40% of the sitemap gap to the visibility score. Off-page actions add `(total opportunity / 800) * 50`. The 50% figure is that assumed cap, not a guaranteed recovery.
 
 ## How We Measure & Optimize for AI Crawlers
@@ -148,7 +148,7 @@ docker compose run --rm --no-deps frontend pnpm test:run
 
 | Layer | Runner | What is covered |
 |-------|--------|-----------------|
-| **Backend unit** | pytest | Peec client, sitemap analyzer, llms.txt probe, agent fix generation, GEO checks (bot access, content, schema, freshness, canonicals, orphans, citability) |
+| **Backend unit** | pytest | Peec client, sitemap analyzer, llms.txt probe, agent fix generation, GEO checks (bot access, content, schema, freshness, canonicals, llms.txt, mobile parity, orphans, citability, optional mobile render) |
 | **Backend API** | pytest | FastAPI routes with mocked dependencies, including `GET /api/geo-jobs/{job_id}` |
 | **Backend integration** | pytest (`-m integration`) | Playwright audit on react.dev — optional, excluded by default |
 | **Frontend** | vitest | API base URL helper, Dashboard form and Peec visibility toggling, Technical Health Matrix |

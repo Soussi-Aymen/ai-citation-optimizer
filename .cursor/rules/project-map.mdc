@@ -20,8 +20,8 @@ alwaysApply: true
 - New/changed endpoint → `backend/app/main.py`
 - Playwright audit / fix guidance → `backend/app/agent.py`
 - Chat model → `backend/app/llm.py` (`OPEN_ROUTE_API_KEY`, `make_chat_model`)
-- GEO checks → `backend/app/geo/` (`catalog.py` registry, `jobs.py` deep polling, `checks/`)
-- llms.txt probe/template → `backend/app/llms_txt_analyzer.py`
+- GEO checks → `backend/app/geo/` (`catalog.py` registry, `jobs.py` deep polling, `checks/`, including `mobile_parity.py` and `mobile_render.py`)
+- llms.txt probe/template → `backend/app/llms_txt_analyzer.py` and `backend/app/geo/checks/llms_txt.py`
 - Sitemap gaps → `backend/app/sitemap_analyzer.py`
 - Peec API → `backend/app/peec_client.py`
 - Dashboard / fix panel → `frontend/src/pages/Dashboard.tsx`

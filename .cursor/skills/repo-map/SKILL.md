@@ -31,7 +31,7 @@ Open the row you need. Do not search the repo first. `docs/AGENT_CONTEXT.md` is 
 | Dashboard / deep audit pages | `frontend/src/pages/Dashboard.tsx`, `frontend/src/pages/PageDetail.tsx` | pages |
 | Tailwind | `frontend/src/index.css`, `frontend/vite.config.ts` | `@tailwindcss/vite` |
 | Docker | `docker-compose.yml`, `docker-compose.prod.yml`, `backend/Dockerfile`, `frontend/Dockerfile.prod` | |
-| Tests | `backend/tests/test_geo_*.py`, `frontend/src/components/GeoCheckMatrix.test.tsx` | |
+| Tests | `backend/tests/test_geo_*.py`, `backend/tests/test_mobile_parity.py`, `backend/tests/test_mobile_render.py`, `frontend/src/components/GeoCheckMatrix.test.tsx` | |
 | Full check | `sh scripts/validate.sh` | |
 | Related-only pre-commit | `.husky/pre-commit` | |
 | CI | `.github/workflows/ci.yml` | push and pull request |

@@ -14,6 +14,7 @@ Peec AI → sitemap/citation gaps → Playwright JS audit + **target-site /llms.
 | Playwright + guidance | `backend/app/agent.py` | `CrawlabilityAgent`, `fetch_and_analyze`, `_generate_guidance`, `build_fix_instructions` |
 | Chat model | `backend/app/llm.py` | `make_chat_model` — OpenRouter, `OPEN_ROUTE_API_KEY`, `google/gemma-4-26b-a4b-it:free` |
 | GEO checks | `backend/app/geo/` | `AuditContext`, `catalog.py` registry, fast/deep tiers, `InMemoryTTLCache`, `jobs.py` |
+| Mobile parity and render | `backend/app/geo/checks/mobile_parity.py`, `backend/app/geo/checks/mobile_render.py` | `MobileParityCheck`, `MobileRenderCheck`, `MOBILE_RENDER_ENABLED` |
 | **llms.txt probe + template** | `backend/app/llms_txt_analyzer.py` | `probe_llms_txt`, `build_llms_txt_template`, `parse_llms_txt_links` |
 | Sitemap gaps | `backend/app/sitemap_analyzer.py` | `fetch_sitemap_urls`, `get_ai_citation_gaps` |
 | Peec API | `backend/app/peec_client.py` | `PeecClient` |
@@ -51,7 +52,7 @@ Guidance IDs: `js_hydration`, `js_payload`, `unused_js`, `console_errors`, `lcp`
 - `backend/tests/test_agent_fix.py` — `build_fix_instructions` unit tests
 - `backend/tests/test_agent.py` — Playwright integration (`pytest -m integration`)
 - `backend/tests/test_llms_txt.py` — llms.txt parse/template unit tests
-- `backend/tests/test_geo_registry.py`, `test_geo_checks.py`, `test_geo_deep.py`, `test_geo_api.py` — GEO registry, checks, and job polling
+- `backend/tests/test_geo_registry.py`, `test_geo_checks.py`, `test_geo_deep.py`, `test_geo_api.py`, `test_geo_context.py`, `test_mobile_parity.py`, `test_mobile_render.py` — GEO registry, checks, context, and job polling
 - `frontend/src/lib/api.test.ts` — API base URL helper
 - `frontend/src/pages/Dashboard.test.tsx` — Peec UI visibility
 - `frontend/src/components/GeoCheckMatrix.test.tsx` — matrix groups and deep loading

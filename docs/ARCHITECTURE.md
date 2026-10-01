@@ -84,10 +84,10 @@ flowchart TB
    - Rendered text → `text_delta`, `js_impact`
    - JSON-LD presence, DOM depth
 3. **AI reasoning** (unless `skip_ai=True`) — OpenRouter (`google/gemma-4-26b-a4b-it:free`) when `OPEN_ROUTE_API_KEY` is set
-4. **GEO checks** — `AuditContext` is shared. Fast checks return with the audit. Deep checks poll from `GET /api/geo-jobs/{job_id}`. Finished results sit in a 10-minute TTL cache. See `docs/GEO_CHECKS.md`.
+4. **GEO checks** — `AuditContext` is shared. Fast checks return with the audit. Deep checks poll from `GET /api/geo-jobs/{job_id}`. Finished results sit in a 10-minute TTL cache. The audit browser closes after the desktop render unless `mobile_render` will run in that same browser. See `docs/GEO_CHECKS.md`.
 
 ## Extension points
 
 New GEO checks register in `backend/app/geo/catalog.py` with an id, tier, timeout, evidence model, and `run(ctx)`. They read `AuditContext` and do not refetch the page.
 
-`llms.txt` is a fast GEO check. `AuditContext` starts the probe when the audit begins, in parallel with Playwright. See `docs/LLMS_TXT_INTEGRATION.md`.
+`llms.txt` is a fast GEO check. `AuditContext` starts that probe, robots.txt, and the smartphone HTML fetch when the audit begins, in parallel with Playwright. `mobile_parity` compares those two HTML responses. `mobile_render` is optional and uses one extra context in the audit browser. See `docs/LLMS_TXT_INTEGRATION.md` and `docs/GEO_CHECKS.md`.
