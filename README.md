@@ -15,7 +15,7 @@ AI Citation Optimizer helps early-stage brands like Nothing Phone, Attio, and BY
 - **Actionable AI-Readiness Fixes:** Provides step-by-step technical instructions, generated copy-paste JSON-LD schema snippets, and **llms.txt templates** for the analyzed site to improve AI discovery and LLM ingestion.
 - **Instant Outreach Content Drafting:** Uses OpenRouter (`google/gemma-4-26b-a4b-it:free`) to draft tailored collaboration pitches, Reddit comments, and PR emails for specific gaps identified in your optimization roadmap.
 - **GEO checks:** Fast checks (bot access, raw-versus-rendered content, answer readiness, schema, freshness, canonicals) return with the audit. Deep checks (orphan pages and an LLM citability review) load in the background.
-- **Dynamic Growth Projection:** Uses a realistic 50% recovery model to project visibility and citation growth based on technical gap closure and off-page strategic actions.
+- **Dynamic Growth Projection:** An assumption, not a measured forecast. Technical fixes can add up to 40% of the sitemap gap to the visibility score. Off-page actions add `(total opportunity / 800) * 50`. The 50% figure is that assumed cap, not a guaranteed recovery.
 
 ## How We Measure & Optimize for AI Crawlers
 
@@ -39,7 +39,7 @@ Instead of just showing raw data, the tool turns these metrics into immediate ac
 
 - **Unified Action Plan:** Every audit generates a single, comprehensive "General Chromium Optimization Tips" section. This provides a framework-agnostic implementation plan to solve all flagged technical issues (JS bloat, LCP, console errors) in one centralized view.
 - **Deep Technical Health Matrix:** Replaces generic scores with a detailed list of bot-centric metrics, including JS Hydration impact, Unused JS coverage, LCP, and **llms.txt status**, plus GEO checks grouped into fast and deep tiers, with explicit 🔴/🟡/✅ status indicators. Deep checks show a loading state until the job finishes.
-- **What to fix first:** At the end of How to Fix, failed and warned checks are numbered by citation impact, then by how hard the change is. Each line says why it is next and whether the change is small, medium, or larger. Passed checks are left out.
+- **What to fix first:** At the end of How to Fix, failed and warned checks are numbered by a hand-set heuristic: assumed citation impact, then assumed fix effort. It is not a measured ranking. Each line says why it is next and whether the change is small, medium, or larger. Passed checks are left out.
 - **Copy-Paste Schema Generation:** Automatically generates custom JSON-LD (e.g., `Product`, `Organization`) tailored to the specific URL path to accelerate AI entity recognition.
 - **llms.txt Template Generation:** When the analyzed site lacks `/llms.txt` or does not list the page, generates a ready-to-deploy markdown file for `https://your-domain/llms.txt`.
 
@@ -47,7 +47,7 @@ Instead of just showing raw data, the tool turns these metrics into immediate ac
 
 ![AI Architecture Overview](artifacts/screenshots/ai_architecture.jpg)
 
-- **Backend**: FastAPI (Python 3.11+)
+- **Backend**: FastAPI (Python 3.11+), dependencies installed with uv
 - **AI Orchestration**: LangChain (for structured chains and prompt templates)
 - **AI Agent**: Playwright (for rendered HTML analysis) + OpenRouter model `google/gemma-4-26b-a4b-it:free`
 - **Data Provider**: Peec AI API (for citation metrics and domain visibility)
@@ -118,7 +118,7 @@ docker compose down                                  # stop dev services
 docker compose -f docker-compose.prod.yml down       # stop prod services
 sh scripts/validate.sh                               # lint + test (all checks)
 sh scripts/validate.sh --tests-only                  # pytest + vitest only
-sh scripts/validate.sh --lint-only                   # ruff + eslint + tsc only
+sh scripts/validate.sh --lint-only                   # ruff + oxlint + oxfmt + tsc only
 ```
 
 ### Production mode (faster runtime)
@@ -148,10 +148,10 @@ docker compose run --rm --no-deps frontend pnpm test:run
 
 | Layer | Runner | What is covered |
 |-------|--------|-----------------|
-| **Backend unit** | pytest | Peec client, sitemap analyzer, llms.txt probe, agent fix generation |
-| **Backend API** | pytest | FastAPI routes with mocked dependencies |
+| **Backend unit** | pytest | Peec client, sitemap analyzer, llms.txt probe, agent fix generation, GEO checks (bot access, content, schema, freshness, canonicals, orphans, citability) |
+| **Backend API** | pytest | FastAPI routes with mocked dependencies, including `GET /api/geo-jobs/{job_id}` |
 | **Backend integration** | pytest (`-m integration`) | Playwright audit on react.dev — optional, excluded by default |
-| **Frontend** | vitest | API base URL helper, Dashboard form and Peec visibility toggling |
+| **Frontend** | vitest | API base URL helper, Dashboard form and Peec visibility toggling, Technical Health Matrix |
 
 Playwright integration test (optional):
 
@@ -198,10 +198,10 @@ pnpm dev
 ## Example Usage
 
 1. Enter your domain (e.g., `nothing.tech`) on the Dashboard.
-2. Review the **Growth Opportunity** and **Competitor Advantage Breakdown** to see where you stand. (Note: Estimated progress in a realistic benchmark shows around 50% improvement for targeted businesses).
+2. Review the **Growth Opportunity** and **Competitor Advantage Breakdown** to see where you stand. The projected lift is an assumption: technical fixes contribute up to 40% of the sitemap gap, and off-page actions are scaled by `(opportunity / 800) * 50`. That 50% is a cap in the formula, not a measured recovery.
 3. Check the **Optimization Roadmap** for high-priority actions and click "Draft Content" to instantly generate outreach emails or comments.
 4. Drill down into specific **Gap Sources** (YouTube, Reddit, Editorial) to identify missed citation opportunities.
-5. In the **Pages Missing** section, click "How to Fix" to get step-by-step instructions, live JS performance metrics, and an **llms.txt template** to publish on the analyzed domain. The last block, **What to fix first**, numbers the failed checks by impact and effort. Expand guidance sections inline for framework-agnostic fixes. Open **View Deep Technical Audit Report** for the full signal breakdown.
+5. In the **Pages Missing** section, click "How to Fix" to get step-by-step instructions, live JS performance metrics, and an **llms.txt template** to publish on the analyzed domain. The last block, **What to fix first**, numbers the failed checks with a hand-set heuristic for impact and effort, not a measured ranking. Expand guidance sections inline for framework-agnostic fixes. Open **View Deep Technical Audit Report** for the full signal breakdown.
 
 ## Developer Docs
 

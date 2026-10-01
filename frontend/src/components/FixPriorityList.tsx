@@ -11,7 +11,8 @@ export function FixPriorityList({ checks }: { checks: GeoCheck[] }) {
     >
       <h4 className="mb-1 text-sm font-bold text-slate-800">What to fix first</h4>
       <p className="mb-4 text-sm text-slate-500">
-        Ordered by how much each change helps citation, then by how hard it is to do.
+        A hand-set order from assumed citation impact and how large the change is. It is not a
+        measured result.
       </p>
       <ol className="space-y-4">
         {items.map((item) => (

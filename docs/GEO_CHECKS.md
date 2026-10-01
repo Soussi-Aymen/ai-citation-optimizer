@@ -13,7 +13,7 @@ Tiers:
 - **fast** — runs with the Playwright audit and returns on `POST /api/audit` and `POST /api/generate-fix`.
 - **deep** — does not block. The first response includes `geo_job_id`. `GET /api/geo-jobs/{job_id}` returns deep checks as each one finishes (`asyncio.as_completed`).
 
-`InMemoryTTLCache` stores finished fast and deep results for 10 minutes (`DEFAULT_TTL_S = 600`), keyed by normalized URL (lowercase host, no fragment, no trailing slash). A cache hit sets `geo_job_id` to null and returns both tiers.
+`InMemoryTTLCache` stores each `pass`, `warn`, or `fail` result for 10 minutes (`DEFAULT_TTL_S = 600`), keyed by normalized URL plus check id. `skipped` and `error` are not stored. A repeat audit reruns only the missing checks. `geo_job_id` is null only when every check is already cached. Otherwise the job runs the missing deep checks.
 
 Thresholds live in `backend/app/geo/config.py`.
 
@@ -35,8 +35,12 @@ Thresholds live in `backend/app/geo/config.py`.
 | id | What it looks at | Bounds | Fix hint |
 |----|------------------|--------|----------|
 | `orphan_page_check` | Sitemap URLs that a crawl never links | `MAX_CRAWL_PAGES` 25, `MAX_CRAWL_SECONDS` 10, `MAX_DEPTH` 2 | Add an internal link from the homepage or a section index |
-| `llm_citability_review` | Main text plus uncited Peec prompts, or questions built from the title and H1 | Temperature 0, structured output, no retry | Add a direct answer for each question in the main HTML |
+| `llm_citability_review` | Main text plus uncited Peec prompts, or questions built from the title and H1 | Temperature 0, structured output, one retry inside the check timeout | Add a direct answer for each question in the main HTML |
 
-Citability uses `make_chat_model(0)` in `backend/app/llm.py`: OpenRouter `https://openrouter.ai/api/v1`, model `google/gemma-4-26b-a4b-it:free`, env `OPEN_ROUTE_API_KEY`. A missing key or HTTP 429 returns `skipped`.
+Citability uses `make_chat_model(0)` in `backend/app/llm.py`: OpenRouter `https://openrouter.ai/api/v1`, model `google/gemma-4-26b-a4b-it:free`, env `OPEN_ROUTE_API_KEY`. A missing key returns `skipped` with no retry. HTTP 429 or a transient network error retries once when `Retry-After` fits in the check timeout, then returns `skipped`.
 
 Fail and warn hints from fast checks are appended to the generate-fix checklist on the first response. The dashboard appends deep hints as the job updates.
+
+## What to fix first
+
+The numbered list is a hand-set heuristic. Each check has an assumed citation impact and an assumed fix effort in `frontend/src/lib/geoChecks.ts`. Higher assumed impact comes first, then the smaller change. That order is not a measured result.
