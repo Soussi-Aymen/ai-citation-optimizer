@@ -5,6 +5,7 @@ import httpx
 
 from ..llms_txt_analyzer import extract_domain, probe_llms_txt
 from ..sitemap_analyzer import fetch_sitemap_urls
+from .config import MOBILE_USER_AGENT
 
 _EMPTY_LLMS = {
     "has_llms_txt": False,
@@ -38,8 +39,13 @@ class AuditContext:
     _client: httpx.AsyncClient | None = None
     _owns_client: bool = False
     _early_tasks: list[asyncio.Task] = field(default_factory=list)
+    mobile_html: str = ""
+    mobile_status: int | None = None
+    mobile_final_url: str = ""
+    mobile_fetch_error: str | None = None
     _llms_task: asyncio.Task | None = None
     _robots_task: asyncio.Task | None = None
+    _mobile_task: asyncio.Task | None = None
 
     async def __aenter__(self) -> "AuditContext":
         if self._client is None:
@@ -47,7 +53,8 @@ class AuditContext:
             self._owns_client = True
         self._llms_task = asyncio.create_task(self._load_llms())
         self._robots_task = asyncio.create_task(self._load_robots())
-        self._early_tasks = [self._llms_task, self._robots_task]
+        self._mobile_task = asyncio.create_task(self._load_mobile())
+        self._early_tasks = [self._llms_task, self._robots_task, self._mobile_task]
         return self
 
     async def __aexit__(self, exc_type, exc, tb) -> bool:
@@ -77,6 +84,30 @@ class AuditContext:
         except Exception:
             self.raw_html = ""
             self.raw_status = None
+        finally:
+            if owns:
+                await client.aclose()
+
+    async def mobile_page(self) -> None:
+        if self._mobile_task is None:
+            self._mobile_task = asyncio.create_task(self._load_mobile())
+            self._early_tasks.append(self._mobile_task)
+        await self._mobile_task
+
+    async def _load_mobile(self) -> None:
+        client = self._client
+        owns = client is None
+        if client is None:
+            client = httpx.AsyncClient(timeout=10.0, follow_redirects=True)
+        try:
+            response = await client.get(
+                self.url, headers={"User-Agent": MOBILE_USER_AGENT}
+            )
+            self.mobile_html = response.text
+            self.mobile_status = response.status_code
+            self.mobile_final_url = str(response.url)
+        except Exception as exc:
+            self.mobile_fetch_error = type(exc).__name__
         finally:
             if owns:
                 await client.aclose()

@@ -28,6 +28,15 @@ BASELINE_USER_AGENT = (
     "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 )
 
+MOBILE_USER_AGENT = (
+    "Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
+)
+
+# Mobile main text divided by desktop main text.
+MOBILE_MAIN_TEXT_RATIO_WARN = 0.8
+MOBILE_MAIN_TEXT_RATIO_FAIL = 0.5
+
 # Bot HTML shorter than this fraction of the baseline body is a content gap.
 BOT_BODY_RATIO_FAIL = 0.5
 CHALLENGE_MARKERS = ("just a moment", "cf-challenge", "captcha", "access denied")

@@ -23,6 +23,7 @@ Open the row you need. Do not search the repo first. `docs/AGENT_CONTEXT.md` is 
 | Citability | `backend/app/geo/checks/llm_citability_review.py` | `LlmCitabilityReviewCheck` |
 | No-JS text helpers | `backend/app/geo/checks/bot_view_diff.py` | `_text`, `_words` |
 | llms.txt probe and template | `backend/app/llms_txt_analyzer.py`, `backend/app/geo/checks/llms_txt.py` | `probe_llms_txt`, `LlmsTxtCheck` |
+| Mobile HTTP parity | `backend/app/geo/checks/mobile_parity.py`, `backend/app/geo/context.py` | `MobileParityCheck`, `mobile_page` |
 | Sitemap gaps | `backend/app/sitemap_analyzer.py` | `fetch_sitemap_urls` |
 | Peec | `backend/app/peec_client.py` | `PeecClient` |
 | Matrix UI | `frontend/src/components/GeoCheckMatrix.tsx` | `GeoCheckMatrix` |

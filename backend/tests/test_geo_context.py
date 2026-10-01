@@ -29,8 +29,14 @@ async def test_early_fetches_overlap_the_slow_browser_step(monkeypatch):
         await asyncio.sleep(0.3)
         return ""
 
+    async def slow_mobile(self):
+        await asyncio.sleep(0.35)
+        self.mobile_html = "<html></html>"
+        self.mobile_status = 200
+
     monkeypatch.setattr(AuditContext, "_load_llms", slow_llms)
     monkeypatch.setattr(AuditContext, "_load_robots", slow_robots)
+    monkeypatch.setattr(AuditContext, "_load_mobile", slow_mobile)
     started = time.monotonic()
     ctx = AuditContext(
         url="https://example.com/page", final_url="https://example.com/page"
@@ -39,6 +45,7 @@ async def test_early_fetches_overlap_the_slow_browser_step(monkeypatch):
         await asyncio.sleep(0.5)
         await ctx.llms_txt()
         await ctx.robots_txt()
+        await ctx.mobile_page()
     assert time.monotonic() - started < 0.75
 
 
@@ -46,6 +53,7 @@ async def test_early_fetches_overlap_the_slow_browser_step(monkeypatch):
 async def test_failed_audit_closes_tasks_and_the_client(monkeypatch):
     monkeypatch.setattr(AuditContext, "_load_llms", _hang)
     monkeypatch.setattr(AuditContext, "_load_robots", _hang)
+    monkeypatch.setattr(AuditContext, "_load_mobile", _hang)
     ctx = AuditContext(
         url="https://example.com/page", final_url="https://example.com/page"
     )
