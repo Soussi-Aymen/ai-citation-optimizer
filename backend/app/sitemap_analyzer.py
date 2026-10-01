@@ -22,6 +22,7 @@ async def fetch_sitemap_urls(domain_url: str):
     ]
 
     all_urls = []
+    entries = []
     has_lastmod_count = 0
     found_path = None
 
@@ -60,6 +61,12 @@ async def fetch_sitemap_urls(domain_url: str):
                             lastmod = url_node.xpath(
                                 "./ns:lastmod/text()", namespaces=ns
                             )
+                            entries.append(
+                                {
+                                    "loc": loc[0],
+                                    "lastmod": lastmod[0] if lastmod else "",
+                                }
+                            )
                             if lastmod:
                                 has_lastmod_count += 1
             except Exception:
@@ -73,6 +80,7 @@ async def fetch_sitemap_urls(domain_url: str):
     unique_urls = list(set(all_urls))
     return {
         "urls": unique_urls,
+        "entries": entries,
         "metrics": {
             "total_count": len(unique_urls),
             "lastmod_count": has_lastmod_count,

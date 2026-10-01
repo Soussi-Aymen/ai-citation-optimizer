@@ -4,10 +4,11 @@ import time
 import pytest
 from pydantic import BaseModel
 
+from app.geo.base import GeoCheck
 from app.geo.cache import InMemoryTTLCache, normalize_url
 from app.geo.context import AuditContext
 from app.geo.models import CheckResult, CheckStatus
-from app.geo.registry import GeoCheck, run_checks
+from app.geo.registry import run_checks
 
 
 class EmptyEvidence(BaseModel):

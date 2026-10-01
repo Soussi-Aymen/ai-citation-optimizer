@@ -1,3 +1,5 @@
-"""Registered checks. Later waves append instances here."""
+"""Registered checks. Deep checks are appended by the deep-tier wave."""
 
-CHECKS: list = []
+from .checks import FAST_CHECKS
+
+CHECKS: list = list(FAST_CHECKS)
