@@ -12,7 +12,7 @@ alwaysApply: true
 | Layer | Path | Tooling |
 |-------|------|---------|
 | API | `backend/app/` | FastAPI, uv, Playwright 1.63, LangChain + OpenRouter |
-| UI | `frontend/src/` | React 19, Vite, TypeScript, **pnpm**, Node 22 |
+| UI | `frontend/src/` | React 19, Vite, TypeScript, **pnpm**, Node 22, Tailwind via `@tailwindcss/vite` |
 | Infra | `docker-compose.yml` | dev: backend :8000, frontend :5173; prod: `docker-compose.prod.yml` → :8080 |
 
 ## Where to edit (common tasks)

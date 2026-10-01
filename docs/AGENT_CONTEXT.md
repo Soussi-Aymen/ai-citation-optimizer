@@ -18,6 +18,7 @@ Peec AI → sitemap/citation gaps → Playwright JS audit + **target-site /llms.
 | Sitemap gaps | `backend/app/sitemap_analyzer.py` | `fetch_sitemap_urls`, `get_ai_citation_gaps` |
 | Peec API | `backend/app/peec_client.py` | `PeecClient` |
 | Fix panel UI | `frontend/src/pages/Dashboard.tsx` | Technical Health Matrix, `GeoCheckMatrix` |
+| Styles | `frontend/src/index.css` | Tailwind via `@tailwindcss/vite` in `frontend/vite.config.ts` |
 | Deep audit UI | `frontend/src/pages/PageDetail.tsx` | signals grid, GEO matrix, llms.txt card |
 
 ## llms.txt flow (implemented)

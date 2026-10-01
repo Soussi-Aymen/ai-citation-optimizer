@@ -28,7 +28,7 @@ Open the row you need. Do not search the repo first. `docs/AGENT_CONTEXT.md` is 
 | Matrix UI | `frontend/src/components/GeoCheckMatrix.tsx` | `GeoCheckMatrix` |
 | Fix order | `frontend/src/lib/geoChecks.ts`, `frontend/src/components/FixPriorityList.tsx` | `prioritizeFixes` |
 | Dashboard / deep audit pages | `frontend/src/pages/Dashboard.tsx`, `frontend/src/pages/PageDetail.tsx` | pages |
-| Tailwind | CDN script in `frontend/index.html`; build config `frontend/vite.config.ts` | |
+| Tailwind | `frontend/src/index.css`, `frontend/vite.config.ts` | `@tailwindcss/vite` |
 | Docker | `docker-compose.yml`, `docker-compose.prod.yml`, `backend/Dockerfile`, `frontend/Dockerfile.prod` | |
 | Tests | `backend/tests/test_geo_*.py`, `frontend/src/components/GeoCheckMatrix.test.tsx` | |
 | Full check | `sh scripts/validate.sh` | |
