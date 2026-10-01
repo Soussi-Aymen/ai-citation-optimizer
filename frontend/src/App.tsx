@@ -13,6 +13,7 @@ import type { HealthResponse } from './types/api'
 import Dashboard from './pages/Dashboard'
 import PageDetail from './pages/PageDetail'
 import { Sparkles } from 'lucide-react'
+import { applyTheme, readTheme, type ThemeName } from './lib/theme'
 
 interface NavLinkProps {
   to: string
@@ -43,6 +44,12 @@ function AuditPage() {
 
 function App() {
   const [peecAvailable, setPeecAvailable] = useState<boolean | null>(null)
+  const [theme, setTheme] = useState<ThemeName>(() => readTheme())
+
+  function chooseTheme(next: ThemeName) {
+    setTheme(next)
+    applyTheme(next)
+  }
 
   useEffect(() => {
     axios
@@ -66,7 +73,15 @@ function App() {
             <Sparkles className="text-blue-500" size={32} aria-hidden />
             <h1 className="text-2xl font-bold tracking-tight text-slate-900">Citation Optimizer</h1>
           </div>
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              className="btn-secondary px-3 py-2 text-sm"
+              aria-pressed={theme === 'night'}
+              onClick={() => chooseTheme(theme === 'night' ? 'light' : 'night')}
+            >
+              {theme === 'night' ? 'Day' : 'Night'}
+            </button>
             <NavLink to="/">Dashboard</NavLink>
           </div>
         </nav>
