@@ -17,7 +17,7 @@ Open the row you need. Do not search the repo first. `docs/AGENT_CONTEXT.md` is 
 | Check list | `backend/app/geo/checks/__init__.py` | `FAST_CHECKS`, `DEEP_CHECKS` |
 | Run one tier, timeouts | `backend/app/geo/registry.py` | `run_tier`, `run_check` |
 | Shared page data | `backend/app/geo/context.py` | `AuditContext`, `load_raw_context` |
-| 10-minute result store | `backend/app/geo/cache.py` | `InMemoryTTLCache` |
+| Per-check result store | `backend/app/geo/cache.py` | `InMemoryTTLCache.get`, `put` |
 | Deep job polling | `backend/app/geo/jobs.py` | `attach_geo`, `get_job` |
 | Thresholds and user agents | `backend/app/geo/config.py` | `AI_BOT_USER_AGENTS` |
 | Citability | `backend/app/geo/checks/llm_citability_review.py` | `LlmCitabilityReviewCheck` |

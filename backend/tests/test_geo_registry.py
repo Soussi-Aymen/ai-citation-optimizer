@@ -77,7 +77,7 @@ async def test_error_does_not_fail_other_checks():
 
 def test_cache_hit_miss_and_ttl():
     cache = InMemoryTTLCache(ttl_s=0.05)
-    assert cache.get("https://Example.com/a/") is None
+    assert cache.get("https://Example.com/a/", "x") is None
     result = CheckResult(
         id="x",
         name="X",
@@ -86,12 +86,22 @@ def test_cache_hit_miss_and_ttl():
         evidence={},
         fix_hint="hint",
     )
-    cache.set("https://Example.com/a/", [result])
-    cached = cache.get("https://example.com/a")
+    cache.put("https://Example.com/a/", result)
+    cached = cache.get("https://example.com/a", "x")
     assert cached is not None
-    assert cached[0].id == "x"
+    assert cached.id == "x"
     time.sleep(0.06)
-    assert cache.get("https://example.com/a") is None
+    assert cache.get("https://example.com/a", "x") is None
+
+
+def test_cache_skips_skipped_and_error():
+    cache = InMemoryTTLCache()
+    for status in (CheckStatus.SKIPPED, CheckStatus.ERROR):
+        cache.put(
+            "https://example.com/a",
+            CheckResult(id="cite", name="Cite", tier="deep", status=status),
+        )
+        assert cache.get("https://example.com/a", "cite") is None
 
 
 def test_normalize_url_drops_fragment_and_trailing_slash():

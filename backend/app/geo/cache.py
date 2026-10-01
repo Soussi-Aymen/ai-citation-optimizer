@@ -2,9 +2,10 @@ import time
 from typing import Protocol
 from urllib.parse import urlsplit, urlunsplit
 
-from .models import CheckResult
+from .models import CheckResult, CheckStatus
 
 DEFAULT_TTL_S = 600
+CACHEABLE_STATUSES = frozenset({CheckStatus.PASS, CheckStatus.WARN, CheckStatus.FAIL})
 
 
 def normalize_url(url: str) -> str:
@@ -17,27 +18,33 @@ def normalize_url(url: str) -> str:
     return urlunsplit((scheme, host, path, parsed.query, ""))
 
 
-class CheckResultCache(Protocol):
-    def get(self, url: str) -> list[CheckResult] | None: ...
+def _cache_key(url: str, check_id: str) -> tuple[str, str]:
+    return (normalize_url(url), check_id)
 
-    def set(self, url: str, results: list[CheckResult]) -> None: ...
+
+class CheckResultCache(Protocol):
+    def get(self, url: str, check_id: str) -> CheckResult | None: ...
+
+    def put(self, url: str, result: CheckResult) -> None: ...
 
 
 class InMemoryTTLCache:
     def __init__(self, ttl_s: float = DEFAULT_TTL_S):
         self.ttl_s = ttl_s
-        self._store: dict[str, tuple[float, list[CheckResult]]] = {}
+        self._store: dict[tuple[str, str], tuple[float, CheckResult]] = {}
 
-    def get(self, url: str) -> list[CheckResult] | None:
-        key = normalize_url(url)
+    def get(self, url: str, check_id: str) -> CheckResult | None:
+        key = _cache_key(url, check_id)
         item = self._store.get(key)
         if item is None:
             return None
-        stored_at, results = item
+        stored_at, result = item
         if time.monotonic() - stored_at > self.ttl_s:
             del self._store[key]
             return None
-        return results
+        return result
 
-    def set(self, url: str, results: list[CheckResult]) -> None:
-        self._store[normalize_url(url)] = (time.monotonic(), results)
+    def put(self, url: str, result: CheckResult) -> None:
+        if result.status not in CACHEABLE_STATUSES:
+            return
+        self._store[_cache_key(url, result.id)] = (time.monotonic(), result)

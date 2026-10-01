@@ -53,19 +53,99 @@ def test_extract_uncited_prompts_ignores_cited_and_empty():
     assert prompts == ["missing citation", "plain prompt"]
 
 
+class CountingCheck(GeoCheck):
+    evidence_model = _Evidence
+
+    def __init__(self, check_id: str, tier: str, status: CheckStatus):
+        self.id = check_id
+        self.name = check_id
+        self.tier = tier
+        self.timeout_s = 1
+        self.status = status
+        self.calls = 0
+
+    async def run(self, ctx: AuditContext):
+        self.calls += 1
+        return self.finish(self.status, _Evidence(), "")
+
+
+def _tiers(fast: list, deep: list):
+    def checks_for_tier(tier: str):
+        return fast if tier == "fast" else deep
+
+    return checks_for_tier
+
+
 @pytest.mark.asyncio
-async def test_cache_hit_returns_fast_and_deep_without_a_job():
+async def test_cache_hit_returns_fast_and_deep_without_a_job(monkeypatch):
     reset_jobs()
-    cached = CheckResult(
-        id="ai_bot_access",
-        name="AI bot access",
-        tier="fast",
-        status=CheckStatus.PASS,
+    fast = CountingCheck("fast_ok", "fast", CheckStatus.PASS)
+    deep = CountingCheck("deep_ok", "deep", CheckStatus.PASS)
+    monkeypatch.setattr("app.geo.jobs.checks_for_tier", _tiers([fast], [deep]))
+    cache.put(
+        "https://example.com/page",
+        CheckResult(id="fast_ok", name="fast_ok", tier="fast", status=CheckStatus.PASS),
     )
-    cache.set("https://example.com/page", [cached])
+    cache.put(
+        "https://example.com/page",
+        CheckResult(id="deep_ok", name="deep_ok", tier="deep", status=CheckStatus.PASS),
+    )
     payload = await attach_geo(AuditContext(url="https://example.com/page"))
     assert payload["geo_job_id"] is None
-    assert payload["geo_checks"][0]["id"] == "ai_bot_access"
+    assert {item["id"] for item in payload["geo_checks"]} == {"fast_ok", "deep_ok"}
+    assert fast.calls == 0
+    assert deep.calls == 0
+
+
+@pytest.mark.asyncio
+async def test_skipped_deep_check_is_rerun_and_pass_fast_is_not(monkeypatch):
+    reset_jobs()
+    fast = CountingCheck("fast_ok", "fast", CheckStatus.PASS)
+    cite = CountingCheck("llm_citability_review", "deep", CheckStatus.SKIPPED)
+    monkeypatch.setattr("app.geo.jobs.checks_for_tier", _tiers([fast], [cite]))
+    first = await attach_geo(AuditContext(url="https://example.com/page"))
+    assert first["geo_job_id"] is not None
+    for _ in range(30):
+        job = get_job(first["geo_job_id"])
+        if job and job["status"] == "done":
+            break
+        await asyncio.sleep(0.02)
+    assert cite.calls == 1
+    assert cache.get("https://example.com/page", "fast_ok") is not None
+    assert cache.get("https://example.com/page", "llm_citability_review") is None
+
+    second = await attach_geo(AuditContext(url="https://example.com/page"))
+    assert second["geo_job_id"] is not None
+    for _ in range(30):
+        job = get_job(second["geo_job_id"])
+        if job and job["status"] == "done":
+            break
+        await asyncio.sleep(0.02)
+    assert fast.calls == 1
+    assert cite.calls == 2
+
+
+@pytest.mark.asyncio
+async def test_missing_deep_check_is_the_only_job(monkeypatch):
+    reset_jobs()
+    fast = CountingCheck("fast_ok", "fast", CheckStatus.PASS)
+    deep = CountingCheck("deep_ok", "deep", CheckStatus.PASS)
+    monkeypatch.setattr("app.geo.jobs.checks_for_tier", _tiers([fast], [deep]))
+    cache.put(
+        "https://example.com/page",
+        CheckResult(id="fast_ok", name="fast_ok", tier="fast", status=CheckStatus.PASS),
+    )
+    payload = await attach_geo(AuditContext(url="https://example.com/page"))
+    assert payload["geo_job_id"] is not None
+    assert fast.calls == 0
+    assert {item["id"] for item in payload["geo_checks"]} == {"fast_ok"}
+    for _ in range(30):
+        job = get_job(payload["geo_job_id"])
+        if job and job["status"] == "done":
+            break
+        await asyncio.sleep(0.02)
+    assert deep.calls == 1
+    assert {item["id"] for item in job["checks"]} == {"deep_ok"}
 
 
 @pytest.mark.asyncio
