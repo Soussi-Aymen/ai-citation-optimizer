@@ -3,13 +3,16 @@ import json
 import os
 import time
 
-import httpx
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
 from playwright.async_api import async_playwright
 
+from .geo.context import load_raw_context
+from .geo.js_dependency import js_dependency
+from .geo.registry import run_tier
+from .geo.schema_type import expected_schema_type
 from .llms_txt_analyzer import build_llms_txt_template, extract_domain, probe_llms_txt
 
 load_dotenv()
@@ -24,20 +27,25 @@ def _infer_product_name(url: str) -> str:
 
 class CrawlabilityAgent:
     def __init__(self):
-        self.model = ChatGoogleGenerativeAI(
-            model="gemini-2.5-flash", google_api_key=GEMINI_API_KEY, temperature=0.7
-        )
+        self.model = None
+        if GEMINI_API_KEY:
+            self.model = ChatGoogleGenerativeAI(
+                model="gemini-2.5-flash",
+                google_api_key=GEMINI_API_KEY,
+                temperature=0.7,
+            )
 
     def build_fix_instructions(self, url: str) -> dict:
         """Returns structured instruction panel data — user-facing action plan, no automated fixes."""
         product_name = _infer_product_name(url)
+        schema_type = expected_schema_type(url)
 
         llms_checklist = (
             "Publish `/llms.txt` at your domain root and include this page "
             "(copy the llms.txt template below)"
         )
 
-        if "/products/" in url:
+        if schema_type == "Product":
             problem = "This product page is likely rendered in JavaScript. AI crawlers cannot read JS-rendered content — they only see an empty shell."
             checklist = [
                 llms_checklist,
@@ -45,7 +53,6 @@ class CrawlabilityAgent:
                 "Ensure the product name and description appear in plain HTML <h1> and <p> tags, not rendered by JavaScript",
                 f"Add a one-paragraph plain-text description of '{product_name}' that includes: what it is, who it's for, and how it differs from competitors like Apple and Samsung",
             ]
-            schema_type = "Product"
             json_ld = {
                 "@context": "https://schema.org",
                 "@type": "Product",
@@ -64,7 +71,7 @@ class CrawlabilityAgent:
                     },
                 },
             }
-        elif "/pages/" in url:
+        elif schema_type == "Organization":
             problem = "This page lacks structured entity information that AI engines use to understand your brand and surface it in responses."
             checklist = [
                 llms_checklist,
@@ -72,7 +79,6 @@ class CrawlabilityAgent:
                 "Verify all key brand information (founding year, products, mission) is written in plain HTML — not loaded via JS",
                 "Structure the page with proper heading hierarchy: one <h1> with the brand name, <h2> for each major section",
             ]
-            schema_type = "Organization"
             json_ld = {
                 "@context": "https://schema.org",
                 "@type": "Organization",
@@ -88,7 +94,7 @@ class CrawlabilityAgent:
                 "foundingDate": "2020",
                 "founder": {"@type": "Person", "name": "Carl Pei"},
             }
-        elif "/collections/" in url:
+        elif schema_type == "CollectionPage":
             problem = "Collection pages typically have thin content with no clear topic — AI engines skip them because there's nothing substantive to cite."
             checklist = [
                 llms_checklist,
@@ -96,7 +102,6 @@ class CrawlabilityAgent:
                 "Add JSON-LD CollectionPage schema to this page's <head> (copy the template below)",
                 "Link each product in this collection to its own product page with descriptive anchor text (not just 'View' or 'Shop Now')",
             ]
-            schema_type = "CollectionPage"
             collection_name = _infer_product_name(url)
             json_ld = {
                 "@context": "https://schema.org",
@@ -117,7 +122,6 @@ class CrawlabilityAgent:
                 "Ensure all key content is in plain HTML — not loaded via JavaScript frameworks",
                 "Add at least one paragraph of descriptive text that clearly explains what this page is about",
             ]
-            schema_type = "WebPage"
             json_ld = {
                 "@context": "https://schema.org",
                 "@type": "WebPage",
@@ -333,6 +337,11 @@ Based on this recommendation: '{action_text}', {task}""")
         )
         return response.content.strip()
 
+    async def _attach_fast_checks(self, payload: dict, audit_ctx) -> dict:
+        results = await run_tier(audit_ctx, "fast")
+        payload["geo_checks"] = [item.model_dump(mode="json") for item in results]
+        return payload
+
     async def fetch_and_analyze(
         self, url: str, competitor_data: str = "", skip_ai: bool = False
     ):
@@ -341,21 +350,16 @@ Based on this recommendation: '{action_text}', {task}""")
         start_time = time.time()
         signals = {}
 
-        async with httpx.AsyncClient() as client:
-            try:
-                logs.append("Phase 1: Deep Content Probe...")
-                headers = {
-                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
-                }
-                raw_response = await client.get(
-                    url, timeout=10.0, headers=headers, follow_redirects=True
-                )
-                raw_soup = BeautifulSoup(raw_response.text, "html.parser")
-                signals["raw_text_length"] = len(raw_soup.get_text())
-                logs.append(f"Probe successful ({signals['raw_text_length']} chars).")
-            except Exception as e:
-                logs.append(f"Probe Warning: {str(e)}")
-                signals["raw_text_length"] = 0
+        logs.append("Phase 1: Deep Content Probe...")
+        audit_ctx = await load_raw_context(url)
+        raw_soup = BeautifulSoup(audit_ctx.raw_html or "", "html.parser")
+        signals["raw_text_length"] = (
+            len(raw_soup.get_text()) if audit_ctx.raw_html else 0
+        )
+        if audit_ctx.raw_status is None:
+            logs.append("Probe Warning: raw fetch failed.")
+        else:
+            logs.append(f"Probe successful ({signals['raw_text_length']} chars).")
 
         domain = extract_domain(url)
         signals["domain"] = domain
@@ -471,15 +475,13 @@ Based on this recommendation: '{action_text}', {task}""")
                     signals["lcp_seconds"] = None
 
                 signals["load_time_ms"] = int((time.time() - start_time) * 1000)
-                signals["text_delta"] = len(rendered_text) - signals["raw_text_length"]
-
-                # JS Impact thresholds
-                if signals["text_delta"] > 2000:
-                    signals["js_impact"] = "CRITICAL"
-                elif signals["text_delta"] > 500:
-                    signals["js_impact"] = "MODERATE"
-                else:
-                    signals["js_impact"] = "LOW"
+                dependency = js_dependency(
+                    signals["raw_text_length"], len(rendered_text)
+                )
+                signals["text_delta"] = dependency["text_delta"]
+                signals["js_impact"] = dependency["js_impact"]
+                audit_ctx.rendered_html = rendered_html
+                audit_ctx.rendered_text = rendered_text
 
                 signals["has_json_ld"] = bool(
                     rendered_soup.find("script", type="application/ld+json")
@@ -493,13 +495,16 @@ Based on this recommendation: '{action_text}', {task}""")
                     signals.update(await llms_task)
                 except Exception:
                     pass
-                return {
-                    "error": True,
-                    "logs": logs,
-                    "message": f"Rendering failed: {str(e)}",
-                    "signals": signals,
-                    "guidance": self._generate_guidance(signals),
-                }
+                return await self._attach_fast_checks(
+                    {
+                        "error": True,
+                        "logs": logs,
+                        "message": f"Rendering failed: {str(e)}",
+                        "signals": signals,
+                        "guidance": self._generate_guidance(signals),
+                    },
+                    audit_ctx,
+                )
             finally:
                 if "browser" in locals():
                     await browser.close()
@@ -519,16 +524,19 @@ Based on this recommendation: '{action_text}', {task}""")
             logs.append(f"llms.txt probe warning: {str(e)}")
 
         if skip_ai:
-            return {
-                "performance_report": {"score": 0, "issues": [], "fixes": []},
-                "sitemap_audit": {"score": 0, "analysis": "", "improvements": []},
-                "competitive_analysis": {"competitor_edge": "", "gap_to_close": ""},
-                "ai_readiness": {"overall_score": 0, "estimated_impact": ""},
-                "logs": logs,
-                "signals": signals,
-                "guidance": self._generate_guidance(signals),
-                "execution_time_ms": int((time.time() - start_time) * 1000),
-            }
+            return await self._attach_fast_checks(
+                {
+                    "performance_report": {"score": 0, "issues": [], "fixes": []},
+                    "sitemap_audit": {"score": 0, "analysis": "", "improvements": []},
+                    "competitive_analysis": {"competitor_edge": "", "gap_to_close": ""},
+                    "ai_readiness": {"overall_score": 0, "estimated_impact": ""},
+                    "logs": logs,
+                    "signals": signals,
+                    "guidance": self._generate_guidance(signals),
+                    "execution_time_ms": int((time.time() - start_time) * 1000),
+                },
+                audit_ctx,
+            )
 
         logs.append("Phase 3: AI Audit Reasoning...")
         prompt = ChatPromptTemplate.from_template("""Perform a triple-track AI Citation Audit for: {url}.
@@ -560,15 +568,18 @@ Ensure the JSON is properly formatted and includes all keys.""")
             result["signals"] = signals
             result["guidance"] = self._generate_guidance(signals)
             result["execution_time_ms"] = int((time.time() - start_time) * 1000)
-            return result
+            return await self._attach_fast_checks(result, audit_ctx)
         except Exception as e:
             logs.append(f"Phase 3 Failed: {str(e)}")
-            return {
-                "error": True,
-                "logs": logs,
-                "message": str(e),
-                "signals": signals if "signals" in locals() else {},
-            }
+            return await self._attach_fast_checks(
+                {
+                    "error": True,
+                    "logs": logs,
+                    "message": str(e),
+                    "signals": signals if "signals" in locals() else {},
+                },
+                audit_ctx,
+            )
 
     async def audit_url(self, url: str, competitor_data: str = ""):
         return await self.fetch_and_analyze(url, competitor_data)
