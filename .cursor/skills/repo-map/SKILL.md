@@ -33,4 +33,4 @@ Open the row you need. Do not search the repo first. `docs/AGENT_CONTEXT.md` is 
 | Tests | `backend/tests/test_geo_*.py`, `frontend/src/components/GeoCheckMatrix.test.tsx` | |
 | Full check | `sh scripts/validate.sh` | |
 | Related-only pre-commit | `.husky/pre-commit` | |
-| CI | none yet | |
+| CI | `.github/workflows/ci.yml` | push and pull request |
