@@ -12,7 +12,7 @@ import { apiUrl } from './lib/api'
 import type { HealthResponse } from './types/api'
 import Dashboard from './pages/Dashboard'
 import PageDetail from './pages/PageDetail'
-import { Sparkles } from 'lucide-react'
+import { Moon, Sparkles, Sun } from 'lucide-react'
 import { applyTheme, readTheme, type ThemeName } from './lib/theme'
 
 interface NavLinkProps {
@@ -74,14 +74,20 @@ function App() {
             <h1 className="text-2xl font-bold tracking-tight text-slate-900">Citation Optimizer</h1>
           </div>
           <div className="flex items-center gap-2">
-            <button
-              type="button"
-              className="btn-secondary px-3 py-2 text-sm"
-              aria-pressed={theme === 'night'}
-              onClick={() => chooseTheme(theme === 'night' ? 'light' : 'night')}
-            >
-              {theme === 'night' ? 'Day' : 'Night'}
-            </button>
+            <label className="theme-switch">
+              <input
+                type="checkbox"
+                role="switch"
+                aria-label="Night mode"
+                checked={theme === 'night'}
+                onChange={(event) => chooseTheme(event.target.checked ? 'night' : 'light')}
+              />
+              <span className="theme-switch-track" aria-hidden="true">
+                <Sun className="theme-switch-sun" size={14} strokeWidth={2.25} />
+                <Moon className="theme-switch-moon" size={14} strokeWidth={2.25} />
+                <span className="theme-switch-thumb" />
+              </span>
+            </label>
             <NavLink to="/">Dashboard</NavLink>
           </div>
         </nav>
