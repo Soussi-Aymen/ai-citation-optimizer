@@ -249,7 +249,7 @@ const Dashboard = ({ peecServiceAvailable = null }: DashboardProps) => {
           <div className="flex gap-4">
             <div className="relative flex-1">
               <Search
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+                className="absolute top-1/2 left-4 -translate-y-1/2 text-slate-400"
                 size={20}
                 aria-hidden
               />
@@ -265,7 +265,7 @@ const Dashboard = ({ peecServiceAvailable = null }: DashboardProps) => {
                 onChange={(e) => setDomain(e.target.value)}
                 aria-describedby={error ? 'domain-error domain-hint' : 'domain-hint'}
                 aria-invalid={error ? true : undefined}
-                className="h-12 w-full rounded-lg border border-slate-200 bg-white pl-12 pr-4 text-base transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                className="h-12 w-full rounded-lg border border-slate-200 bg-white pr-4 pl-12 text-base transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                 required
               />
             </div>
@@ -354,7 +354,7 @@ const Dashboard = ({ peecServiceAvailable = null }: DashboardProps) => {
                 <h3 className="mb-6 text-xl font-bold text-slate-900">Growth Opportunity</h3>
                 <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
                   <div>
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                    <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">
                       CURRENT VISIBILITY
                     </span>
                     <div className="text-2xl font-black text-slate-900">
@@ -362,7 +362,7 @@ const Dashboard = ({ peecServiceAvailable = null }: DashboardProps) => {
                     </div>
                   </div>
                   <div>
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-blue-400">
+                    <span className="text-[10px] font-bold tracking-wider text-blue-400 uppercase">
                       TARGET VISIBILITY
                     </span>
                     <div className="flex items-center gap-2 text-2xl font-black text-blue-600">
@@ -371,7 +371,7 @@ const Dashboard = ({ peecServiceAvailable = null }: DashboardProps) => {
                     <p className="mt-1 text-[10px] text-slate-500">if top 3 actions completed</p>
                   </div>
                   <div>
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                    <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">
                       CURRENT CITATIONS
                     </span>
                     <div className="text-2xl font-black text-slate-900">
@@ -379,7 +379,7 @@ const Dashboard = ({ peecServiceAvailable = null }: DashboardProps) => {
                     </div>
                   </div>
                   <div>
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-blue-400">
+                    <span className="text-[10px] font-bold tracking-wider text-blue-400 uppercase">
                       TARGET CITATIONS
                     </span>
                     <div className="flex items-center gap-2 text-2xl font-black text-blue-600">
@@ -389,7 +389,7 @@ const Dashboard = ({ peecServiceAvailable = null }: DashboardProps) => {
                 </div>
 
                 <div className="mt-8 border-t border-blue-100 pt-8">
-                  <h4 className="mb-6 text-[10px] font-bold uppercase tracking-[0.2em] text-blue-500">
+                  <h4 className="mb-6 text-[10px] font-bold tracking-[0.2em] text-blue-500 uppercase">
                     WHERE COMPETITORS HAVE THE ADVANTAGE OVER YOU (last 30 days)
                   </h4>
                   <div className="space-y-4">
@@ -457,7 +457,7 @@ const Dashboard = ({ peecServiceAvailable = null }: DashboardProps) => {
                     <div className="mb-4 flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <span
-                          className={`rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-wider ${
+                          className={`rounded-full px-3 py-1 text-[10px] font-black tracking-wider uppercase ${
                             item.priority === 'HIGH'
                               ? 'bg-red-100 text-red-600'
                               : item.priority === 'MEDIUM'
@@ -480,7 +480,7 @@ const Dashboard = ({ peecServiceAvailable = null }: DashboardProps) => {
                     </p>
 
                     <div className="mb-6 rounded-lg bg-slate-50 p-4 ring-1 ring-slate-100">
-                      <h5 className="mb-3 text-xs font-bold uppercase tracking-widest text-slate-400">
+                      <h5 className="mb-3 text-xs font-bold tracking-widest text-slate-400 uppercase">
                         What to do:
                       </h5>
                       <ul className="space-y-3">
@@ -542,7 +542,7 @@ const Dashboard = ({ peecServiceAvailable = null }: DashboardProps) => {
                             {generatedContent[contentKey] && (
                               <div className="mt-4 rounded-lg border border-blue-100 bg-blue-50/50 p-4">
                                 <div className="mb-3 flex items-center justify-between">
-                                  <span className="text-[10px] font-bold uppercase tracking-widest text-blue-500">
+                                  <span className="text-[10px] font-bold tracking-widest text-blue-500 uppercase">
                                     GEMINI DRAFT
                                   </span>
                                   <button
@@ -563,7 +563,7 @@ const Dashboard = ({ peecServiceAvailable = null }: DashboardProps) => {
                                     {copiedContent[contentKey] ? 'Copied!' : 'Copy Draft'}
                                   </button>
                                 </div>
-                                <div className="whitespace-pre-wrap text-sm leading-relaxed text-slate-700">
+                                <div className="text-sm leading-relaxed whitespace-pre-wrap text-slate-700">
                                   {generatedContent[contentKey]}
                                 </div>
                               </div>
@@ -806,7 +806,7 @@ const Dashboard = ({ peecServiceAvailable = null }: DashboardProps) => {
                                       {row.score !== 'Good' && (
                                         <details className="disclosure mt-2 sm:mt-0">
                                           <summary
-                                            className={`motion-safe-scale inline-flex items-center gap-1.5 rounded-lg px-3 py-1 text-[10px] font-black uppercase tracking-tight transition-all ${
+                                            className={`motion-safe-scale inline-flex items-center gap-1.5 rounded-lg px-3 py-1 text-[10px] font-black tracking-tight uppercase transition-all ${
                                               row.score === 'Bad'
                                                 ? 'bg-red-50 text-red-600'
                                                 : 'bg-amber-50 text-amber-600'
@@ -962,7 +962,7 @@ const Dashboard = ({ peecServiceAvailable = null }: DashboardProps) => {
                                 </code>
                               </pre>
                             </div>
-                            <p className="mt-4 text-[10px] italic text-slate-400">
+                            <p className="mt-4 text-[10px] text-slate-400 italic">
                               Deploy at https://your-domain/llms.txt on the site you are analyzing —
                               not this tool.
                             </p>
@@ -992,7 +992,7 @@ const Dashboard = ({ peecServiceAvailable = null }: DashboardProps) => {
                                 </code>
                               </pre>
                             </div>
-                            <p className="mt-4 text-[10px] italic text-slate-400">
+                            <p className="mt-4 text-[10px] text-slate-400 italic">
                               Paste this into your website's &lt;head&gt; tag. Brand is set to
                               'Nothing' based on your profile.
                             </p>
@@ -1086,7 +1086,7 @@ const Dashboard = ({ peecServiceAvailable = null }: DashboardProps) => {
                   <div className="space-y-6">
                     <div className="flex items-center gap-3">
                       <span
-                        className={`rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-widest ${
+                        className={`rounded-full px-3 py-1 text-[10px] font-black tracking-widest uppercase ${
                           benchmarkData.tab_actions[activeTab].opportunity_score > 70
                             ? 'bg-red-100 text-red-600'
                             : benchmarkData.tab_actions[activeTab].opportunity_score > 40
@@ -1133,7 +1133,7 @@ const Dashboard = ({ peecServiceAvailable = null }: DashboardProps) => {
                               <summary className="text-xs font-bold text-slate-600">
                                 Generated content
                               </summary>
-                              <p className="mt-3 whitespace-pre-wrap text-xs leading-relaxed text-slate-600">
+                              <p className="mt-3 text-xs leading-relaxed whitespace-pre-wrap text-slate-600">
                                 {generatedContent[gapItem.id]}
                               </p>
                               <button

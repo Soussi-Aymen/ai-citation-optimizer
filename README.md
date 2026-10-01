@@ -178,7 +178,7 @@ uv sync
 uv run playwright install chromium
 uv run uvicorn app.main:app --reload --port 8000
 
-# Frontend — Node 20+ with pnpm
+# Frontend — Node 22+ with pnpm
 cd frontend
 corepack enable && pnpm install
 pnpm dev

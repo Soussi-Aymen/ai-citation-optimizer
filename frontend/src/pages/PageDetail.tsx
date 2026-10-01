@@ -166,7 +166,7 @@ const PageDetail = () => {
         <h1 className="mb-2 text-3xl font-extrabold tracking-tight text-slate-900">
           Technical Audit Report
         </h1>
-        <p className="break-all font-mono text-sm text-slate-500">{decodedUrl}</p>
+        <p className="font-mono text-sm break-all text-slate-500">{decodedUrl}</p>
       </header>
 
       {audit.signals && (
@@ -184,7 +184,7 @@ const PageDetail = () => {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {/* Load Time */}
             <div className="rounded-xl border border-slate-100 bg-slate-50 p-4 ring-1 ring-slate-100">
-              <div className="mb-2 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+              <div className="mb-2 flex items-center gap-2 text-[10px] font-bold tracking-widest text-slate-400 uppercase">
                 <Clock size={12} /> Load Time
               </div>
               <div
@@ -202,7 +202,7 @@ const PageDetail = () => {
 
             {/* JS Impact */}
             <div className="rounded-xl border border-slate-100 bg-slate-50 p-4 ring-1 ring-slate-100">
-              <div className="mb-2 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+              <div className="mb-2 flex items-center gap-2 text-[10px] font-bold tracking-widest text-slate-400 uppercase">
                 <Code2 size={12} /> JS Hydration
               </div>
               <div
@@ -216,7 +216,7 @@ const PageDetail = () => {
 
             {/* DOM Depth */}
             <div className="rounded-xl border border-slate-100 bg-slate-50 p-4 ring-1 ring-slate-100">
-              <div className="mb-2 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+              <div className="mb-2 flex items-center gap-2 text-[10px] font-bold tracking-widest text-slate-400 uppercase">
                 <Layers size={12} /> DOM Depth
               </div>
               <div className="text-2xl font-black text-slate-900">{audit.signals.dom_depth}</div>
@@ -224,7 +224,7 @@ const PageDetail = () => {
 
             {/* Structured Data */}
             <div className="rounded-xl border border-slate-100 bg-slate-50 p-4 ring-1 ring-slate-100">
-              <div className="mb-2 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+              <div className="mb-2 flex items-center gap-2 text-[10px] font-bold tracking-widest text-slate-400 uppercase">
                 <FileJson size={12} /> JSON-LD
               </div>
               <div className="flex items-center gap-2">
@@ -244,7 +244,7 @@ const PageDetail = () => {
 
             {/* LLM Discovery File */}
             <div className="rounded-xl border border-slate-100 bg-slate-50 p-4 ring-1 ring-slate-100">
-              <div className="mb-2 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+              <div className="mb-2 flex items-center gap-2 text-[10px] font-bold tracking-widest text-slate-400 uppercase">
                 <Globe size={12} /> llms.txt
               </div>
               <div className="flex items-center gap-2">
@@ -289,7 +289,7 @@ const PageDetail = () => {
                   <summary className="flex flex-wrap items-start justify-between gap-4">
                     <div className="flex-1">
                       <div className="mb-2 flex items-center gap-3">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-amber-800">
+                        <span className="text-[10px] font-black tracking-widest text-amber-800 uppercase">
                           {item.metric.toUpperCase()}
                         </span>
                         <span
@@ -314,7 +314,7 @@ const PageDetail = () => {
                   </summary>
 
                   <div className="mt-6 rounded-lg border border-amber-100 bg-white p-5 shadow-inner">
-                    <h4 className="mb-4 flex items-center gap-2 text-xs font-black uppercase tracking-widest text-amber-800">
+                    <h4 className="mb-4 flex items-center gap-2 text-xs font-black tracking-widest text-amber-800 uppercase">
                       <Target size={14} className="text-amber-600" aria-hidden /> Framework-Agnostic
                       Implementation
                     </h4>
@@ -354,7 +354,7 @@ const PageDetail = () => {
 
             <div className="space-y-6">
               <div>
-                <h4 className="mb-3 text-xs font-bold uppercase tracking-widest text-red-500">
+                <h4 className="mb-3 text-xs font-bold tracking-widest text-red-500 uppercase">
                   Critical Issues
                 </h4>
                 <ul className="space-y-2">
@@ -368,7 +368,7 @@ const PageDetail = () => {
               </div>
 
               <div>
-                <h4 className="mb-3 text-xs font-bold uppercase tracking-widest text-emerald-500">
+                <h4 className="mb-3 text-xs font-bold tracking-widest text-emerald-500 uppercase">
                   Recommended Fixes
                 </h4>
                 <ul className="space-y-2">
@@ -399,7 +399,7 @@ const PageDetail = () => {
               {audit.sitemap_audit.analysis}
             </div>
 
-            <h4 className="mb-3 text-xs font-bold uppercase tracking-widest text-blue-500">
+            <h4 className="mb-3 text-xs font-bold tracking-widest text-blue-500 uppercase">
               Roadmap for Visibility
             </h4>
             <div className="grid grid-cols-1 gap-2">
@@ -423,7 +423,7 @@ const PageDetail = () => {
           </h3>
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
             <div>
-              <h4 className="mb-2 text-xs font-bold uppercase tracking-widest text-indigo-500">
+              <h4 className="mb-2 text-xs font-bold tracking-widest text-indigo-500 uppercase">
                 Competitor Advantages
               </h4>
               <p className="text-sm leading-relaxed text-slate-600">
@@ -431,7 +431,7 @@ const PageDetail = () => {
               </p>
             </div>
             <div>
-              <h4 className="mb-2 text-xs font-bold uppercase tracking-widest text-indigo-500">
+              <h4 className="mb-2 text-xs font-bold tracking-widest text-indigo-500 uppercase">
                 Strategic Gap to Close
               </h4>
               <div className="rounded-xl border border-indigo-200 bg-white p-5 text-lg font-bold text-indigo-600 shadow-sm">
@@ -446,7 +446,7 @@ const PageDetail = () => {
       <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
         {audit.ai_readiness && (
           <div className="glass-card flex flex-col items-center justify-center py-8 text-center">
-            <span className="mb-1 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">
+            <span className="mb-1 text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase">
               AI READINESS
             </span>
             <div className="text-4xl font-black text-slate-900">
@@ -456,7 +456,7 @@ const PageDetail = () => {
         )}
         {audit.ai_readiness && (
           <div className="glass-card flex flex-col items-center justify-center border-emerald-100 bg-emerald-50 py-8 text-center">
-            <span className="mb-1 text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-500">
+            <span className="mb-1 text-[10px] font-bold tracking-[0.2em] text-emerald-500 uppercase">
               ESTIMATED IMPACT
             </span>
             <div className="text-4xl font-black text-emerald-600">
@@ -465,7 +465,7 @@ const PageDetail = () => {
           </div>
         )}
         <div className="glass-card flex flex-col items-center justify-center py-8 text-center">
-          <span className="mb-1 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">
+          <span className="mb-1 text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase">
             AUDIT SPEED
           </span>
           <div className="text-4xl font-black text-blue-500">{audit.execution_time_ms}ms</div>
@@ -474,7 +474,7 @@ const PageDetail = () => {
 
       {/* Audit Logs */}
       <div className="mt-8">
-        <h3 className="mb-4 text-xs font-bold uppercase tracking-widest text-slate-400">
+        <h3 className="mb-4 text-xs font-bold tracking-widest text-slate-400 uppercase">
           Execution Trace
         </h3>
         <div className="max-h-32 overflow-auto rounded-lg bg-slate-900 p-4 font-mono text-[10px] text-slate-500">
