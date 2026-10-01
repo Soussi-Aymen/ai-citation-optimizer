@@ -11,8 +11,8 @@ jobs:
       run:
         working-directory: backend
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v5
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10
         with:
           enable-cache: true
       - run: uv sync --frozen
@@ -26,15 +26,20 @@ jobs:
       run:
         working-directory: frontend
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
         with:
           version: 10.12.1
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: pnpm
           cache-dependency-path: frontend/pnpm-lock.yaml
+      # setup-node records this path before install. Create it so a missing
+      # store does not fail the job after the checks have passed.
+      - name: Create the pnpm store
+        working-directory: ${{ github.workspace }}
+        run: mkdir -p "$(pnpm store path --silent)"
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
       - run: pnpm format:check
