@@ -6,6 +6,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from .agent import CrawlabilityAgent
+from .geo.jobs import get_job
+from .geo.prompts import extract_uncited_prompts
 from .peec_client import PeecClient
 from .sitemap_analyzer import fetch_sitemap_urls, get_ai_citation_gaps
 
@@ -154,13 +156,36 @@ async def generate_fix(request: FixRequest):
         url = request.url
         fix_data = agent.build_fix_instructions(url)
 
-        audit_result = await agent.fetch_and_analyze(url, skip_ai=True)
+        prompts = None
+        if await peec.is_available():
+            domain = (
+                url.replace("https://", "")
+                .replace("http://", "")
+                .replace("www.", "")
+                .split("/")[0]
+            )
+            report = await peec.get_domain_report(domain)
+            prompts = extract_uncited_prompts(report)
+
+        audit_result = await agent.fetch_and_analyze(
+            url, skip_ai=True, uncited_prompts=prompts
+        )
         if "signals" in audit_result:
             fix_data["metrics"] = audit_result["signals"]
             fix_data["guidance"] = audit_result.get("guidance", [])
         else:
             fix_data["metrics"] = {}
             fix_data["guidance"] = []
+
+        checks = audit_result.get("geo_checks") or []
+        hints = [
+            item["fix_hint"]
+            for item in checks
+            if item.get("status") in ("fail", "warn") and item.get("fix_hint")
+        ]
+        fix_data["checklist"] = list(fix_data.get("checklist") or []) + hints
+        fix_data["geo_checks"] = checks
+        fix_data["geo_job_id"] = audit_result.get("geo_job_id")
 
         return fix_data
     except Exception as e:
@@ -470,13 +495,30 @@ async def audit_page(request: AuditRequest):
             .split("/")[0]
         )
         comp_context = ""
+        prompts = None
         if await peec.is_available():
             report = await peec.get_domain_report(domain)
             comp_context = json.dumps(report.get("data", [])[:3])
-        result = await agent.audit_url(request.url, competitor_data=comp_context)
-        return {"url": request.url, "analysis": result}
+            prompts = extract_uncited_prompts(report)
+        result = await agent.audit_url(
+            request.url, competitor_data=comp_context, uncited_prompts=prompts
+        )
+        return {
+            "url": request.url,
+            "analysis": result,
+            "geo_checks": result.get("geo_checks", []),
+            "geo_job_id": result.get("geo_job_id"),
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) from e
+
+
+@app.get("/api/geo-jobs/{job_id}")
+async def get_geo_job(job_id: str):
+    job = get_job(job_id)
+    if job is None:
+        raise HTTPException(status_code=404, detail="GEO job not found")
+    return job
 
 
 if __name__ == "__main__":

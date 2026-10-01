@@ -1,5 +1,5 @@
-"""Registered checks. Deep checks are appended by the deep-tier wave."""
+"""Registered GEO checks."""
 
-from .checks import FAST_CHECKS
+from .checks import DEEP_CHECKS, FAST_CHECKS
 
-CHECKS: list = list(FAST_CHECKS)
+CHECKS: list = list(FAST_CHECKS) + list(DEEP_CHECKS)

@@ -1,23 +1,20 @@
 import asyncio
 import json
-import os
 import time
 
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_google_genai import ChatGoogleGenerativeAI
 from playwright.async_api import async_playwright
 
 from .geo.context import load_raw_context
+from .geo.jobs import attach_geo
 from .geo.js_dependency import js_dependency
-from .geo.registry import run_tier
 from .geo.schema_type import expected_schema_type
+from .llm import make_chat_model
 from .llms_txt_analyzer import build_llms_txt_template, extract_domain, probe_llms_txt
 
 load_dotenv()
-
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 
 def _infer_product_name(url: str) -> str:
@@ -27,13 +24,7 @@ def _infer_product_name(url: str) -> str:
 
 class CrawlabilityAgent:
     def __init__(self):
-        self.model = None
-        if GEMINI_API_KEY:
-            self.model = ChatGoogleGenerativeAI(
-                model="gemini-2.5-flash",
-                google_api_key=GEMINI_API_KEY,
-                temperature=0.7,
-            )
+        self.model = make_chat_model(0.7)
 
     def build_fix_instructions(self, url: str) -> dict:
         """Returns structured instruction panel data — user-facing action plan, no automated fixes."""
@@ -331,6 +322,8 @@ class CrawlabilityAgent:
         prompt = ChatPromptTemplate.from_template("""You are a {role} at Nothing Technology (the phone brand by Carl Pei, competing with Apple and Samsung).
 Based on this recommendation: '{action_text}', {task}""")
 
+        if self.model is None:
+            raise RuntimeError("OPEN_ROUTE_API_KEY is not set")
         chain = prompt | self.model
         response = await chain.ainvoke(
             {"role": role, "action_text": action_text, "task": task}
@@ -338,20 +331,24 @@ Based on this recommendation: '{action_text}', {task}""")
         return response.content.strip()
 
     async def _attach_fast_checks(self, payload: dict, audit_ctx) -> dict:
-        results = await run_tier(audit_ctx, "fast")
-        payload["geo_checks"] = [item.model_dump(mode="json") for item in results]
+        payload.update(await attach_geo(audit_ctx))
         return payload
 
     async def fetch_and_analyze(
-        self, url: str, competitor_data: str = "", skip_ai: bool = False
+        self,
+        url: str,
+        competitor_data: str = "",
+        skip_ai: bool = False,
+        uncited_prompts: list[str] | None = None,
     ):
-        """Deep technical audit using Playwright and Gemini."""
+        """Deep technical audit using Playwright and OpenRouter."""
         logs = []
         start_time = time.time()
         signals = {}
 
         logs.append("Phase 1: Deep Content Probe...")
         audit_ctx = await load_raw_context(url)
+        audit_ctx.uncited_prompts = uncited_prompts
         raw_soup = BeautifulSoup(audit_ctx.raw_html or "", "html.parser")
         signals["raw_text_length"] = (
             len(raw_soup.get_text()) if audit_ctx.raw_html else 0
@@ -551,6 +548,8 @@ Return ONLY valid JSON: {{
 Ensure the JSON is properly formatted and includes all keys.""")
 
         try:
+            if self.model is None:
+                raise RuntimeError("OPEN_ROUTE_API_KEY is not set")
             chain = prompt | self.model
             response = await chain.ainvoke(
                 {
@@ -581,5 +580,12 @@ Ensure the JSON is properly formatted and includes all keys.""")
                 audit_ctx,
             )
 
-    async def audit_url(self, url: str, competitor_data: str = ""):
-        return await self.fetch_and_analyze(url, competitor_data)
+    async def audit_url(
+        self,
+        url: str,
+        competitor_data: str = "",
+        uncited_prompts: list[str] | None = None,
+    ):
+        return await self.fetch_and_analyze(
+            url, competitor_data, uncited_prompts=uncited_prompts
+        )

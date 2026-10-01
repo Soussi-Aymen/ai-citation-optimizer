@@ -12,6 +12,8 @@ alwaysApply: false
 backend/app/
   main.py              # routes only — orchestration, no heavy logic
   agent.py             # CrawlabilityAgent — Playwright + guidance
+  llm.py               # OpenRouter ChatOpenAI factory
+  geo/                 # check registry, context, cache, deep jobs
   llms_txt_analyzer.py # /llms.txt probe + template
   sitemap_analyzer.py  # sitemap fetch + citation gaps
   peec_client.py       # Peec AI API client
@@ -27,9 +29,10 @@ backend/tests/         # pytest-style tests
 
 ## Key flows
 
-1. `POST /api/audit` → `CrawlabilityAgent.fetch_and_analyze`
-2. `POST /api/generate-fix` → `build_fix_instructions` + live metrics + `llms_txt_template`
-3. `probe_llms_txt` runs **in parallel** with Playwright inside `fetch_and_analyze`
+1. `POST /api/audit` → `CrawlabilityAgent.fetch_and_analyze` (fast GEO checks + `geo_job_id`)
+2. `GET /api/geo-jobs/{job_id}` → partial deep checks from `geo/jobs.py`
+3. `POST /api/generate-fix` → `build_fix_instructions` + live metrics + `llms_txt_template`
+4. `probe_llms_txt` runs **in parallel** with Playwright inside `fetch_and_analyze`
 
 ## Tests
 
