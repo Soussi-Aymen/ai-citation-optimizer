@@ -48,3 +48,13 @@ class InMemoryTTLCache:
         if result.status not in CACHEABLE_STATUSES:
             return
         self._store[_cache_key(url, result.id)] = (time.monotonic(), result)
+
+    def prune(self) -> None:
+        now = time.monotonic()
+        expired = [
+            key
+            for key, (stored_at, _result) in self._store.items()
+            if now - stored_at > self.ttl_s
+        ]
+        for key in expired:
+            del self._store[key]

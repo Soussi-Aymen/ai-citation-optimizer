@@ -1,4 +1,5 @@
 import asyncio
+import time
 
 import pytest
 from pydantic import BaseModel
@@ -222,6 +223,52 @@ async def test_generate_fix_appends_fail_and_warn_hints(
         "Shorten the redirect chain",
     ]
     assert data["geo_job_id"] == "job-2"
+
+
+@pytest.mark.asyncio
+async def test_finished_job_expires_with_its_ttl(monkeypatch):
+    reset_jobs()
+    monkeypatch.setattr(jobs_module, "JOB_STATE_TTL_S", 0.05)
+    jobs_module._jobs["old"] = {
+        "id": "old",
+        "status": "done",
+        "checks": [],
+        "fast": [],
+        "created_at": time.monotonic() - 1,
+    }
+    assert get_job("old") is None
+
+
+def test_oldest_job_is_evicted_past_the_cap(monkeypatch):
+    reset_jobs()
+    monkeypatch.setattr(jobs_module, "MAX_JOBS", 2)
+    now = time.monotonic()
+    for index, stamp in enumerate((now - 3, now - 2, now - 1)):
+        jobs_module._jobs[str(index)] = {
+            "id": str(index),
+            "status": "done",
+            "checks": [],
+            "fast": [],
+            "created_at": stamp,
+        }
+    jobs_module.sweep_jobs()
+    assert "0" not in jobs_module._jobs
+    assert set(jobs_module._jobs) == {"1", "2"}
+
+
+def test_expired_check_result_is_not_reused():
+    reset_jobs()
+    result = CheckResult(
+        id="fast_ok", name="fast_ok", tier="fast", status=CheckStatus.PASS
+    )
+    cache.put("https://example.com/page", result)
+    stored = cache._store[("https://example.com/page", "fast_ok")]
+    cache._store[("https://example.com/page", "fast_ok")] = (
+        time.monotonic() - 10_000,
+        stored[1],
+    )
+    cache.prune()
+    assert cache.get("https://example.com/page", "fast_ok") is None
 
 
 @pytest.mark.asyncio
