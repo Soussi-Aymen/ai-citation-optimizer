@@ -113,33 +113,79 @@ async def test_citability_skips_when_the_api_key_is_missing(monkeypatch):
     )
     result = await LlmCitabilityReviewCheck().run(ctx)
     assert result.status == CheckStatus.SKIPPED
-    assert result.evidence["reason"] == "missing_api_key"
+    assert result.evidence["reason"] == "API key not configured"
     assert result.evidence["questions"]
 
 
-@pytest.mark.asyncio
-async def test_citability_skips_on_rate_limit_without_retry(monkeypatch):
-    calls = {"n": 0}
+def _rate_limit(retry_after: str | None = None):
+    error = Exception("429")
+    error.status_code = 429
+    if retry_after is not None:
+        error.headers = {"retry-after": retry_after}
+    return error
 
-    class RateLimited:
-        def with_structured_output(self, _schema):
-            return self
 
-        async def ainvoke(self, _prompt):
-            calls["n"] += 1
-            error = Exception("429")
-            error.status_code = 429
-            raise error
+class _ScriptedModel:
+    def __init__(self, outcomes):
+        self.outcomes = list(outcomes)
+        self.calls = 0
 
+    def with_structured_output(self, _schema):
+        return self
+
+    async def ainvoke(self, _prompt):
+        self.calls += 1
+        outcome = self.outcomes.pop(0)
+        if isinstance(outcome, Exception):
+            raise outcome
+        return outcome
+
+
+def _patch_model(monkeypatch, model):
     monkeypatch.setattr(
         "app.geo.checks.llm_citability_review.make_chat_model",
-        lambda _temperature: RateLimited(),
+        lambda temperature: model if temperature == 0 else None,
     )
-    ctx = AuditContext(url="https://example.com/page", raw_html="<h1>Widget</h1>")
-    result = await LlmCitabilityReviewCheck().run(ctx)
+
+
+@pytest.mark.asyncio
+async def test_citability_retries_429_then_succeeds(monkeypatch):
+    model = _ScriptedModel(
+        [
+            _rate_limit("0"),
+            CitabilityReview(answerable=True, missing_points=[], fix_hint=""),
+        ]
+    )
+    _patch_model(monkeypatch, model)
+    result = await LlmCitabilityReviewCheck().run(
+        AuditContext(url="https://example.com/page", raw_html="<h1>Widget</h1>")
+    )
+    assert result.status == CheckStatus.PASS
+    assert model.calls == 2
+
+
+@pytest.mark.asyncio
+async def test_citability_skips_when_429_persists(monkeypatch):
+    model = _ScriptedModel([_rate_limit("0"), _rate_limit("0")])
+    _patch_model(monkeypatch, model)
+    result = await LlmCitabilityReviewCheck().run(
+        AuditContext(url="https://example.com/page", raw_html="<h1>Widget</h1>")
+    )
     assert result.status == CheckStatus.SKIPPED
-    assert result.evidence["reason"] == "rate_limited"
-    assert calls["n"] == 1
+    assert result.evidence["reason"] == "model rate limited, retry later"
+    assert model.calls == 2
+
+
+@pytest.mark.asyncio
+async def test_citability_does_not_retry_when_retry_after_exceeds_timeout(monkeypatch):
+    model = _ScriptedModel([_rate_limit("30")])
+    _patch_model(monkeypatch, model)
+    result = await LlmCitabilityReviewCheck().run(
+        AuditContext(url="https://example.com/page", raw_html="<h1>Widget</h1>")
+    )
+    assert result.status == CheckStatus.SKIPPED
+    assert result.evidence["reason"] == "model rate limited, retry later"
+    assert model.calls == 1
 
 
 @pytest.mark.asyncio

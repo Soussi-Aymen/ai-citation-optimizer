@@ -1,4 +1,9 @@
-"""Structured citability review. Missing key or HTTP 429 skips without retry."""
+"""Structured citability review. One retry on 429 or a transient network error."""
+
+import asyncio
+import time
+from datetime import datetime, timezone
+from email.utils import parsedate_to_datetime
 
 from bs4 import BeautifulSoup
 from pydantic import BaseModel, Field
@@ -7,6 +12,19 @@ from ...llm import make_chat_model
 from ..base import GeoCheck
 from ..context import AuditContext
 from ..models import CheckResult, CheckStatus
+
+# Leave at least this long for the second model call after Retry-After.
+_MIN_RETRY_BUDGET_S = 1.0
+_RATE_LIMIT_REASON = "model rate limited, retry later"
+_MISSING_KEY_REASON = "API key not configured"
+_NETWORK_REASON = "temporary network error, retry later"
+_TRANSIENT_ERRORS = {
+    "APIConnectionError",
+    "APITimeoutError",
+    "ConnectError",
+    "NetworkError",
+    "TimeoutException",
+}
 
 
 class CitabilityReview(BaseModel):
@@ -31,30 +49,33 @@ class LlmCitabilityReviewCheck(GeoCheck):
 
     async def run(self, ctx: AuditContext) -> CheckResult:
         questions = ctx.uncited_prompts or _questions_from_html(ctx.raw_html or "")
+        started = time.monotonic()
         model = make_chat_model(0)
         if model is None:
-            return self.finish(
-                CheckStatus.SKIPPED,
-                CitabilityEvidence(questions=questions, reason="missing_api_key"),
-                "Set OPEN_ROUTE_API_KEY to review whether this page answers citation questions.",
-            )
+            return self._skipped(questions, _MISSING_KEY_REASON)
         text = (ctx.rendered_text or _visible_text(ctx.raw_html or ""))[:6000]
-        try:
-            structured = model.with_structured_output(CitabilityReview)
-            review = await structured.ainvoke(
-                "Review whether this page can be cited for the questions. "
-                "Return the structured fields only.\n"
-                "Questions:\n- " + "\n- ".join(questions) + "\n\n"
-                f"Page text:\n{text}"
-            )
-        except Exception as exc:
-            if _is_rate_limit(exc):
-                return self.finish(
-                    CheckStatus.SKIPPED,
-                    CitabilityEvidence(questions=questions, reason="rate_limited"),
-                    "Citability review was skipped because the model rate limit was reached.",
-                )
-            raise
+        prompt = (
+            "Review whether this page can be cited for the questions. "
+            "Return the structured fields only.\n"
+            "Questions:\n- " + "\n- ".join(questions) + "\n\n"
+            f"Page text:\n{text}"
+        )
+        structured = model.with_structured_output(CitabilityReview)
+        review = None
+        for attempt in range(2):
+            try:
+                review = await structured.ainvoke(prompt)
+                break
+            except Exception as exc:
+                retryable = _is_rate_limit(exc) or _is_transient(exc)
+                if not retryable:
+                    raise
+                if attempt == 1 or not _retry_fits(exc, started, self.timeout_s):
+                    reason = (
+                        _RATE_LIMIT_REASON if _is_rate_limit(exc) else _NETWORK_REASON
+                    )
+                    return self._skipped(questions, reason)
+                await asyncio.sleep(_retry_after_seconds(exc))
         if not isinstance(review, CitabilityReview):
             review = CitabilityReview.model_validate(review)
         evidence = CitabilityEvidence(
@@ -69,6 +90,52 @@ class LlmCitabilityReviewCheck(GeoCheck):
             review.fix_hint or "Add a direct answer for each question in the main HTML."
         )
         return self.finish(status, evidence, hint)
+
+    def _skipped(self, questions: list[str], reason: str) -> CheckResult:
+        hint = (
+            "Set OPEN_ROUTE_API_KEY to review whether this page answers citation questions."
+            if reason == _MISSING_KEY_REASON
+            else "Citability review was skipped. Retry this audit in a moment."
+        )
+        return self.finish(
+            CheckStatus.SKIPPED,
+            CitabilityEvidence(questions=questions, reason=reason),
+            hint,
+        )
+
+
+def _retry_fits(exc: Exception, started: float, timeout_s: float) -> bool:
+    delay = _retry_after_seconds(exc)
+    remaining = timeout_s - (time.monotonic() - started)
+    return remaining >= delay + _MIN_RETRY_BUDGET_S
+
+
+def _retry_after_seconds(exc: Exception) -> float:
+    raw = _header(exc, "retry-after")
+    if raw is None:
+        return 0.0
+    try:
+        return max(0.0, float(raw))
+    except ValueError:
+        pass
+    try:
+        when = parsedate_to_datetime(raw)
+    except (TypeError, ValueError):
+        return 0.0
+    if when.tzinfo is None:
+        when = when.replace(tzinfo=timezone.utc)
+    return max(0.0, (when - datetime.now(timezone.utc)).total_seconds())
+
+
+def _header(exc: Exception, name: str) -> str | None:
+    response = getattr(exc, "response", None)
+    headers = getattr(response, "headers", None) or getattr(exc, "headers", None)
+    if headers is None:
+        return None
+    value = headers.get(name) or headers.get(name.title())
+    if value is None:
+        return None
+    return str(value)
 
 
 def _questions_from_html(html: str) -> list[str]:
@@ -94,3 +161,19 @@ def _is_rate_limit(exc: Exception) -> bool:
     if getattr(response, "status_code", None) == 429:
         return True
     return "429" in str(exc)
+
+
+def _is_transient(exc: Exception) -> bool:
+    return type(exc).__name__ in _TRANSIENT_ERRORS or any(
+        type(item).__name__ in _TRANSIENT_ERRORS for item in _causes(exc)
+    )
+
+
+def _causes(exc: Exception):
+    current = exc
+    seen: set[int] = set()
+    while current is not None and id(current) not in seen:
+        seen.add(id(current))
+        current = current.__cause__ or current.__context__
+        if current is not None:
+            yield current

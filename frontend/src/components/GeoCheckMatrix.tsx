@@ -38,6 +38,9 @@ function CheckGroup({
                   {status.mark} {status.label}
                 </div>
               </div>
+              {check.status === 'skipped' && typeof check.evidence?.reason === 'string' && (
+                <p className="mt-1 text-xs text-slate-600">{check.evidence.reason}</p>
+              )}
               {check.fix_hint && check.status !== 'pass' && (
                 <p className="mt-1 text-xs text-slate-600">{check.fix_hint}</p>
               )}

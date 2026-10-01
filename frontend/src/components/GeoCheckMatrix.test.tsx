@@ -31,6 +31,24 @@ describe('GeoCheckMatrix', () => {
     expect(screen.getByText('Allow GPTBot in robots.txt')).toBeInTheDocument()
   })
 
+  it('shows the skip reason for a skipped deep check', () => {
+    render(
+      <GeoCheckMatrix
+        checks={[
+          {
+            id: 'llm_citability_review',
+            name: 'LLM citability review',
+            tier: 'deep',
+            status: 'skipped',
+            evidence: { reason: 'model rate limited, retry later' },
+          },
+        ]}
+        deepLoading={false}
+      />,
+    )
+    expect(screen.getByText('model rate limited, retry later')).toBeInTheDocument()
+  })
+
   it('shows a busy loading state while deep checks are still running', () => {
     const { container } = render(<GeoCheckMatrix checks={[fast]} deepLoading />)
     expect(container.querySelector('[aria-busy="true"]')).toBeTruthy()
