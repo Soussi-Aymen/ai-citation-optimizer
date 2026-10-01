@@ -172,12 +172,11 @@ Every `git commit` then runs `sh scripts/validate.sh`. Skip once: `git commit --
 For faster hot-reload iteration, you can run services natively. This path is **not required** for normal use.
 
 ```bash
-# Backend — Python 3.10+ with venv
+# Backend — Python 3.10+ with uv
 cd backend
-python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt -r requirements-dev.txt
-playwright install chromium
-uvicorn app.main:app --reload --port 8000
+uv sync
+uv run playwright install chromium
+uv run uvicorn app.main:app --reload --port 8000
 
 # Frontend — Node 20+ with pnpm
 cd frontend

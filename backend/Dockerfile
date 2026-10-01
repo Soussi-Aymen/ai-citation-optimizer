@@ -1,10 +1,17 @@
 # Use the required Playwright version to match the library
 FROM mcr.microsoft.com/playwright/python:v1.48.0-jammy
 
-# Environment variables for optimal performance
+COPY --from=ghcr.io/astral-sh/uv:0.11.24 /uv /uvx /bin/
+
+# Environment variables for optimal performance.
+# The venv lives outside /app so the dev bind mount does not hide it.
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+    PLAYWRIGHT_BROWSERS_PATH=/ms-playwright \
+    UV_PROJECT_ENVIRONMENT=/opt/venv \
+    UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy \
+    PATH="/opt/venv/bin:$PATH"
 
 WORKDIR /app
 
@@ -18,9 +25,10 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# 2. Install Python dependencies (incl. dev tools for containerized lint/test)
-COPY requirements.txt requirements-dev.txt ./
-RUN pip install --no-cache-dir -r requirements.txt -r requirements-dev.txt
+# 2. Install Python dependencies with uv (runtime + dev tools for lint/test)
+COPY pyproject.toml uv.lock ./
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen
 
 # 3. Copy code
 COPY . .

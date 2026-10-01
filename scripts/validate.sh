@@ -43,7 +43,7 @@ run_related_tests() {
   while IFS= read -r file; do
     [ -n "$file" ] || continue
     case "$file" in
-      backend/pyproject.toml|backend/requirements.txt|backend/requirements-dev.txt|backend/tests/conftest.py|backend/Dockerfile)
+      backend/pyproject.toml|backend/uv.lock|backend/tests/conftest.py|backend/Dockerfile|backend/Dockerfile.prod)
         backend_all=true
         ;;
       backend/tests/*.py)

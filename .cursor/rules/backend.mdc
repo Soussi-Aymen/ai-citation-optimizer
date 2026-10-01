@@ -20,7 +20,7 @@ backend/tests/         # pytest-style tests
 
 ## Conventions
 
-- Pin deps in `requirements.txt`; Docker image installs runtime + dev deps
+- Pin deps in `pyproject.toml` and `uv.lock`; Docker installs them with `uv sync`
 - Lint/format: `ruff check` / `ruff format` (config in `pyproject.toml`)
 - Playwright version must match Docker image (`playwright==1.48.0`)
 - Keep business logic in module files, not `main.py`
