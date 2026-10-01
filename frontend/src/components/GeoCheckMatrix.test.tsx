@@ -49,6 +49,40 @@ describe('GeoCheckMatrix', () => {
     expect(screen.getByText('model rate limited, retry later')).toBeInTheDocument()
   })
 
+  it('shows mobile parity and mobile render with the same status marks', () => {
+    render(
+      <GeoCheckMatrix
+        checks={[
+          {
+            id: 'mobile_parity',
+            name: 'Mobile content parity',
+            tier: 'fast',
+            status: 'fail',
+            fix_hint: 'Serve the same main content to mobile visitors, including the H1.',
+          },
+          {
+            id: 'mobile_render',
+            name: 'Mobile rendered content',
+            tier: 'deep',
+            status: 'warn',
+            fix_hint: 'Remove or delay interstitials that cover the page.',
+          },
+        ]}
+        deepLoading={false}
+      />,
+    )
+    expect(screen.getByText('Mobile content parity')).toBeInTheDocument()
+    expect(screen.getByText('Mobile rendered content')).toBeInTheDocument()
+    expect(screen.getByText(/Fail/)).toBeInTheDocument()
+    expect(screen.getByText(/Warn/)).toBeInTheDocument()
+    expect(
+      screen.getByText('Serve the same main content to mobile visitors, including the H1.'),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText('Remove or delay interstitials that cover the page.'),
+    ).toBeInTheDocument()
+  })
+
   it('shows a busy loading state while deep checks are still running', () => {
     const { container } = render(<GeoCheckMatrix checks={[fast]} deepLoading />)
     expect(container.querySelector('[aria-busy="true"]')).toBeTruthy()

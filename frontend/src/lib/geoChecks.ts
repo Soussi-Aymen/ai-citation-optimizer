@@ -52,6 +52,18 @@ const FIX_WEIGHTS: Record<string, FixWeight> = {
     effort: 'medium',
     reason: 'Nothing on the site links to this page.',
   },
+  mobile_parity: {
+    impact: 3,
+    complexity: 2,
+    effort: 'medium',
+    reason: 'Mobile visitors are not getting the same main content.',
+  },
+  mobile_render: {
+    impact: 2,
+    complexity: 2,
+    effort: 'medium',
+    reason: 'The rendered phone page hides or drops the main content.',
+  },
   llm_citability_review: {
     impact: 0,
     complexity: 2,

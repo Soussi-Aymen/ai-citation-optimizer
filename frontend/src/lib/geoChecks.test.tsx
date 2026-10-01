@@ -42,6 +42,20 @@ describe('prioritizeFixes', () => {
     expect(ranked.map((item) => item.id)).toEqual(['answer_readiness', 'llm_citability_review'])
   })
 
+  it('ranks mobile parity with the other high-impact medium changes', () => {
+    const ranked = prioritizeFixes([
+      check('mobile_render', 'fail', 'Mobile rendered content'),
+      check('mobile_parity', 'fail', 'Mobile content parity'),
+      check('ai_bot_access', 'fail', 'Bot access'),
+    ])
+    expect(ranked.map((item) => item.id)).toEqual([
+      'ai_bot_access',
+      'mobile_parity',
+      'mobile_render',
+    ])
+    expect(ranked[1]?.effort).toBe('medium')
+  })
+
   it('drops passed and skipped checks', () => {
     expect(
       prioritizeFixes([
