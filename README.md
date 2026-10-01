@@ -39,6 +39,7 @@ Instead of just showing raw data, the tool turns these metrics into immediate ac
 
 - **Unified Action Plan:** Every audit generates a single, comprehensive "General Chromium Optimization Tips" section. This provides a framework-agnostic implementation plan to solve all flagged technical issues (JS bloat, LCP, console errors) in one centralized view.
 - **Deep Technical Health Matrix:** Replaces generic scores with a detailed list of bot-centric metrics, including JS Hydration impact, Unused JS coverage, LCP, and **llms.txt status**, plus GEO checks grouped into fast and deep tiers, with explicit 🔴/🟡/✅ status indicators. Deep checks show a loading state until the job finishes.
+- **What to fix first:** At the end of How to Fix, failed and warned checks are numbered by citation impact, then by how hard the change is. Each line says why it is next and whether the change is small, medium, or larger. Passed checks are left out.
 - **Copy-Paste Schema Generation:** Automatically generates custom JSON-LD (e.g., `Product`, `Organization`) tailored to the specific URL path to accelerate AI entity recognition.
 - **llms.txt Template Generation:** When the analyzed site lacks `/llms.txt` or does not list the page, generates a ready-to-deploy markdown file for `https://your-domain/llms.txt`.
 
@@ -200,7 +201,7 @@ pnpm dev
 2. Review the **Growth Opportunity** and **Competitor Advantage Breakdown** to see where you stand. (Note: Estimated progress in a realistic benchmark shows around 50% improvement for targeted businesses).
 3. Check the **Optimization Roadmap** for high-priority actions and click "Draft Content" to instantly generate outreach emails or comments.
 4. Drill down into specific **Gap Sources** (YouTube, Reddit, Editorial) to identify missed citation opportunities.
-5. In the **Pages Missing** section, click "How to Fix" to get step-by-step instructions, live JS performance metrics, and an **llms.txt template** to publish on the analyzed domain. Expand guidance sections inline for framework-agnostic fixes. Open **View Deep Technical Audit Report** for the full signal breakdown.
+5. In the **Pages Missing** section, click "How to Fix" to get step-by-step instructions, live JS performance metrics, and an **llms.txt template** to publish on the analyzed domain. The last block, **What to fix first**, numbers the failed checks by impact and effort. Expand guidance sections inline for framework-agnostic fixes. Open **View Deep Technical Audit Report** for the full signal breakdown.
 
 ## Developer Docs
 

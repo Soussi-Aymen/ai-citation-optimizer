@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import axios from 'axios'
+import { FixPriorityList } from '../components/FixPriorityList'
 import { GeoCheckMatrix } from '../components/GeoCheckMatrix'
 import { apiUrl } from '../lib/api'
 import { appendFixHints, mergeDeepChecks } from '../lib/geoChecks'
@@ -1064,6 +1065,7 @@ const Dashboard = ({ peecServiceAvailable = null }: DashboardProps) => {
                               </button>
                             </div>
                           </div>
+                          <FixPriorityList checks={generatedFixes[url]?.geo_checks ?? []} />
                         </div>
                       </div>
                     )}
