@@ -1,5 +1,7 @@
 """Named thresholds and bot identities for GEO checks."""
 
+import os
+
 AI_BOT_USER_AGENTS: dict[str, str] = {
     "GPTBot": (
         "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; "
@@ -60,3 +62,28 @@ REDIRECT_CHAIN_FAIL = 4
 MAX_CRAWL_PAGES = 25
 MAX_CRAWL_SECONDS = 10
 MAX_DEPTH = 2
+
+# Extra mobile browser context. Off unless the flag is set.
+MOBILE_RENDER_ENABLED = os.getenv("MOBILE_RENDER_ENABLED", "").lower() in {
+    "1",
+    "true",
+    "yes",
+}
+MOBILE_RENDER_CONCURRENCY = 1
+MOBILE_RENDER_TIMEOUT_S = 12.0
+BROWSER_HOLD_MARGIN_S = 8.0
+BROWSER_MAX_HOLD_S = MOBILE_RENDER_TIMEOUT_S + BROWSER_HOLD_MARGIN_S
+
+
+def assert_browser_hold(
+    hold_s: float = BROWSER_MAX_HOLD_S,
+    timeout_s: float = MOBILE_RENDER_TIMEOUT_S,
+    margin_s: float = BROWSER_HOLD_MARGIN_S,
+) -> None:
+    if hold_s < timeout_s + margin_s:
+        raise ValueError(
+            "BROWSER_MAX_HOLD_S must cover the mobile render timeout plus margin"
+        )
+
+
+assert_browser_hold()

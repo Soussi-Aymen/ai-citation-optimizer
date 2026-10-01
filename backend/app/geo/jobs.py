@@ -5,8 +5,9 @@ import time
 import uuid
 
 from .cache import DEFAULT_TTL_S, InMemoryTTLCache, normalize_url
+from .config import MOBILE_RENDER_ENABLED
 from .context import AuditContext
-from .models import CheckResult
+from .models import CheckResult, CheckStatus
 from .registry import checks_for_tier, run_check, run_checks
 
 cache = InMemoryTTLCache()
@@ -87,6 +88,10 @@ async def attach_geo(ctx: AuditContext) -> dict:
         cached_deep[check.id] for check in deep_checks if check.id in cached_deep
     ]
 
+    if not _render_will_run(ordered_fast):
+        missing_deep = [check for check in missing_deep if not check.needs_browser]
+        ordered_deep = [item for item in ordered_deep if item.id != "mobile_render"]
+
     if not missing_deep:
         return {
             "geo_checks": _dump(ordered_fast + ordered_deep),
@@ -98,6 +103,16 @@ async def attach_geo(ctx: AuditContext) -> dict:
         "geo_checks": _dump(ordered_fast + ordered_deep),
         "geo_job_id": job_id,
     }
+
+
+def _render_will_run(fast: list[CheckResult]) -> bool:
+    if MOBILE_RENDER_ENABLED:
+        return True
+    return any(
+        item.id == "mobile_parity"
+        and item.status in (CheckStatus.WARN, CheckStatus.FAIL)
+        for item in fast
+    )
 
 
 def _take_cached(url: str, checks: list) -> dict[str, CheckResult]:

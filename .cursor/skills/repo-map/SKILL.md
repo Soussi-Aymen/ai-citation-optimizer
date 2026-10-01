@@ -12,7 +12,7 @@ Open the row you need. Do not search the repo first. `docs/AGENT_CONTEXT.md` is 
 | Task | File | Symbol |
 |------|------|--------|
 | Route or response shape | `backend/app/main.py` | route handlers |
-| Playwright audit, browser lifetime, guidance | `backend/app/agent.py` | `fetch_and_analyze`, `_audit_body` |
+| Playwright audit, browser lifetime, guidance | `backend/app/agent.py`, `backend/app/geo/checks/mobile_render.py` | `fetch_and_analyze`, `_maybe_mobile_render`, `MobileRenderCheck` |
 | OpenRouter model | `backend/app/llm.py` | `make_chat_model`, `OPEN_ROUTE_API_KEY` |
 | Check list | `backend/app/geo/checks/__init__.py` | `FAST_CHECKS`, `DEEP_CHECKS` |
 | Run one tier, timeouts | `backend/app/geo/registry.py` | `run_tier`, `run_check` |

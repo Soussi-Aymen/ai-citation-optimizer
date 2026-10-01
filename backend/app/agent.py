@@ -7,9 +7,13 @@ from dotenv import load_dotenv
 from langchain_core.prompts import ChatPromptTemplate
 from playwright.async_api import async_playwright
 
+from .geo.checks.mobile_parity import MobileParityCheck
+from .geo.checks.mobile_render import MobileRenderCheck
+from .geo.config import BROWSER_MAX_HOLD_S, MOBILE_RENDER_ENABLED
 from .geo.context import AuditContext
-from .geo.jobs import attach_geo
+from .geo.jobs import attach_geo, cache
 from .geo.js_dependency import js_dependency
+from .geo.models import CheckStatus
 from .geo.schema_type import expected_schema_type
 from .llm import make_chat_model
 from .llms_txt_analyzer import build_llms_txt_template, extract_domain
@@ -334,6 +338,30 @@ Based on this recommendation: '{action_text}', {task}""")
         payload.update(await attach_geo(audit_ctx))
         return payload
 
+    async def _maybe_mobile_render(self, browser, audit_ctx) -> None:
+        """Close the audit browser now, or after one extra phone context."""
+        try:
+            parity = await MobileParityCheck().run(audit_ctx)
+            cache.put(audit_ctx.url, parity)
+            keep = MOBILE_RENDER_ENABLED or parity.status in (
+                CheckStatus.WARN,
+                CheckStatus.FAIL,
+            )
+            if not keep:
+                return
+            audit_ctx.browser = browser
+            try:
+                result = await asyncio.wait_for(
+                    MobileRenderCheck().run(audit_ctx),
+                    timeout=BROWSER_MAX_HOLD_S,
+                )
+            except (TimeoutError, asyncio.TimeoutError):
+                return
+            cache.put(audit_ctx.url, result)
+        finally:
+            audit_ctx.browser = None
+            await browser.close()
+
     async def fetch_and_analyze(
         self,
         url: str,
@@ -379,6 +407,7 @@ Based on this recommendation: '{action_text}', {task}""")
 
         logs.append("Phase 2: Initializing Browser Render...")
         async with async_playwright() as p:
+            browser = None
             try:
                 browser = await p.chromium.launch(headless=True)
                 context = await browser.new_context(
@@ -493,6 +522,8 @@ Based on this recommendation: '{action_text}', {task}""")
                 signals["js_impact"] = dependency["js_impact"]
                 audit_ctx.rendered_html = rendered_html
                 audit_ctx.rendered_text = rendered_text
+                await self._maybe_mobile_render(browser, audit_ctx)
+                browser = None
 
                 signals["has_json_ld"] = bool(
                     rendered_soup.find("script", type="application/ld+json")
@@ -517,7 +548,7 @@ Based on this recommendation: '{action_text}', {task}""")
                     audit_ctx,
                 )
             finally:
-                if "browser" in locals():
+                if browser is not None:
                     await browser.close()
 
         try:

@@ -43,6 +43,7 @@ class AuditContext:
     mobile_status: int | None = None
     mobile_final_url: str = ""
     mobile_fetch_error: str | None = None
+    browser: object | None = None
     _llms_task: asyncio.Task | None = None
     _robots_task: asyncio.Task | None = None
     _mobile_task: asyncio.Task | None = None

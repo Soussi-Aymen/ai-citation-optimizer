@@ -13,6 +13,7 @@ class GeoCheck(ABC):
     tier: Literal["fast", "deep"]
     timeout_s: float
     evidence_model: type[BaseModel]
+    needs_browser: bool = False
 
     @abstractmethod
     async def run(self, ctx: AuditContext) -> CheckResult: ...
