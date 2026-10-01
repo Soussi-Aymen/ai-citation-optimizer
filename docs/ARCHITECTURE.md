@@ -90,4 +90,4 @@ flowchart TB
 
 New GEO checks register in `backend/app/geo/catalog.py` with an id, tier, timeout, evidence model, and `run(ctx)`. They read `AuditContext` and do not refetch the page.
 
-`llms.txt` still follows the older signal pattern — see `docs/LLMS_TXT_INTEGRATION.md`.
+`llms.txt` is a fast GEO check. `AuditContext` starts the probe when the audit begins, in parallel with Playwright. See `docs/LLMS_TXT_INTEGRATION.md`.

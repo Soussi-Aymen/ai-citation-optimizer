@@ -6,6 +6,7 @@ from .bot_view_diff import BotViewDiffCheck
 from .canonical_and_redirects import CanonicalAndRedirectsCheck
 from .freshness_consistency import FreshnessConsistencyCheck
 from .llm_citability_review import LlmCitabilityReviewCheck
+from .llms_txt import LlmsTxtCheck
 from .orphan_page_check import OrphanPageCheck
 from .schema_validation import SchemaValidationCheck
 
@@ -16,6 +17,7 @@ FAST_CHECKS = [
     SchemaValidationCheck(),
     FreshnessConsistencyCheck(),
     CanonicalAndRedirectsCheck(),
+    LlmsTxtCheck(),
 ]
 
 DEEP_CHECKS = [

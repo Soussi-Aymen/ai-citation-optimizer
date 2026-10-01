@@ -7,12 +7,12 @@ from dotenv import load_dotenv
 from langchain_core.prompts import ChatPromptTemplate
 from playwright.async_api import async_playwright
 
-from .geo.context import load_raw_context
+from .geo.context import AuditContext
 from .geo.jobs import attach_geo
 from .geo.js_dependency import js_dependency
 from .geo.schema_type import expected_schema_type
 from .llm import make_chat_model
-from .llms_txt_analyzer import build_llms_txt_template, extract_domain, probe_llms_txt
+from .llms_txt_analyzer import build_llms_txt_template, extract_domain
 
 load_dotenv()
 
@@ -342,12 +342,27 @@ Based on this recommendation: '{action_text}', {task}""")
         uncited_prompts: list[str] | None = None,
     ):
         """Deep technical audit using Playwright and OpenRouter."""
+        audit_ctx = AuditContext(url=url, final_url=url)
+        async with audit_ctx:
+            return await self._audit_body(
+                audit_ctx,
+                url,
+                {
+                    "competitor_data": competitor_data,
+                    "skip_ai": skip_ai,
+                    "uncited_prompts": uncited_prompts,
+                },
+            )
+
+    async def _audit_body(self, audit_ctx, url, options):
+        competitor_data = options["competitor_data"]
+        skip_ai = options["skip_ai"]
+        uncited_prompts = options["uncited_prompts"]
         logs = []
         start_time = time.time()
         signals = {}
-
         logs.append("Phase 1: Deep Content Probe...")
-        audit_ctx = await load_raw_context(url)
+        await audit_ctx.load_page()
         audit_ctx.uncited_prompts = uncited_prompts
         raw_soup = BeautifulSoup(audit_ctx.raw_html or "", "html.parser")
         signals["raw_text_length"] = (
@@ -361,7 +376,6 @@ Based on this recommendation: '{action_text}', {task}""")
         domain = extract_domain(url)
         signals["domain"] = domain
         logs.append("Phase 1b: Probing target /llms.txt (parallel with browser)...")
-        llms_task = asyncio.create_task(probe_llms_txt(domain, url))
 
         logs.append("Phase 2: Initializing Browser Render...")
         async with async_playwright() as p:
@@ -489,7 +503,7 @@ Based on this recommendation: '{action_text}', {task}""")
             except Exception as e:
                 logs.append(f"BROWSER_ERROR: {str(e)}")
                 try:
-                    signals.update(await llms_task)
+                    signals.update(await audit_ctx.llms_txt())
                 except Exception:
                     pass
                 return await self._attach_fast_checks(
@@ -507,7 +521,7 @@ Based on this recommendation: '{action_text}', {task}""")
                     await browser.close()
 
         try:
-            llms_signals = await llms_task
+            llms_signals = await audit_ctx.llms_txt()
             signals.update(llms_signals)
             if llms_signals.get("has_llms_txt"):
                 logs.append(
