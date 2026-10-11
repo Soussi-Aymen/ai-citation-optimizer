@@ -37,6 +37,7 @@ run_related_tests() {
   backend_all=false
   frontend_all=false
   backend_tests=""
+  backend_integration=""
   frontend_sources=""
   frontend_tests=""
 
@@ -45,6 +46,9 @@ run_related_tests() {
     case "$file" in
       backend/pyproject.toml|backend/uv.lock|backend/tests/conftest.py|backend/Dockerfile|backend/Dockerfile.prod)
         backend_all=true
+        ;;
+      backend/tests/test_agent.py)
+        backend_integration="$backend_integration tests/test_agent.py"
         ;;
       backend/tests/*.py)
         backend_tests="$backend_tests ${file#backend/}"
@@ -86,8 +90,13 @@ EOF
   elif [ -n "$(printf '%s' "$backend_tests" | tr -s ' ')" ]; then
     # shellcheck disable=SC2086
     docker_run 'Backend tests for touched files (pytest -n auto)' backend pytest $backend_tests
-  else
+  elif [ -z "$(printf '%s' "$backend_integration" | tr -s ' ')" ]; then
     printf '\n▶ Backend tests for touched files: none\n'
+  fi
+
+  if [ -n "$(printf '%s' "$backend_integration" | tr -s ' ')" ]; then
+    # shellcheck disable=SC2086
+    docker_run 'Chromium tests for touched files (pytest -m integration)' backend pytest -m integration $backend_integration
   fi
 
   if [ "$frontend_all" = true ]; then
