@@ -5,10 +5,10 @@ description = "AI citation optimizer API"
 requires-python = ">=3.10"
 dependencies = [
     "beautifulsoup4==4.15.0",
-    "fastapi==0.142.2",
+    "fastapi==0.143.0",
     "httpx==0.28.1",
-    "langchain==1.4.3",
-    "langchain-openai==1.6.7",
+    "langchain==1.4.4",
+    "langchain-openai==1.7.0",
     "lxml==6.1.3",
     "playwright==1.63.0",
     "python-dotenv==1.2.4",
@@ -21,7 +21,7 @@ dev = [
     "pytest-asyncio==1.4.0",
     "pytest-mock==3.16.0",
     "pytest-xdist==3.8.0",
-    "ruff==0.16.9",
+    "ruff==0.17.0",
 ]
 
 [tool.uv]
