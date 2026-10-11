@@ -1,7 +1,3 @@
-export interface HealthResponse {
-  peec_available: boolean
-}
-
 export interface Competitor {
   name: string
   domain: string

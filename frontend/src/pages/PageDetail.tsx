@@ -2,9 +2,9 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import { GeoCheckMatrix } from '../components/GeoCheckMatrix'
-import { apiUrl } from '../lib/api'
+import { apiUrl, healthResponseSchema } from '../lib/api'
 import { mergeDeepChecks } from '../lib/geoChecks'
-import type { AuditAnalysis, AuditResponse, GeoJob, HealthResponse } from '../types/api'
+import type { AuditAnalysis, AuditResponse, GeoJob } from '../types/api'
 import {
   ArrowLeft,
   Zap,
@@ -46,8 +46,11 @@ const PageDetail = () => {
 
   useEffect(() => {
     axios
-      .get<HealthResponse>(apiUrl('/api/health'))
-      .then((res) => setPeecAvailable(res.data.peec_available === true))
+      .get(apiUrl('/api/health'))
+      .then((res) => {
+        const health = healthResponseSchema.safeParse(res.data)
+        setPeecAvailable(health.success && health.data.peec_available)
+      })
       .catch(() => setPeecAvailable(false))
   }, [])
 
@@ -93,7 +96,7 @@ const PageDetail = () => {
         clearInterval(stepInterval)
       }
     }
-    runAudit()
+    void runAudit()
     return () => clearInterval(stepInterval)
   }, [decodedUrl, simulationSteps.length])
 

@@ -239,7 +239,7 @@ const Dashboard = ({ peecServiceAvailable = null }: DashboardProps) => {
   }
 
   const copyToClipboard = (text: string, key: string, type: 'fix' | 'content' = 'fix') => {
-    navigator.clipboard.writeText(text)
+    void navigator.clipboard.writeText(text).catch(() => undefined)
     if (type === 'fix') {
       setCopiedFix((prev) => ({ ...prev, [key]: true }))
       setTimeout(() => setCopiedFix((prev) => ({ ...prev, [key]: false })), 2000)

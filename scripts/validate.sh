@@ -94,7 +94,7 @@ EOF
     docker_run 'Frontend tests for touched files (vitest)' frontend pnpm test:run
   elif [ -n "$(printf '%s' "$frontend_sources$frontend_tests" | tr -s ' ')" ]; then
     # shellcheck disable=SC2086
-    docker_run 'Frontend tests for touched files (vitest)' frontend pnpm exec vitest related --run --maxWorkers=100% $frontend_sources $frontend_tests
+    docker_run 'Frontend tests for touched files (vitest)' frontend pnpm exec vp test related --run --maxWorkers=100% $frontend_sources $frontend_tests
   else
     printf '\n▶ Frontend tests for touched files: none\n'
   fi
@@ -105,9 +105,7 @@ printf 'Running checks via Docker Compose...\n'
 if [ "$tests_only" = false ]; then
   docker_run 'Backend lint (ruff)' backend ruff check .
   docker_run 'Backend format (ruff)' backend ruff format --check .
-  docker_run 'Frontend typecheck' frontend pnpm typecheck
-  docker_run 'Frontend lint (oxlint)' frontend pnpm lint
-  docker_run 'Frontend format (oxfmt)' frontend pnpm format:check
+  docker_run 'Frontend check (format, oxlint, types)' frontend pnpm exec vp check
 fi
 
 if [ "$lint_only" = false ]; then

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vite-plus/test'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
@@ -73,8 +73,8 @@ describe('Dashboard', () => {
     expect(screen.queryByText('Cited by AI')).not.toBeInTheDocument()
     expect(screen.queryByText('Growth Opportunity')).not.toBeInTheDocument()
     expect(screen.getByText('Your Sitemap Pages')).toBeInTheDocument()
-    expect(mockedAxios.get).toHaveBeenCalledTimes(1)
-    expect(mockedAxios.get).toHaveBeenCalledWith(expect.stringContaining('/api/gaps'))
+    expect(mockedAxios.get.mock.calls).toHaveLength(1)
+    expect(mockedAxios.get.mock.calls[0]?.[0]).toEqual(expect.stringContaining('/api/gaps'))
   })
 
   it('shows Peec citation stats and fetches benchmark in parallel when available', async () => {
@@ -109,6 +109,6 @@ describe('Dashboard', () => {
 
     expect(screen.getByText('AI Coverage')).toBeInTheDocument()
     expect(screen.getByText('Your Pages Missing from AI Answers')).toBeInTheDocument()
-    expect(mockedAxios.get).toHaveBeenCalledTimes(2)
+    expect(mockedAxios.get.mock.calls).toHaveLength(2)
   })
 })

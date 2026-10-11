@@ -8,8 +8,7 @@ import {
   useParams,
 } from 'react-router-dom'
 import axios from 'axios'
-import { apiUrl } from './lib/api'
-import type { HealthResponse } from './types/api'
+import { apiUrl, healthResponseSchema } from './lib/api'
 import Dashboard from './pages/Dashboard'
 import PageDetail from './pages/PageDetail'
 import { Moon, Sparkles, Sun } from 'lucide-react'
@@ -53,8 +52,11 @@ function App() {
 
   useEffect(() => {
     axios
-      .get<HealthResponse>(apiUrl('/api/health'))
-      .then((res) => setPeecAvailable(res.data.peec_available === true))
+      .get(apiUrl('/api/health'))
+      .then((res) => {
+        const health = healthResponseSchema.safeParse(res.data)
+        setPeecAvailable(health.success && health.data.peec_available)
+      })
       .catch(() => setPeecAvailable(false))
   }, [])
 

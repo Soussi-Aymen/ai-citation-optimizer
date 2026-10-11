@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vite-plus/test'
 import type { GeoCheck } from '../types/api'
 import { appendFixHints, mergeDeepChecks } from '../lib/geoChecks'
 import { GeoCheckMatrix } from './GeoCheckMatrix'

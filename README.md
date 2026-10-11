@@ -45,12 +45,12 @@ Instead of just showing raw data, the tool turns these metrics into immediate ac
 
 ![AI Architecture Overview](artifacts/screenshots/ai_architecture.jpg)
 
-- **Backend**: FastAPI (Python 3.11+), dependencies installed with uv
+- **Backend**: FastAPI (Python 3.10+), dependencies pinned to exact versions and installed with uv
 - **AI Orchestration**: LangChain (for structured chains and prompt templates)
 - **AI Agent**: Playwright (for rendered HTML analysis) + OpenRouter model `google/gemma-4-26b-a4b-it:free`
 - **Data Provider**: Peec AI API (for citation metrics and domain visibility)
-- **Frontend**: React + Vite + TypeScript (strict) + pnpm (Tailwind CSS), Node 22
-- **Code Quality**: Ruff (backend), oxlint + oxfmt + `tsc` (frontend), optional git pre-commit via Docker
+- **Frontend**: React + Vite+ (Vite 8.3) + TypeScript (strict) + pnpm + Tailwind CSS v4, Node 22. Dev, lint, format, and tests share `frontend/vite.config.ts`. Direct library versions are exact pins. pnpm waits 24 hours before installing a newly published release (`minimum-release-age=1440` in `frontend/.npmrc`).
+- **Code Quality**: Ruff (backend), Vite+ `vp check` (oxlint, oxfmt, and type checks) on the frontend, optional git pre-commit via Docker
 - **Web standards**: Frontend UI follows [modern-web-guidance](https://github.com/GoogleChrome/modern-web-guidance) patterns — accessible forms, native `<details>` disclosures, ARIA tabs, `:focus-visible`, and `prefers-reduced-motion`
 - **Progress Tracking**: Dynamic visibility progress visualization at the top of the dashboard
 
@@ -116,7 +116,7 @@ docker compose down                                  # stop dev services
 docker compose -f docker-compose.prod.yml down       # stop prod services
 sh scripts/validate.sh                               # lint + test (all checks)
 sh scripts/validate.sh --tests-only                  # pytest + vitest only
-sh scripts/validate.sh --lint-only                   # ruff + oxlint + oxfmt + tsc only
+sh scripts/validate.sh --lint-only                   # ruff + vp check only
 ```
 
 ### Production mode (faster runtime)
@@ -163,7 +163,7 @@ docker compose run --rm backend pytest -m integration
 git config core.hooksPath .husky   # one-time
 ```
 
-Every `git commit` then runs `sh scripts/validate.sh`. Skip once: `git commit --no-verify`.
+Every `git commit` then runs `sh scripts/validate.sh --related` (checks and tests for the files you changed). The full suite is `sh scripts/validate.sh`. Skip once: `git commit --no-verify`.
 
 ---
 
@@ -178,14 +178,16 @@ uv sync
 uv run playwright install chromium
 uv run uvicorn app.main:app --reload --port 8000
 
-# Frontend — Node 22+ with pnpm
+# Frontend — Node 22.18+ with pnpm 10
 cd frontend
 corepack enable && pnpm install
-pnpm dev
+pnpm dev      # Vite+ dev server
+pnpm check    # oxlint, oxfmt, and type checks
 ```
 
 ## API Endpoints
 
+- `GET /api/health`: Reports whether Peec is available. The frontend validates this JSON with Zod before showing Peec features.
 - `GET /api/gaps?domain=<domain>`: Returns a list of non-cited pages, overall performance metrics, and competitor visibility data.
 - `GET /api/benchmark?domain=<domain>`: Provides the detailed optimization roadmap, competitor breakdown, and gap sources.
 - `POST /api/audit`: Conducts a deep crawlability and AI-readiness audit of a specific URL. Returns fast GEO checks and a `geo_job_id` for deep checks.
@@ -216,12 +218,11 @@ Compact reference docs for contributors and AI coding agents (start with `docs/A
 UI and layout work should follow **[modern-web-guidance](https://github.com/GoogleChrome/modern-web-guidance)** (pinned CLI `0.0.174`). Search before implementing forms, tabs, disclosures, or motion:
 
 ```bash
-npx -y modern-web-guidance@0.0.174 search "<what you are building>" --skill-version 2026_05_16-c5e7870
-npx -y modern-web-guidance@0.0.174 retrieve "<guide-id>"
+npx -y modern-web-guidance@0.0.191 search "<what you are building>" --skill-version 2026_09_04-7de96777
+npx -y modern-web-guidance@0.0.191 retrieve "<guide-id>"
 ```
 
-Project skill for Cursor agents: `.cursor/skills/modern-web-guidance/SKILL.md`  
-Reinstall upstream skill files (from `frontend/`): `cd frontend && npx -y modern-web-guidance@0.0.174 install`
+Project skill for Cursor agents: `.cursor/skills/modern-web-guidance/SKILL.md`
 
 **Patterns used in this app:**
 
