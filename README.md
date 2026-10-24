@@ -49,7 +49,7 @@ Instead of just showing raw data, the tool turns these metrics into immediate ac
 - **AI Orchestration**: LangChain (for structured chains and prompt templates)
 - **AI Agent**: Playwright (for rendered HTML analysis) + OpenRouter model `google/gemma-4-26b-a4b-it:free`
 - **Data Provider**: Peec AI API (for citation metrics and domain visibility)
-- **Frontend**: React + Vite+ (Vite 8.3) + TypeScript (strict) + pnpm + Tailwind CSS v4, Node 22. Dev, lint, format, and tests share `frontend/vite.config.ts`. Direct library versions are exact pins. pnpm waits 24 hours before installing a newly published release (`minimum-release-age=1440` in `frontend/.npmrc`).
+- **Frontend**: React + Vite+ (Vite 8.3) + TypeScript (strict) + pnpm + Tailwind CSS v4, Node 24.22.1. Dev, lint, format, and tests share `frontend/vite.config.ts`. Direct library versions are exact pins. pnpm waits 24 hours before installing a newly published release (`minimum-release-age=1440` in `frontend/.npmrc`).
 - **Code Quality**: Ruff (backend), Vite+ `vp check` (oxlint, oxfmt, and type checks) on the frontend, optional git pre-commit via Docker
 - **Web standards**: Frontend UI follows [modern-web-guidance](https://github.com/GoogleChrome/modern-web-guidance) patterns — accessible forms, native `<details>` disclosures, ARIA tabs, `:focus-visible`, and `prefers-reduced-motion`
 - **Progress Tracking**: Dynamic visibility progress visualization at the top of the dashboard
@@ -178,7 +178,7 @@ uv sync
 uv run playwright install chromium
 uv run uvicorn app.main:app --reload --port 8000
 
-# Frontend — Node 22.18+ with pnpm 10
+# Frontend — Node 24.22.1+ with pnpm 10
 cd frontend
 corepack enable && pnpm install
 pnpm dev      # Vite+ dev server

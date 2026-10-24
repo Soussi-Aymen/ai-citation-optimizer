@@ -32,7 +32,7 @@ jobs:
           version: 10.12.1
       - uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: 24.22.1
           cache: pnpm
           cache-dependency-path: frontend/pnpm-lock.yaml
       # setup-node records this path before install. Create it so a missing
